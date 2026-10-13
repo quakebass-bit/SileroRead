@@ -98,11 +98,11 @@ def get_silero_model():
     with silero_lock:
         if silero_model is not None:
             return silero_model
-        model_path = os.path.join(MODELS_DIR, 'v4_ru.pt')
+        model_path = os.path.join(MODELS_DIR, 'v5_ru.pt')
         if not os.path.exists(model_path):
             raise FileNotFoundError(
                 f"Модель Silero не найдена: {model_path}. "
-                f"Скачай вручную: https://models.silero.ai/models/tts/ru/v4_ru.pt"
+                f"Скачай вручную: https://models.silero.ai/models/tts/ru/v5_ru.pt"
             )
         if torch_module is None:
             import torch
