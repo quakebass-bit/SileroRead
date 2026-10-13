@@ -1,6 +1,4 @@
-Держи. Полноценный `README.md` на английском, со всеми шагами установки, описанием фич и инструкциями для разных платформ. Просто скопируй в файл `README.md` в корне проекта и запушь.
 
-```markdown
 # 📖 SileroRead
 
 **A self-hosted text-to-speech reader for books with three TTS engines — two offline, one cloud.**
