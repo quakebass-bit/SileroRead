@@ -115,7 +115,7 @@ Expected output:
 
 ```bash
 mkdir -p models
-wget -O models/v4_ru.pt https://models.silero.ai/models/tts/ru/v4_ru.pt
+wget -O models/v5_ru.pt https://models.silero.ai/models/tts/ru/v5_ru.pt
 ```
 
 **Piper binary (ARM64):**
