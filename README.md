@@ -75,7 +75,7 @@ source venv/bin/activate
 ```bash
 pip install --upgrade pip
 pip install torch==2.6.0+cpu --index-url https://download.pytorch.org/whl/cpu --no-cache-dir
-pip install numpy Flask edge-tts
+pip install numpy scipy Flask edge-tts
 ```
 
 Verify torch:
@@ -111,7 +111,7 @@ Expected output:
 
 ### 7. Download models
 
-**Silero (Russian, ~60 MB):**
+**Silero v5 (Russian, ~60 MB):**
 
 ```bash
 mkdir -p models
@@ -177,13 +177,13 @@ venv\Scripts\activate
 ```cmd
 pip install --upgrade pip
 pip install torch --index-url https://download.pytorch.org/whl/cpu
-pip install numpy Flask edge-tts ru-normalizr
+pip install numpy scipy Flask edge-tts ru-normalizr
 ```
 
 ### 4. Models
 
 Download manually into `models/`:
-- Silero: https://models.silero.ai/models/tts/ru/v4_ru.pt
+- Silero v5: https://models.silero.ai/models/tts/ru/v5_ru.pt
 - Piper: download `piper_windows_amd64.zip` from https://github.com/rhasspy/piper/releases, unpack into `piper/`, ensure `piper/piper.exe` exists
 - Piper voices: same URLs as Android step 7
 
@@ -220,7 +220,7 @@ pip install torch==2.6.0+cpu --index-url https://download.pytorch.org/whl/cpu
 ```
 
 ```bash
-pip install numpy Flask edge-tts ru-normalizr
+pip install numpy scipy Flask edge-tts ru-normalizr
 ```
 
 Then follow Android step 7 for models and Piper binary (use the release for your architecture).
@@ -237,7 +237,7 @@ python app.py
 cd ~/SileroRead
 git pull
 source venv/bin/activate
-pip install -r requirements.txt 2>/dev/null || pip install numpy Flask edge-tts ru-normalizr
+pip install numpy scipy Flask edge-tts ru-normalizr
 python app.py
 ```
 
@@ -330,6 +330,14 @@ n = Normalizer(NormalizeOptions.tts())
 n.normalize("В 1980 году")
 ```
 
+### `No module named 'scipy'`
+
+Silero v5 requires `scipy` (v4 did not):
+
+```bash
+pip install scipy
+```
+
 ### Silero takes 10+ seconds on first request
 
 Normal — torch loads the model into memory on first use. Subsequent requests are fast.
@@ -345,7 +353,7 @@ pip install --upgrade edge-tts
 ### `Silero model not found`
 
 ```bash
-wget -O models/v4_ru.pt https://models.silero.ai/models/tts/ru/v4_ru.pt
+wget -O models/v5_ru.pt https://models.silero.ai/models/tts/ru/v5_ru.pt
 ```
 
 ---
@@ -379,7 +387,7 @@ SileroRead/
 ├── manifest.json           # PWA manifest
 ├── sw.js                   # Service worker
 ├── models/                 # TTS models
-│   ├── v4_ru.pt            # Silero
+│   ├── v5_ru.pt            # Silero v5
 │   ├── ru_RU-irina-medium.onnx
 │   └── ...
 ├── piper/                  # Piper binary
@@ -453,4 +461,5 @@ MIT.
 ---
 
 **Enjoy. 📚🎧**
-
+`
+Пушь на GitHub, заходи с телефона — эмодзи должны отобразиться нормально. 🚀
