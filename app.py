@@ -11,6 +11,24 @@ import wave
 from threading import Lock
 from flask import Flask, render_template, request, jsonify, send_from_directory
 
+# ================= НОРМАЛИЗАЦИЯ ТЕКСТА =================
+try:
+    from ru_normalizr import normalize as ru_normalize
+    NORMALIZATION_AVAILABLE = True
+except ImportError:
+    NORMALIZATION_AVAILABLE = False
+    print("⚠️ ru-normalizr не установлен. Числа и символы не будут нормализованы. Установи: pip install ru-normalizr")
+
+def normalize_text(text: str) -> str:
+    """Нормализация текста для TTS: числа, даты, аббревиатуры, латиница."""
+    if not NORMALIZATION_AVAILABLE:
+        return text
+    try:
+        return ru_normalize(text, mode='tts')
+    except Exception as e:
+        print(f"⚠️ Ошибка нормализации: {e}. Использую исходный текст.")
+        return text
+
 app = Flask(__name__)
 
 # ================= ПУТИ =================
@@ -21,7 +39,7 @@ MODELS_DIR = os.path.join(BASE_DIR, 'models')
 PROGRESS_FILE = os.path.join(BASE_DIR, 'progress.json')
 TEMP_TXT = os.path.join(BASE_DIR, 'temp_input.txt')
 
-CACHE_TTL_SECONDS = 600  # 10 минут
+CACHE_TTL_SECONDS = 600
 
 os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
@@ -35,18 +53,15 @@ def find_piper_executable():
     env_path = os.getenv("PIPER_CMD")
     if env_path:
         return env_path
-
     local_win = os.path.join(BASE_DIR, 'piper', 'piper.exe')
     local_linux = os.path.join(BASE_DIR, 'piper', 'piper')
     if os.name == 'nt' and os.path.exists(local_win):
         return local_win
     if os.path.exists(local_linux):
         return local_linux
-
     termux_path = "/root/piper/piper"
     if os.path.exists(termux_path):
         return termux_path
-
     system_piper = shutil.which("piper.exe") if os.name == 'nt' else shutil.which("piper")
     return system_piper if system_piper else ("piper.exe" if os.name == 'nt' else "piper")
 
@@ -66,24 +81,20 @@ torch_module = None
 
 
 def get_silero_model():
-    """Загрузка PyTorch и модели Silero v4. Ленивая, потокобезопасная."""
     global silero_model, torch_module
     with silero_lock:
         if silero_model is not None:
             return silero_model
-
         model_path = os.path.join(MODELS_DIR, 'v4_ru.pt')
         if not os.path.exists(model_path):
             raise FileNotFoundError(
                 f"Модель Silero не найдена: {model_path}. "
                 f"Скачай вручную: https://models.silero.ai/models/tts/ru/v4_ru.pt"
             )
-
         if torch_module is None:
             import torch
-            torch.set_num_threads(2)  # 2 потока — баланс для телефона и встройки
+            torch.set_num_threads(2)
             torch_module = torch
-
         print("⏳ Загружаю Silero в память...", flush=True)
         silero_model = torch_module.package.PackageImporter(model_path).load_pickle("tts_models", "model")
         silero_model.to(torch_module.device('cpu'))
@@ -92,7 +103,6 @@ def get_silero_model():
 
 
 def save_tensor_to_wav(audio_tensor, output_path, sample_rate=24000):
-    """Сохранение тензора в WAV без torchaudio — только stdlib."""
     audio_data = (audio_tensor.clamp(-1.0, 1.0) * 32767).to(torch_module.int16).cpu().numpy()
     with wave.open(output_path, 'wb') as wf:
         wf.setnchannels(1)
@@ -114,33 +124,29 @@ def synthesize_silero(text, speaker, output_path):
     save_tensor_to_wav(audio, output_path, sample_rate)
 
 
-# ================= EDGE TTS ЧЕРЕЗ CLI =================
+# ================= EDGE TTS =================
 def run_edge_tts_cli(text, voice, output_path, timeout_sec=30):
     with edge_tts_lock:
         clean_text = text.strip()
         if not clean_text:
             raise ValueError("Пустой фрагмент текста")
-
         with open(TEMP_TXT, 'w', encoding='utf-8') as f:
             f.write(clean_text)
-
         cmd = [
             sys.executable, '-m', 'edge_tts',
             '-f', TEMP_TXT,
             '-v', voice,
             '--write-media', output_path
         ]
-
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_sec)
         if proc.returncode != 0:
             err = proc.stderr.strip() or f"Код ошибки: {proc.returncode}"
             raise RuntimeError(err)
-
         if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
             raise FileNotFoundError("Аудиофайл не создан")
 
 
-# ================= ОЧИСТКА КЭША =================
+# ================= КЭШ И УТИЛИТЫ =================
 def cleanup_old_audio():
     now = time.time()
     for ext in ('*.mp3', '*.wav'):
@@ -152,37 +158,27 @@ def cleanup_old_audio():
                 pass
 
 
-# ================= РАЗБИЕНИЕ НА КУСКИ =================
 def split_into_chunks(text, max_chars=300, min_chars=20):
     cleaned = " ".join(text.split()).strip()
     if not cleaned:
         return []
-
     abbreviations = [
         "т.е.", "т.к.", "т.д.", "т.п.", "и т.д.", "и т.п.",
         "г-н.", "г-жа.", "д-р.", "проф.", "акад.", "доц.",
         "руб.", "коп.", "Mr.", "Mrs.", "Ms.", "Dr.", "e.g.", "i.e.", "etc."
     ]
-
     working_text = cleaned
     replacements = {}
-
-    # Числа с точкой
     working_text = re.sub(r'(\d+)\.(\d+)', r'\1@@DOT@@\2', working_text)
-    # Инициалы
     working_text = re.sub(r'\b([A-ZА-ЯЁ])\.\s*([A-ZА-ЯЁ])\.', r'\1@@DOT@@\2@@DOT@@', working_text)
     working_text = re.sub(r'\b([A-ZА-ЯЁ])\.\s+(?=[A-ZА-ЯЁ])', r'\1@@DOT@@ ', working_text)
-
-    # Сокращения
     for idx, abbr in enumerate(abbreviations):
         matches = list(re.finditer(re.escape(abbr), working_text, flags=re.IGNORECASE))
         for m in reversed(matches):
             token = f"@@ABBR_{idx}_{m.start()}@@"
             replacements[token] = m.group(0)
             working_text = working_text[:m.start()] + token + working_text[m.end():]
-
     raw_sentences = re.split(r'(?<=[\.\?!])\s+(?=[A-ZА-ЯЁ\d«"\(])', working_text)
-
     restored_sentences = []
     for s in raw_sentences:
         s_restored = s.replace('@@DOT@@', '.')
@@ -192,7 +188,6 @@ def split_into_chunks(text, max_chars=300, min_chars=20):
         s_restored = s_restored.strip()
         if s_restored:
             restored_sentences.append(s_restored)
-
     sub_divided = []
     for sent in restored_sentences:
         if len(sent) > max_chars:
@@ -209,7 +204,6 @@ def split_into_chunks(text, max_chars=300, min_chars=20):
                 sub_divided.append(curr)
         else:
             sub_divided.append(sent)
-
     chunks = []
     buffer = ""
     for s in sub_divided:
@@ -224,18 +218,15 @@ def split_into_chunks(text, max_chars=300, min_chars=20):
             buffer = s
     if buffer:
         chunks.append(buffer)
-
     merged = []
     for chunk in chunks:
         if merged and (len(chunk) < min_chars or len(merged[-1]) < min_chars):
             merged[-1] = f"{merged[-1]} {chunk}".strip()
         else:
             merged.append(chunk)
-
     return merged
 
 
-# ================= PROGRESS =================
 def load_progress_data():
     if os.path.exists(PROGRESS_FILE):
         try:
@@ -276,7 +267,6 @@ def save_progress():
     index = data.get('index')
     if not book_name:
         return jsonify({'success': False, 'error': 'Missing book_name'})
-
     progress = load_progress_data()
     progress[book_name] = {
         'index': index,
@@ -299,7 +289,6 @@ def api_split():
     if 'paragraphs' in data and isinstance(data['paragraphs'], list):
         results = [split_into_chunks(p) for p in data['paragraphs']]
         return jsonify({'results': results})
-
     text = data.get('text', '')
     if not text:
         return jsonify({'chunks': []})
@@ -314,8 +303,13 @@ def synthesize():
     if not text:
         return jsonify({'success': False, 'error': 'Text is empty'})
 
+    # ★ НОРМАЛИЗАЦИЯ ТЕКСТА ДЛЯ ВСЕХ ДВИЖКОВ
+    normalized_text = normalize_text(text)
+
     cleanup_old_audio()
 
+    # Хэш для кэша строится по оригинальному тексту + голосу,
+    # чтобы кэш не путался, если нормализация изменится
     hash_seed = f"{text}_{voice}".encode('utf-8')
     cache_hash = hashlib.md5(hash_seed).hexdigest()
 
@@ -331,14 +325,14 @@ def synthesize():
                                 'engine': 'silero', 'cached': True})
 
             try:
-                synthesize_silero(text=text, speaker=speaker_name, output_path=filepath)
+                synthesize_silero(text=normalized_text, speaker=speaker_name, output_path=filepath)
                 return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
                                 'engine': 'silero', 'cached': False})
             except Exception as silero_err:
                 print(f"⚠️ Silero упал ({silero_err}). Fallback → Edge Svetlana.", flush=True)
                 fallback_filename = f"speech_fallback_{cache_hash}.mp3"
                 fallback_filepath = os.path.join(AUDIO_DIR, fallback_filename)
-                run_edge_tts_cli(text=text, voice='ru-RU-SvetlanaNeural',
+                run_edge_tts_cli(text=normalized_text, voice='ru-RU-SvetlanaNeural',
                                  output_path=fallback_filepath, timeout_sec=25)
                 return jsonify({'success': True, 'audio_url': f'/static/audio/{fallback_filename}',
                                 'engine': 'edge_fallback', 'cached': False})
@@ -359,7 +353,7 @@ def synthesize():
                                 'engine': 'piper', 'cached': True})
 
             cmd = [PIPER_CMD, '--model', model_path, '--output_file', filepath]
-            result = subprocess.run(cmd, input=text.encode('utf-8'),
+            result = subprocess.run(cmd, input=normalized_text.encode('utf-8'),
                                     capture_output=True, timeout=60)
 
             if result.returncode != 0:
@@ -378,7 +372,7 @@ def synthesize():
                 return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
                                 'engine': 'edge', 'cached': True})
 
-            run_edge_tts_cli(text=text, voice=voice, output_path=filepath, timeout_sec=30)
+            run_edge_tts_cli(text=normalized_text, voice=voice, output_path=filepath, timeout_sec=30)
             return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
                             'engine': 'edge', 'cached': False})
 
@@ -388,7 +382,6 @@ def synthesize():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ================= ЗАПУСК =================
 if __name__ == '__main__':
     with app.app_context():
         cleanup_old_audio()
@@ -396,6 +389,7 @@ if __name__ == '__main__':
     print("\n" + "=" * 60)
     print("📖 SileroRead TTS Server")
     print("🔊 Engines: Silero (lazy) | Piper | Edge")
+    print(f"📝 Normalization: {'✅ ru-normalizr' if NORMALIZATION_AVAILABLE else '❌ disabled'}")
     print(f"📍 Piper:  {PIPER_CMD}")
     print("📍 UI:     http://127.0.0.1:5001")
     print("=" * 60 + "\n")
