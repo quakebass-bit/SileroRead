@@ -13,21 +13,33 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 
 # ================= НОРМАЛИЗАЦИЯ ТЕКСТА =================
 try:
-    from ru_normalizr import normalize as ru_normalize
+    from ru_normalizr import Normalizer, NormalizeOptions
     NORMALIZATION_AVAILABLE = True
 except ImportError:
     NORMALIZATION_AVAILABLE = False
-    print("⚠️ ru-normalizr не установлен. Числа и символы не будут нормализованы. Установи: pip install ru-normalizr")
+    print("⚠️ ru-normalizr не установлен. Числа и символы не будут нормализованы.")
+
+# Создаём нормализатор ОДИН РАЗ при старте (TTS-режим)
+_normalizer = None
+if NORMALIZATION_AVAILABLE:
+    try:
+        _normalizer = Normalizer(NormalizeOptions.tts())
+        print("✅ ru-normalizr загружен")
+    except Exception as e:
+        print(f"⚠️ Не удалось создать Normalizer: {e}")
+        NORMALIZATION_AVAILABLE = False
+
 
 def normalize_text(text: str) -> str:
     """Нормализация текста для TTS: числа, даты, аббревиатуры, латиница."""
-    if not NORMALIZATION_AVAILABLE:
+    if not NORMALIZATION_AVAILABLE or _normalizer is None:
         return text
     try:
-        return ru_normalize(text, mode='tts')
+        return _normalizer.normalize(text)
     except Exception as e:
         print(f"⚠️ Ошибка нормализации: {e}. Использую исходный текст.")
         return text
+
 
 app = Flask(__name__)
 
@@ -64,6 +76,7 @@ def find_piper_executable():
         return termux_path
     system_piper = shutil.which("piper.exe") if os.name == 'nt' else shutil.which("piper")
     return system_piper if system_piper else ("piper.exe" if os.name == 'nt' else "piper")
+
 
 PIPER_CMD = find_piper_executable()
 
@@ -303,13 +316,11 @@ def synthesize():
     if not text:
         return jsonify({'success': False, 'error': 'Text is empty'})
 
-    # ★ НОРМАЛИЗАЦИЯ ТЕКСТА ДЛЯ ВСЕХ ДВИЖКОВ
+    # ★ НОРМАЛИЗАЦИЯ ДЛЯ ВСЕХ ДВИЖКОВ
     normalized_text = normalize_text(text)
 
     cleanup_old_audio()
 
-    # Хэш для кэша строится по оригинальному тексту + голосу,
-    # чтобы кэш не путался, если нормализация изменится
     hash_seed = f"{text}_{voice}".encode('utf-8')
     cache_hash = hashlib.md5(hash_seed).hexdigest()
 
