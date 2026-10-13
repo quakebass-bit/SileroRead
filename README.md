@@ -1,69 +1,41 @@
 
 # 📖 SileroRead
 
-**A self-hosted text-to-speech reader for books with three TTS engines — two offline, one cloud.**
-
-Built and tested to run entirely on a phone (proot-distro Ubuntu on Android) with no GPU and no external API keys. Also works on Windows and Linux.
+Self-hosted TTS reader with three engines: Silero (offline, Russian), Piper (offline, RU+EN), Edge TTS (cloud, RU+EN). Runs on Android via proot-distro Ubuntu, Windows, and Linux. No GPU required.
 
 ---
 
 ## ✨ Features
 
-- **Three TTS engines** in one app:
-  - 🟣 **Silero** — offline, neural, high-quality Russian (5 voices)
-  - 🟢 **Piper** — offline, fast, multi-language (Russian + English)
-  - 🔵 **Edge TTS** — cloud, Microsoft neural voices (Russian + English)
-- **Automatic fallback** — if Silero fails, it silently switches to Edge TTS
-- **Sentence-level chunking** — long paragraphs are split into 1–2 sentence chunks with abbreviation protection (`т.е.`, `Mr.`, initials, decimals)
-- **Predictive prefetch** — while the current chunk plays, the next 6 chunks are generated in the background (12-chunk buffer)
-- **10-minute audio cache** — repeated requests are served instantly from disk
-- **Multi-format reader** — supports `.txt`, `.fb2`, `.docx`, `.pdf`
-- **Reader UI** — themes (dark / light / sepia / OLED), font family, font size, playback speed (0.75x – 2x)
-- **PWA support** — install as an app on Android/iOS
-- **Reading progress** — saved per book, restored on reopen
-- **Lock screen** — prevents accidental taps while listening
-- **Media Session API** — control playback from your phone's lock screen / bluetooth headset
-
----
-
-## 📱 Tested on
-
-- **Android** via [proot-distro](https://github.com/termux/proot-distro) Ubuntu (ARM64)
-- **Windows 10/11** (x86_64)
-- **Linux** (x86_64, ARM64)
-
-No GPU required — everything runs on CPU.
+- 3 TTS engines: Silero (offline neural RU), Piper (offline RU+EN), Edge (cloud RU+EN)
+- Automatic fallback: Silero → Edge Svetlana on failure
+- Sentence-level chunking with abbreviation protection
+- Text normalization: numbers, dates, abbreviations, Latin → Russian (via `ru-normalizr`)
+- Predictive prefetch: 6 chunks ahead, 12-chunk buffer
+- 10-minute disk cache
+- Multi-format: `.txt`, `.fb2`, `.docx`, `.pdf`
+- Reader UI: 4 themes, font/size, speed 0.75x–2x
+- PWA, reading progress, lock screen, Media Session API
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌────────────────────┐        ┌─────────────────────┐
-│  Browser (index)   │◄──────►│  Flask (app.py)     │
-│  - Parses files    │  HTTP  │  - /api/split       │
-│  - Prefetch queue  │        │  - /synthesize      │
-│  - Audio player    │        │  - /save_progress   │
-└────────────────────┘        └──────────┬──────────┘
-                                         │
-                    ┌────────────────────┼─────────────────────┐
-                    ▼                    ▼                     ▼
-              ┌──────────┐        ┌──────────┐          ┌──────────┐
-              │  Silero  │        │  Piper   │          │ Edge TTS │
-              │ (torch)  │        │ (binary) │          │  (CLI)   │
-              │ offline  │        │ offline  │          │  cloud   │
-              └──────────┘        └──────────┘          └──────────┘
+Browser (index.html) ←HTTP→ Flask (app.py)
+                                │
+                ┌───────────────┼───────────────┐
+                ▼               ▼               ▼
+            Silero          Piper           Edge TTS
+            (torch)         (binary)        (CLI subprocess)
+            offline         offline         cloud
 ```
 
 ---
 
-## 🚀 Installation
+## 🚀 Install — Android (proot-distro Ubuntu)
 
-### Option 1 — Android (proot-distro Ubuntu) — RECOMMENDED
-
-#### 1. Install Termux and proot-distro
-
-Install [Termux](https://f-droid.org/packages/com.termux/) from F-Droid (not Google Play — that version is outdated).
+### 1. Termux: install proot-distro
 
 ```bash
 pkg update && pkg upgrade -y
@@ -72,14 +44,16 @@ proot-distro install ubuntu
 proot-distro login ubuntu
 ```
 
-#### 2. Inside Ubuntu — install system dependencies
+### 2. Ubuntu: system packages
 
 ```bash
 apt update && apt upgrade -y
-apt install -y python3 python3-pip python3-venv git wget build-essential python3-dev
+apt install -y python3 python3-pip python3-venv python3.13-dev git wget build-essential
 ```
 
-#### 3. Clone the project
+`python3.13-dev` is required for compiling `DAWG2` (dependency of `pymorphy3`). Without it, `pip install ru-normalizr` fails with `Python.h: No such file or directory`.
+
+### 3. Clone project
 
 ```bash
 cd ~
@@ -87,16 +61,16 @@ git clone https://github.com/quakebass-bit/SileroRead.git
 cd SileroRead
 ```
 
-#### 4. Create venv and activate it
+### 4. Create venv
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-#### 5. Install Python dependencies
+### 5. Install Python deps
 
-**⚠️ Important for ARM64:** install torch from the official CPU wheel index. The default PyPI index will try to pull CUDA libraries (~3 GB of useless NVIDIA packages).
+**ARM64 — use CPU wheel index to avoid 3 GB of CUDA packages:**
 
 ```bash
 pip install --upgrade pip
@@ -104,27 +78,48 @@ pip install torch==2.6.0+cpu --index-url https://download.pytorch.org/whl/cpu --
 pip install numpy Flask edge-tts
 ```
 
-Verify torch installed correctly:
+Verify torch:
 
 ```bash
 python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
 ```
 
-Expected output:
+Expected:
 ```
 2.6.0+cpu
 False
 ```
 
-#### 6. Download models
+### 6. Install text normalization
+
+```bash
+pip install ru-normalizr
+```
+
+If `pip install ru-normalizr` fails with `struct.error: unpack requires a buffer of 4 bytes` at runtime — remove the broken compiled DAWG2 and use the pure-Python `dawg2-python` instead:
+
+```bash
+pip uninstall -y DAWG2
+pip install dawg2-python
+python -c "from ru_normalizr import Normalizer, NormalizeOptions; n = Normalizer(NormalizeOptions.tts()); print(n.normalize('В 1980 году'))"
+```
+
+Expected output:
+```
+В тысяча девятьсот восьмом году
+```
+
+### 7. Download models
 
 **Silero (Russian, ~60 MB):**
+
 ```bash
 mkdir -p models
 wget -O models/v4_ru.pt https://models.silero.ai/models/tts/ru/v4_ru.pt
 ```
 
 **Piper binary (ARM64):**
+
 ```bash
 mkdir -p piper
 cd piper
@@ -135,74 +130,64 @@ rm piper_arm64.tar.gz
 cd ..
 ```
 
-**Piper voices (Russian + English):**
+**Piper voices:**
 
 ```bash
-# Russian — Irina
 wget -O models/ru_RU-irina-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx
 wget -O models/ru_RU-irina-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx.json
-
-# Russian — Ruslan
 wget -O models/ru_RU-ruslan-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/ruslan/medium/ru_RU-ruslan-medium.onnx
 wget -O models/ru_RU-ruslan-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/ruslan/medium/ru_RU-ruslan-medium.onnx.json
-
-# English — Lessac
 wget -O models/en_US-lessac-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx
 wget -O models/en_US-lessac-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
-
-# English — Ryan
 wget -O models/en_US-ryan-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/medium/en_US-ryan-medium.onnx
 wget -O models/en_US-ryan-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/medium/en_US-ryan-medium.onnx.json
 ```
 
-#### 7. Run the server
+### 8. Run
 
 ```bash
 python app.py
 ```
 
-Open in your phone's browser: `http://127.0.0.1:5001`
+Open on phone: `http://127.0.0.1:5001`
 
-From another device on the same Wi-Fi network: `http://<PHONE_IP>:5001`
-(get IP with `ip addr show | grep inet`)
+From other device on same Wi-Fi:
+```bash
+ip addr show | grep inet
+```
+Then open `http://<PHONE_IP>:5001`.
 
 ---
 
-### Option 2 — Windows (x86_64)
+## 🚀 Install — Windows
 
-#### 1. Install Python 3.10+
+### 1. Install Python 3.10+ from python.org (check "Add to PATH")
 
-Download from [python.org](https://www.python.org/downloads/). Check **"Add Python to PATH"** during install.
-
-#### 2. Clone the project
+### 2. Clone and setup
 
 ```cmd
 git clone https://github.com/quakebass-bit/SileroRead.git
 cd SileroRead
-```
-
-#### 3. Create venv and activate it
-
-```cmd
 python -m venv venv
 venv\Scripts\activate
 ```
 
-#### 4. Install dependencies
+### 3. Install deps
 
 ```cmd
 pip install --upgrade pip
 pip install torch --index-url https://download.pytorch.org/whl/cpu
-pip install numpy Flask edge-tts
+pip install numpy Flask edge-tts ru-normalizr
 ```
 
-#### 5. Download models
+### 4. Models
 
-Follow **step 6** from the Android instructions above. Use a browser if `wget` is not available — just save files into the `models/` folder with the exact names shown.
+Download manually into `models/`:
+- Silero: https://models.silero.ai/models/tts/ru/v4_ru.pt
+- Piper: download `piper_windows_amd64.zip` from https://github.com/rhasspy/piper/releases, unpack into `piper/`, ensure `piper/piper.exe` exists
+- Piper voices: same URLs as Android step 7
 
-For Piper on Windows, download `piper_windows_amd64.zip` from the [Piper releases page](https://github.com/rhasspy/piper/releases), unpack into `piper/`, ensure `piper/piper.exe` exists.
-
-#### 6. Run
+### 5. Run
 
 ```cmd
 python app.py
@@ -212,7 +197,7 @@ Open `http://127.0.0.1:5001`.
 
 ---
 
-### Option 3 — Linux (x86_64 / ARM64)
+## 🚀 Install — Linux (x86_64 / ARM64)
 
 ```bash
 git clone https://github.com/quakebass-bit/SileroRead.git
@@ -220,17 +205,25 @@ cd SileroRead
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
-
-# For x86_64:
-pip install torch --index-url https://download.pytorch.org/whl/cpu
-
-# For ARM64 (aarch64):
-pip install torch==2.6.0+cpu --index-url https://download.pytorch.org/whl/cpu
-
-pip install numpy Flask edge-tts
 ```
 
-Then follow **step 6** from the Android instructions for models and Piper binary (use the appropriate Piper release for your arch).
+**x86_64:**
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+```
+
+**ARM64:**
+
+```bash
+pip install torch==2.6.0+cpu --index-url https://download.pytorch.org/whl/cpu
+```
+
+```bash
+pip install numpy Flask edge-tts ru-normalizr
+```
+
+Then follow Android step 7 for models and Piper binary (use the release for your architecture).
 
 ```bash
 python app.py
@@ -238,42 +231,58 @@ python app.py
 
 ---
 
-## 🎮 Usage
+## 🔄 Update from GitHub
 
-1. Open the web UI.
-2. Click **📁 Choose File** and load a `.txt`, `.fb2`, `.docx`, or `.pdf`.
-3. Pick a voice from the dropdown:
-   - **Silero** (offline, Russian) — best quality, first request slow
-   - **Piper** (offline, Russian/English) — fast, low memory
-   - **Edge** (cloud, Russian/English) — requires internet
-4. Press **▶ READ**.
+```bash
+cd ~/SileroRead
+git pull
+source venv/bin/activate
+pip install -r requirements.txt 2>/dev/null || pip install numpy Flask edge-tts ru-normalizr
+python app.py
+```
 
-The reader will:
-- Split the book into sentence-level chunks (server-side).
-- Prefetch up to 6 chunks ahead while playing.
-- Highlight the current paragraph and scroll to it.
-- Save your progress automatically.
+If `git pull` fails on local changes:
 
-**Controls:**
-- **▶ / ⏸ / ⏹** — play / pause / stop
-- **Speed** — 0.75x to 2x
-- **Font family / size** — reader preferences
-- **Theme** — dark / light / sepia / OLED
-- **🔒 Lock** — prevent accidental taps
+```bash
+cd ~/SileroRead
+git checkout -- .
+git pull
+```
 
 ---
 
-## 📊 Performance (Android, ARM64, mid-range CPU)
+## 🎮 Usage
+
+1. Open UI.
+2. Load `.txt` / `.fb2` / `.docx` / `.pdf`.
+3. Pick voice:
+   - **Silero** — offline, best Russian quality, first request slow (~10 s)
+   - **Piper** — offline, fast, low memory
+   - **Edge** — cloud, needs internet
+4. Press **▶ READ**.
+
+Controls: **▶ / ⏸ / ⏹**, speed 0.75x–2x, font family/size, theme (dark/light/sepia/OLED), lock.
+
+---
+
+## 📊 Performance (Android ARM64 mid-range CPU)
 
 | Operation | Time |
 |---|---|
 | Server startup | ~1 s |
 | First Silero request (torch + model load) | 5–15 s |
-| Subsequent Silero chunks (1 sentence) | 0.5–2 s |
+| Subsequent Silero chunks | 0.5–2 s |
 | Piper chunks | 0.3–1 s |
 | Edge TTS chunks | 0.8–2 s |
+| `ru-normalizr` per sentence | 0.5–2 ms |
 
-Memory footprint with Silero loaded: **~600–900 MB RAM**.
+RAM with Silero loaded: ~600–900 MB.
+
+CPU load:
+- `ru-normalizr`: negligible
+- Piper: 1 core, 100% during synthesis
+- Silero: 2 cores, 100% during synthesis (phone gets warm)
+- Edge: only network
 
 ---
 
@@ -281,32 +290,59 @@ Memory footprint with Silero loaded: **~600–900 MB RAM**.
 
 ### `pip install torch` downloads 3 GB of `nvidia-*` packages
 
-You installed the CUDA build by mistake. Abort, uninstall, reinstall:
+You got the CUDA build. Abort and reinstall CPU build:
 
 ```bash
 pip uninstall -y torch
 pip install torch==2.6.0+cpu --index-url https://download.pytorch.org/whl/cpu --no-cache-dir
 ```
 
-### `torch` fails to install on ARM64 via default PyPI
+### `torch` not found on ARM64 via default PyPI
 
-The default PyPI index does not carry aarch64 wheels. Always use `--index-url https://download.pytorch.org/whl/cpu` on ARM.
+PyPI has no aarch64 wheels. Always use `--index-url https://download.pytorch.org/whl/cpu` on ARM.
+
+### `fatal error: Python.h: No such file or directory` during `pip install ru-normalizr`
+
+Missing Python dev headers. On Ubuntu:
+
+```bash
+apt install -y python3.13-dev
+```
+
+Replace `3.13` with your Python version (`python3 --version`).
+
+### `struct.error: unpack requires a buffer of 4 bytes`
+
+Broken compiled `DAWG2`. Replace with pure-Python version:
+
+```bash
+pip uninstall -y DAWG2
+pip install dawg2-python
+```
+
+### `TypeError: normalize() got an unexpected keyword argument 'mode'`
+
+You're using `ru-normalizr` ≥ 1.3.0. Use the new API:
+
+```python
+from ru_normalizr import Normalizer, NormalizeOptions
+n = Normalizer(NormalizeOptions.tts())
+n.normalize("В 1980 году")
+```
 
 ### Silero takes 10+ seconds on first request
 
-This is normal — torch loads the model into memory the first time. Subsequent requests are fast. If you want the model warm at startup, change `get_silero_model()` in `app.py` to run once inside `if __name__ == '__main__':`.
+Normal — torch loads the model into memory on first use. Subsequent requests are fast.
 
 ### Edge TTS returns HTTP 403
 
-This happens when the Python asyncio event loop on Windows mishandles WebSocket connections. We avoid this by **calling `edge-tts` as a CLI subprocess** instead of using the Python API directly. If it still fails, upgrade to the latest `edge-tts`:
+Avoided by calling `edge-tts` as CLI subprocess. If it still fails:
 
 ```bash
 pip install --upgrade edge-tts
 ```
 
-### `Silero model not found` error
-
-Download `v4_ru.pt` into `models/`:
+### `Silero model not found`
 
 ```bash
 wget -O models/v4_ru.pt https://models.silero.ai/models/tts/ru/v4_ru.pt
@@ -316,21 +352,21 @@ wget -O models/v4_ru.pt https://models.silero.ai/models/tts/ru/v4_ru.pt
 
 ## 🛠️ Configuration
 
-Edit these constants at the top of `app.py`:
+`app.py` constants:
 
 | Constant | Default | Meaning |
 |---|---|---|
 | `CACHE_TTL_SECONDS` | `600` | Audio cache lifetime (seconds) |
-| `MODELS_DIR` | `./models` | Where Silero/Piper models live |
-| `AUDIO_DIR` | `./static/audio` | Where generated audio is stored |
-| `torch.set_num_threads(2)` | `2` | CPU threads for Silero. Increase for faster synthesis on multi-core devices, decrease to save battery |
+| `MODELS_DIR` | `./models` | Silero/Piper models |
+| `AUDIO_DIR` | `./static/audio` | Generated audio cache |
+| `torch.set_num_threads(2)` | `2` | CPU threads for Silero. Higher = faster but hotter; lower = cooler but slower |
 
-Frontend knobs (in `index.html`):
+`index.html` constants:
 
 | Constant | Default | Meaning |
 |---|---|---|
-| `PREFETCH_AHEAD` | `6` | Chunks prefetched ahead of playback |
-| `MAX_PLAYLIST` | `12` | Hard cap on buffer size (should be `2 × PREFETCH_AHEAD`) |
+| `PREFETCH_AHEAD` | `6` | Chunks prefetched ahead |
+| `MAX_PLAYLIST` | `12` | Buffer cap (keep at `2 × PREFETCH_AHEAD`) |
 
 ---
 
@@ -338,42 +374,55 @@ Frontend knobs (in `index.html`):
 
 ```
 SileroRead/
-├── app.py                  # Flask server (all three engines)
-├── index.html              # UI (single-file, no build step)
+├── app.py                  # Flask server
+├── index.html              # UI (single file)
 ├── manifest.json           # PWA manifest
 ├── sw.js                   # Service worker
-├── models/                 # TTS models (Silero + Piper voices)
-│   ├── v4_ru.pt
+├── models/                 # TTS models
+│   ├── v4_ru.pt            # Silero
 │   ├── ru_RU-irina-medium.onnx
 │   └── ...
-├── piper/                  # Piper binary (per platform)
+├── piper/                  # Piper binary
 │   └── piper
-├── static/
-│   └── audio/              # Generated audio cache (auto-cleaned)
-└── progress.json           # Saved reading positions
+├── static/audio/           # Generated audio (auto-cleaned)
+└── progress.json           # Saved positions
 ```
 
 ---
 
 ## 🔧 How it works
 
-### Sentence chunking (`split_into_chunks`)
+### Text normalization
 
-Splits text on `.`, `?`, `!` while protecting:
-- Russian abbreviations: `т.е.`, `т.к.`, `т.д.`, `г-н.`, `проф.`, `акад.`, etc.
-- English abbreviations: `Mr.`, `Mrs.`, `Dr.`, `e.g.`, `i.e.`, `etc.`
-- Initials: `А.С. Пушкин`, `J. K. Rowling`
-- Decimals: `3.14`, `1.5`
+Before synthesis, text passes through `ru-normalizr` in TTS mode:
 
-Then groups sentences into chunks of 1–2, capped at 300 characters. Chunks shorter than 20 characters are merged into neighbors.
+```python
+from ru_normalizr import Normalizer, NormalizeOptions
+_normalizer = Normalizer(NormalizeOptions.tts())  # created once at startup
+normalized = _normalizer.normalize(text)
+```
+
+Expands: numbers (`1980` → `тысяча девятьсот восьмой`), dates, times (`10:07` → `десять часов семь минут`), abbreviations (`т.е.` → `то есть`), Latin (`iPhone` → `айфоун`), initials, currency, phone numbers.
+
+Applied to **all three engines** (Silero, Piper, Edge) — none of them read raw digits reliably.
+
+### Sentence chunking
+
+Splits on `.`, `?`, `!` with protection for:
+- Russian abbreviations: `т.е.`, `т.к.`, `т.д.`, `г-н.`, `проф.`, etc.
+- English: `Mr.`, `Mrs.`, `Dr.`, `e.g.`, `i.e.`, `etc.`
+- Initials: `А.С.`, `J.K.`
+- Decimals: `3.14`
+
+Groups into 1–2 sentence chunks (max 300 chars). Chunks <20 chars merged into neighbors.
 
 ### Prefetch queue
 
-The browser keeps a rolling buffer of up to 12 chunks. While chunk *N* plays in the `<audio>` element, chunks *N+1* through *N+6* are being generated by the server. If the buffer empties (slow network / slow synthesis), playback waits — but with 6-chunk lookahead this is rare.
+Browser keeps rolling buffer of up to 12 chunks. While chunk N plays, N+1..N+6 are generated in background. If buffer empties, playback pauses — rare with 6-chunk lookahead.
 
 ### CLI orchestration for Edge TTS
 
-Instead of using the `edge_tts` Python API (which has WebSocket issues on Windows and Termux), we shell out:
+Instead of `edge_tts` Python API (WebSocket 403 on Windows/Termux), runs as subprocess:
 
 ```python
 subprocess.run([sys.executable, '-m', 'edge_tts',
@@ -381,27 +430,27 @@ subprocess.run([sys.executable, '-m', 'edge_tts',
                 '--write-media', output_path])
 ```
 
-Each request runs in a clean subprocess — no shared event loop, no 403 errors.
+Each request = clean subprocess = no 403.
 
 ---
 
 ## 📄 License
 
-MIT — do whatever you want.
+MIT.
 
 ---
 
 ## 🙏 Credits
 
-- [Silero Models](https://github.com/snakers4/silero-models) — Russian TTS
+- [Silero Models](https://github.com/snakers4/silero-models) — Russian neural TTS
 - [Piper](https://github.com/rhasspy/piper) — fast offline TTS
-- [Edge TTS](https://github.com/rany2/edge-tts) — Microsoft neural voices via CLI
-- [Flask](https://flask.palletsprojects.com/) — web framework
-- [Mammoth.js](https://github.com/mwilliamson/mammoth.js) — DOCX parsing
-- [PDF.js](https://mozilla.github.io/pdf.js/) — PDF parsing
+- [Edge TTS](https://github.com/rany2/edge-tts) — Microsoft voices via CLI
+- [ru-normalizr](https://github.com/denismakogon/ru-normalizr) — Russian text normalization for TTS
+- [Flask](https://flask.palletsprojects.com/)
+- [Mammoth.js](https://github.com/mwilliamson/mammoth.js) — DOCX
+- [PDF.js](https://mozilla.github.io/pdf.js/) — PDF
 
 ---
 
-**Enjoy listening. 📚🎧**
-```
+**Enjoy. 📚🎧**
 
