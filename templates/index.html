@@ -358,6 +358,13 @@
             color: var(--text-main);
             border-left: 3px solid var(--accent-cyan);
         }
+
+        .chunk-active {
+            text-decoration: underline;
+            text-decoration-color: var(--accent-cyan);
+            text-decoration-thickness: 2px;
+            text-underline-offset: 4px;
+        }
         .fb2-image {
             max-width: 85%;
             height: auto;
@@ -539,6 +546,8 @@
 
         <!-- Lock Screen — перенесена из верхней панели -->
         <button class="icon-action-btn" id="lockBtn" style="color:var(--accent-amber);" title="Lock Screen">🔒</button>
+        <button class="icon-action-btn" id="prevBtn" title="Previous chunk">⏮</button>
+        <button class="icon-action-btn" id="nextBtn" title="Next chunk">⏭</button>
     </div>
 
     <!-- 3. BOOK TITLE STRIP -->
@@ -609,6 +618,7 @@
     let isPaused = false;
     let bookKey = '';
     let currentSessionId = 0;
+    let hasPendingJump = false; // true, если пользователь вручную прыгнул на чанк
     
     const PREFETCH_AHEAD = 6; // Ровно 2-6 кусков вперед
     const MAX_PLAYLIST = 12;   // Максимум в буфере
@@ -988,6 +998,12 @@
                 div.className = 'paragraph'; div.id = 'p-' + block.index;
                 div.textContent = block.text;
                 div.onclick = () => { 
+                    // Не реагируем, если пользователь выделяет/копирует текст
+                    const sel = window.getSelection();
+                    if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
+                        return;
+                    }
+                    
                     currentIndex = block.index; 
                     syncCurrentUnitFromParagraph();
                     saveDebounced(); 
@@ -1092,7 +1108,11 @@
         stopBtn.style.display = 'flex';
         
         playlist = [];
-        syncCurrentUnitFromParagraph();
+        // Если пользователь вручную прыгнул (⏮/⏭ на паузе) — сохраняем позицию
+        if (!hasPendingJump) {
+            syncCurrentUnitFromParagraph();
+        }
+        hasPendingJump = false;
         statusInfo.textContent = "Buffering audio...";
         fetchNext();
     };
@@ -1122,8 +1142,65 @@
         pauseBtn.style.display = 'none';
         stopBtn.style.display = 'none';
         statusInfo.textContent = "Stopped";
+        clearChunkHighlight();
         updateProgress();
     }
+
+    // ================= ПЕРЕСКОК ПО ЧАНКАМ (⏮ / ⏭) =================
+    function jumpToUnit(targetIndex) {
+        if (!readingUnits.length) return;
+        if (targetIndex < 0 || targetIndex >= readingUnits.length) return;
+
+        const wasPlaying = isPlaying && !isPaused;
+
+        // Останавливаем текущее аудио и сбрасываем сессию
+        currentSessionId++;
+        playlist = [];
+        isFetching = false;
+        audioPlayer.pause();
+        audioPlayer.src = "";
+        audioPlayer.currentTime = 0;
+
+        // Устанавливаем новую позицию
+        currentUnitIndex = targetIndex;
+        lastRequestedUnitIndex = targetIndex - 1;
+
+        const item = readingUnits[targetIndex];
+        if (item) {
+            currentIndex = item.paragraphIndex;
+            scrollToCurrent();
+            saveDebounced();
+        }
+        updateProgress();
+
+        if (wasPlaying) {
+            // Продолжаем воспроизведение с новой позиции
+            isPlaying = true;
+            isPaused = false;
+            playBtn.style.display = 'none';
+            pauseBtn.style.display = 'flex';
+            stopBtn.style.display = 'flex';
+            statusInfo.textContent = `Chunk ${targetIndex + 1} / ${readingUnits.length}`;
+            fetchNext();
+        } else {
+            // Были на паузе — просто перескочили, не играем
+            isPlaying = false;
+            isPaused = false;
+            playBtn.style.display = 'flex';
+            pauseBtn.style.display = 'none';
+            stopBtn.style.display = 'none';
+            statusInfo.textContent = `Jumped to chunk ${targetIndex + 1} / ${readingUnits.length}`;
+            hasPendingJump = true;
+        }
+    }
+
+    document.getElementById('prevBtn').onclick = () => {
+        jumpToUnit(currentUnitIndex - 1);
+    };
+
+    document.getElementById('nextBtn').onclick = () => {
+        jumpToUnit(currentUnitIndex + 1);
+    };
 
     // Prefetch: последовательные запросы к серверу
     function fetchNext() {
@@ -1178,6 +1255,77 @@
             });
     }
 
+    // ================= ПОДСВЕТКА ТЕКУЩЕГО ЧАНКА =================
+    function findChunkRange(fullText, chunkText) {
+        // Прямой поиск
+        let idx = fullText.indexOf(chunkText);
+        if (idx !== -1) return { start: idx, end: idx + chunkText.length };
+
+        // Гибкий поиск по пробелам через regex
+        try {
+            const escaped = chunkText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const flexible = escaped.replace(/\s+/g, '\\s+');
+            const regex = new RegExp(flexible);
+            const match = fullText.match(regex);
+            if (match) {
+                return { start: match.index, end: match.index + match[0].length };
+            }
+        } catch (e) {
+            console.warn("Regex failed:", e);
+        }
+        return null;
+    }
+
+    function clearChunkHighlight() {
+        document.querySelectorAll('.chunk-active').forEach(span => {
+            const parent = span.parentNode;
+            if (!parent) return;
+            const textNode = document.createTextNode(span.textContent);
+            parent.replaceChild(textNode, span);
+            parent.normalize();
+        });
+    }
+
+    function highlightChunk(paragraphIndex, chunkText) {
+        clearChunkHighlight();
+
+        const para = document.getElementById('p-' + paragraphIndex);
+        if (!para) return;
+
+        const fullText = para.textContent;
+        const range = findChunkRange(fullText, chunkText);
+        if (!range) {
+            console.warn("Chunk not found in paragraph:", chunkText.substring(0, 40));
+            return;
+        }
+
+        const before = fullText.substring(0, range.start);
+        const middle = fullText.substring(range.start, range.end);
+        const after = fullText.substring(range.end);
+
+        para.textContent = '';
+        if (before) para.appendChild(document.createTextNode(before));
+        const span = document.createElement('span');
+        span.className = 'chunk-active';
+        span.textContent = middle;
+        para.appendChild(span);
+        if (after) para.appendChild(document.createTextNode(after));
+
+        scrollToElementCenter(span);
+    }
+
+    function scrollToElementCenter(el) {
+        const rect = el.getBoundingClientRect();
+        const bodyRect = readerBody.getBoundingClientRect();
+        const elTopInBody = rect.top - bodyRect.top + readerBody.scrollTop;
+        const targetScrollTop = elTopInBody - (readerBody.clientHeight / 2) + (rect.height / 2);
+
+        readerBody.scrollTo({
+            top: Math.max(0, targetScrollTop),
+            behavior: 'smooth'
+        });
+    }
+
     function playAudio() {
         if (!isPlaying || !playlist.length || isPaused) return;
         
@@ -1187,8 +1335,14 @@
         if (currentIndex !== audioItem.paragraphIndex) {
             currentIndex = audioItem.paragraphIndex;
             saveDebounced();
-            scrollToCurrent();
         }
+        
+        // Подсвечиваем текущий чанк и скроллим к нему
+        highlightChunk(audioItem.paragraphIndex, audioItem.text);
+        // Помечаем абзац активным (для левой полоски)
+        document.querySelectorAll('.paragraph').forEach(p => p.classList.remove('active-text'));
+        const activePara = document.getElementById('p-' + audioItem.paragraphIndex);
+        if (activePara) activePara.classList.add('active-text');
         
         updateProgress();
         updateMediaSession(audioItem.text);
