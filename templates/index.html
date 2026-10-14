@@ -608,6 +608,65 @@
     const PREFETCH_AHEAD = 6; // Ровно 2-6 кусков вперед
     const MAX_PLAYLIST = 12;   // Максимум в буфере
 
+    // ================= WAKE LOCK =================
+    // Не даём экрану гаснуть во время воспроизведения
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+        if (!('wakeLock' in navigator)) {
+            console.warn("⚠️ Wake Lock API не поддерживается");
+            return;
+        }
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log("✅ Wake Lock активен");
+            wakeLock.addEventListener('release', () => {
+                console.log("🔓 Wake Lock освобождён");
+                wakeLock = null;
+                // Если всё ещё играем — перезапрашиваем
+                if (isPlaying && !isPaused) {
+                    setTimeout(requestWakeLock, 1000);
+                }
+            });
+        } catch (e) {
+            console.warn("⚠️ Wake Lock не удалось запросить:", e);
+        }
+    }
+
+    function releaseWakeLock() {
+        if (wakeLock) {
+            wakeLock.release().catch(() => {});
+            wakeLock = null;
+        }
+    }
+
+    // ================= АУДИО-ОШИБКИ =================
+    audioPlayer.addEventListener('error', (e) => {
+        console.error("❌ Audio error:", audioPlayer.error);
+        if (isPlaying && !isPaused) {
+            setTimeout(() => {
+                audioPlayer.play().catch(err => console.error("Retry failed:", err));
+            }, 500);
+        }
+    });
+    audioPlayer.addEventListener('stalled', () => console.warn("⚠️ Audio stalled"));
+    audioPlayer.addEventListener('suspend', () => console.warn("⚠️ Audio suspended"));
+    audioPlayer.addEventListener('waiting', () => console.warn("⚠️ Audio waiting"));
+    audioPlayer.addEventListener('abort', () => console.warn("⚠️ Audio aborted"));
+
+    // ================= ВОЗВРАТ ИЗ ФОНА =================
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && isPlaying && !isPaused) {
+            console.log("📱 Вернулись из фона, проверяем аудио...");
+            setTimeout(() => {
+                if (audioPlayer.paused && isPlaying) {
+                    console.warn("⚠️ Система поставила на паузу, возобновляем...");
+                    audioPlayer.play().catch(e => console.error("Resume failed:", e));
+                }
+                if (!wakeLock) requestWakeLock();
+            }, 500);
+        }
+    });
     // 1. Font Family Preference
     const savedFont = localStorage.getItem('reader-font') || "'Lora', Georgia, serif";
     fontSelect.value = savedFont;
@@ -1007,6 +1066,8 @@
     }
 
     playBtn.onclick = () => {
+        requestWakeLock(); // ★ запрашиваем блокировку сна
+
         if (isPaused) {
             isPaused = false;
             audioPlayer.play();
@@ -1031,7 +1092,8 @@
         fetchNext();
     };
 
-    pauseBtn.onclick = () => {
+        pauseBtn.onclick = () => {
+        releaseWakeLock(); // ★ при паузе экран может гаснуть
         isPaused = true;
         audioPlayer.pause();
         playBtn.style.display = 'flex';
@@ -1041,7 +1103,8 @@
 
     stopBtn.onclick = stop;
 
-    function stop() {
+        function stop() {
+        releaseWakeLock(); // ★ снимаем блокировку сна
         currentSessionId++; 
         isPlaying = false; 
         isPaused = false; 
