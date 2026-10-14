@@ -38,8 +38,20 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
 RU_DIR = os.path.join(BASE_DIR, 'ru_audio')
 EN_DIR = os.path.join(BASE_DIR, 'en_audio')
-WORD_DIR = os.path.join(BASE_DIR, 'word_audio')
-OUTPUT_DIR = os.path.join(BASE_DIR, 'output_lesson')
+
+# --- Android shared storage ---
+# На телефоне (proot Ubuntu) файлы сохраняются в /sdcard/Music/Youtube/1/
+# На Windows этого пути нет → fallback на локальные папки проекта.
+ANDROID_OUTPUT = '/sdcard/Music/Youtube/1'
+
+if os.path.isdir(ANDROID_OUTPUT):
+    WORD_DIR = os.path.join(ANDROID_OUTPUT, 'words')
+    OUTPUT_DIR = os.path.join(ANDROID_OUTPUT, 'lessons')
+    print(f"📁 Android storage: {ANDROID_OUTPUT}")
+else:
+    WORD_DIR = os.path.join(BASE_DIR, 'word_audio')
+    OUTPUT_DIR = os.path.join(BASE_DIR, 'output_lesson')
+    print("📁 Local folders (Windows mode)")
 
 SILERO_RU_MODEL = os.path.join(MODELS_DIR, 'v5_ru.pt')
 SILERO_EN_MODEL = os.path.join(MODELS_DIR, 'v3_en.pt')
