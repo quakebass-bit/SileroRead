@@ -8,5 +8,19 @@
   "orientation": "portrait",
   "background_color": "#0c0e14",
   "theme_color": "#0c0e14",
-  "lang": "ru"
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "/static/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }
