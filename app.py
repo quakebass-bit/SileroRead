@@ -6,6 +6,8 @@ import shutil
 import hashlib
 import re
 import sys
+import gc
+import ctypes
 import subprocess
 import wave
 from threading import Lock
@@ -19,7 +21,6 @@ except ImportError:
     NORMALIZATION_AVAILABLE = False
     print("⚠️ ru-normalizr не установлен. Числа и символы не будут нормализованы.")
 
-# Создаём нормализатор ОДИН РАЗ при старте (TTS-режим)
 _normalizer = None
 if NORMALIZATION_AVAILABLE:
     try:
@@ -31,7 +32,6 @@ if NORMALIZATION_AVAILABLE:
 
 
 def normalize_text(text: str) -> str:
-    """Нормализация текста для TTS: числа, даты, аббревиатуры, латиница."""
     if not NORMALIZATION_AVAILABLE or _normalizer is None:
         return text
     try:
@@ -39,6 +39,42 @@ def normalize_text(text: str) -> str:
     except Exception as e:
         print(f"⚠️ Ошибка нормализации: {e}. Использую исходный текст.")
         return text
+
+
+# ================= ОСВОБОЖДЕНИЕ ПАМЯТИ =================
+try:
+    _libc = ctypes.CDLL("libc.so.6")
+    _HAS_MALLOC_TRIM = True
+except Exception:
+    _libc = None
+    _HAS_MALLOC_TRIM = False
+
+
+def _malloc_trim():
+    """Возвращает освобождённые страницы glibc обратно ядру ОС (только Linux)."""
+    if _HAS_MALLOC_TRIM:
+        try:
+            _libc.malloc_trim(0)
+        except Exception:
+            pass
+
+
+def _get_rss_mb():
+    """RSS текущего процесса в мегабайтах (только Linux)."""
+    try:
+        with open('/proc/self/status', 'r') as f:
+            for line in f:
+                if line.startswith('VmRSS:'):
+                    return int(line.split()[1]) // 1024
+    except Exception:
+        pass
+    return -1
+
+
+def _force_memory_release():
+    """gc.collect + malloc_trim — освобождает память Python и возвращает её ОС."""
+    gc.collect()
+    _malloc_trim()
 
 
 app = Flask(__name__)
@@ -87,10 +123,14 @@ MODELS = {
     'piper-ru-ruslan': 'ru_RU-ruslan-medium.onnx'
 }
 
-# ================= SILERO (ЛЕНИВАЯ) =================
+# ================= SILERO =================
 SILERO_VOICES = {'silero-aidar', 'silero-baya', 'silero-kseniya', 'silero-xenia', 'silero-eugene'}
+SILERO_RELOAD_EVERY = 40   # перезагружать модель каждые N запросов
+SILERO_RSS_LOG_EVERY = 10   # логировать RSS каждые N запросов
+
 silero_model = None
 torch_module = None
+_silero_request_count = 0
 
 
 def get_silero_model():
@@ -111,7 +151,7 @@ def get_silero_model():
         print("⏳ Загружаю Silero в память...", flush=True)
         silero_model = torch_module.package.PackageImporter(model_path).load_pickle("tts_models", "model")
         silero_model.to(torch_module.device('cpu'))
-        print("✅ Silero готова", flush=True)
+        print(f"✅ Silero готова | RSS: {_get_rss_mb()} MB", flush=True)
         return silero_model
 
 
@@ -125,8 +165,10 @@ def save_tensor_to_wav(audio_tensor, output_path, sample_rate=24000):
 
 
 def synthesize_silero(text, speaker, output_path):
+    global silero_model, _silero_request_count
     model = get_silero_model()
     sample_rate = 24000
+
     audio = model.apply_tts(
         text=text,
         speaker=speaker,
@@ -135,6 +177,24 @@ def synthesize_silero(text, speaker, output_path):
         put_yo=True
     )
     save_tensor_to_wav(audio, output_path, sample_rate)
+
+    # Освобождаем tensor и возвращаем память ОС
+    del audio
+    _force_memory_release()
+
+    _silero_request_count += 1
+
+    # Периодический лог RSS
+    if _silero_request_count % SILERO_RSS_LOG_EVERY == 0:
+        print(f"📊 Silero #{_silero_request_count} | RSS: {_get_rss_mb()} MB", flush=True)
+
+    # Периодическая перезагрузка модели
+    if _silero_request_count % SILERO_RELOAD_EVERY == 0:
+        rss_before = _get_rss_mb()
+        print(f"♻️ Перезагрузка Silero после {_silero_request_count} запросов (RSS до: {rss_before} MB)", flush=True)
+        silero_model = None
+        _force_memory_release()
+        print(f"✅ Silero выгружена | RSS после: {_get_rss_mb()} MB", flush=True)
 
 
 # ================= EDGE TTS =================
@@ -316,7 +376,6 @@ def synthesize():
     if not text:
         return jsonify({'success': False, 'error': 'Text is empty'})
 
-    # ★ НОРМАЛИЗАЦИЯ ДЛЯ ВСЕХ ДВИЖКОВ
     normalized_text = normalize_text(text)
 
     cleanup_old_audio()
@@ -401,8 +460,10 @@ if __name__ == '__main__':
     print("📖 SileroRead TTS Server")
     print("🔊 Engines: Silero (lazy) | Piper | Edge")
     print(f"📝 Normalization: {'✅ ru-normalizr' if NORMALIZATION_AVAILABLE else '❌ disabled'}")
+    print(f"🧹 malloc_trim:   {'✅ available' if _HAS_MALLOC_TRIM else '❌ not available'}")
+    print(f"♻️  Silero reload: every {SILERO_RELOAD_EVERY} requests")
     print(f"📍 Piper:  {PIPER_CMD}")
-    print("📍 UI:     http://127.0.0.1:5001")
+    print("📍 UI:     http://127.0.0.1:5008")
     print("=" * 60 + "\n")
 
-    app.run(debug=False, host='0.0.0.0', port=5001, threaded=True)
+    app.run(debug=False, host='0.0.0.0', port=5008, threaded=True)
