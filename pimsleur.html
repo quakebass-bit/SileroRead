@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pimsleur Builder</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: #0c0e14;
+        color: #f1f5f9;
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: #141721;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    h1 { text-align: center; margin-top: 0; color: #f1f5f9; }
+
+    /* Tabs */
+    .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #262c40;
+    }
+    .tab {
+        background: transparent;
+        color: #94a3b8;
+        border: none;
+        padding: 12px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: 0.2s;
+    }
+    .tab:hover { color: #f1f5f9; }
+    .tab.active {
+        color: #06b6d4;
+        border-bottom-color: #06b6d4;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Settings bar */
+    .settings-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: center;
+        background: #1b1f2e;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border: 1px solid #262c40;
+        align-items: flex-end;
+    }
+    .settings-bar > div {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .settings-bar label {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+    select {
+        background: #0c0e14;
+        color: #f1f5f9;
+        border: 1px solid #262c40;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        min-width: 180px;
+        cursor: pointer;
+    }
+    select:focus { outline: none; border-color: #06b6d4; }
+
+    input[type="range"] {
+        background: transparent;
+        cursor: pointer;
+        accent-color: #06b6d4;
+    }
+
+    /* Raw input */
+    .raw-section {
+        margin-bottom: 20px;
+        background: #1b1f2e;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid #262c40;
+    }
+    .raw-section h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #06b6d4;
+        font-size: 15px;
+    }
+
+    textarea {
+        width: 100%;
+        height: 130px;
+        padding: 12px;
+        border: 1px solid #262c40;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: 'Consolas', monospace;
+        background: #0c0e14;
+        color: #f1f5f9;
+        resize: vertical;
+        line-height: 1.5;
+    }
+    textarea:focus { outline: none; border-color: #06b6d4; }
+
+    .editor-grid {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .column { flex: 1; display: flex; flex-direction: column; }
+    .column h3 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        color: #94a3b8;
+        text-align: center;
+    }
+    .column textarea { height: 400px; }
+
+    .btn {
+        background: #06b6d4;
+        color: #0c0e14;
+        padding: 12px 20px;
+        font-size: 15px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: 0.2s;
+    }
+    .btn:hover { background: #0891b2; }
+    .btn:disabled { background: #475569; cursor: not-allowed; }
+    .btn-full { width: 100%; padding: 15px; font-size: 17px; margin-top: 10px; }
+
+    .status-bar {
+        text-align: center;
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    .status-bar.warn { color: #f59e0b; }
+
+    .log-box {
+        background: #0c0e14;
+        border: 1px solid #262c40;
+        border-radius: 6px;
+        padding: 12px;
+        font-family: 'Consolas', monospace;
+        font-size: 12px;
+        color: #94a3b8;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 15px;
+    }
+    .log-box .ok { color: #10b981; }
+    .log-box .err { color: #ef4444; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎧 Pimsleur Builder</h1>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('pimsleur')">🎧 Пимслер</button>
+        <button class="tab" onclick="switchTab('words')">📝 Слова</button>
+    </div>
+
+    <!-- ================= TAB 1: PIMSLEUR ================= -->
+    <div id="tab-pimsleur" class="tab-content active">
+
+        <div class="raw-section">
+            <h3>📝 Быстрая вставка исходного текста</h3>
+            <textarea id="rawText" placeholder="Формат: 1. Здравствуйте -> Hello *&#10;2. Как дела? -> How are you? *"></textarea>
+            <button class="btn btn-full" onclick="processRawText()">✂️ Разделить на РУС и АНГЛ</button>
+        </div>
+
+        <div class="settings-bar">
+            <div>
+                <label>🇷🇺 Голос Silero (РУС)</label>
+                <select id="ruVoice">
+                    <option value="xenia">Ксения</option>
+                    <option value="kseniya">Ксения (альт)</option>
+                    <option value="aidar">Айдар</option>
+                    <option value="baya">Бая</option>
+                    <option value="eugene">Евгений</option>
+                </select>
+            </div>
+            <div>
+                <label>🇬🇧 Голос Silero (АНГЛ)</label>
+                <select id="enVoice"></select>
+            </div>
+        </div>
+
+        <div class="status-bar" id="lineCounter">Строк: РУС (0) | АНГЛ (0)</div>
+
+        <div class="editor-grid">
+            <div class="column">
+                <h3>🇷🇺 Русский текст</h3>
+                <textarea id="ruText" placeholder="Русский текст..."></textarea>
+            </div>
+            <div class="column">
+                <h3>🇬🇧 Английский текст</h3>
+                <textarea id="enText" placeholder="English text..."></textarea>
+            </div>
+        </div>
+
+        <button class="btn btn-full" id="pimsleurBtn" onclick="submitPimsleur()">🚀 Создать урок</button>
+        <div class="log-box" id="pimsleurLog" style="display:none;"></div>
+    </div>
+
+    <!-- ================= TAB 2: WORDS ================= -->
+    <div id="tab-words" class="tab-content">
+
+        <div class="settings-bar">
+            <div>
+                <label>🇬🇧 Голос Silero (АНГЛ)</label>
+                <select id="wordVoice"></select>
+            </div>
+            <div>
+                <label>🏃 Скорость: <span id="wordSpeedVal">1.00</span>x</label>
+                <input type="range" id="wordSpeed" min="0.5" max="1.5"
+                       step="0.05" value="1.0"
+                       oninput="document.getElementById('wordSpeedVal').innerText = parseFloat(this.value).toFixed(2)"
+                       style="width: 180px;">
+            </div>
+            <div>
+                <label>⏸ Пауза в начале: <span id="wordLeadVal">200</span> мс</label>
+                <input type="range" id="wordLead" min="0" max="1000"
+                       step="50" value="200"
+                       oninput="document.getElementById('wordLeadVal').innerText = this.value"
+                       style="width: 180px;">
+            </div>
+        </div>
+
+        <div class="status-bar" id="wordCounter">Строк: 0</div>
+
+        <div class="raw-section">
+            <h3>📝 Английские слова / фразы (одна строка = один mp3)</h3>
+            <textarea id="wordText" style="height: 400px;" placeholder="apple&#10;Good morning&#10;How are you?&#10;..."></textarea>
+        </div>
+
+        <button class="btn btn-full" id="wordsBtn" onclick="submitWords()">🚀 Создать аудио в word_audio/</button>
+        <div class="log-box" id="wordsLog" style="display:none;"></div>
+    </div>
+
+</div>
+
+<script>
+    // Заполняем селекторы EN голосами
+    const enVoices = Array.from({length: 118}, (_, i) => `en_${i}`);
+    function fillEnVoices(selectId) {
+        const sel = document.getElementById(selectId);
+        sel.innerHTML = '';
+        enVoices.forEach(v => sel.add(new Option(v, v)));
+        sel.value = 'en_56';  // дефолт — «народный фаворит»
+    }
+    fillEnVoices('enVoice');
+    fillEnVoices('wordVoice');
+
+    // ---------- TABS ----------
+    function switchTab(name) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.tab[onclick*="${name}"]`).classList.add('active');
+        document.getElementById(`tab-${name}`).classList.add('active');
+    }
+
+    // ---------- PIMSLEUR ----------
+    const ruBox = document.getElementById('ruText');
+    const enBox = document.getElementById('enText');
+    const lineCounter = document.getElementById('lineCounter');
+
+    function processRawText() {
+        const raw = document.getElementById('rawText').value;
+        if (!raw.trim()) return alert('Вставь текст!');
+
+        const lines = raw.split('\n');
+        const ru = [], en = [];
+
+        lines.forEach(line => {
+            const clean = line.trim();
+            const idx = clean.indexOf('->');
+            if (idx === -1) return;
+
+            let r = clean.substring(0, idx).trim().replace(/^\d+[\s\.)]*/, '');
+            if (r) r = r.charAt(0).toUpperCase() + r.slice(1);
+            const e = clean.substring(idx + 2).replace(/\*/g, '').trim();
+
+            if (r && e) { ru.push(r); en.push(e); }
+        });
+
+        if (!ru.length) return alert('Не найдено строк с "->"');
+
+        ruBox.value = ru.join('\n');
+        enBox.value = en.join('\n');
+        updateLineCount();
+        document.getElementById('rawText').value = '';
+    }
+
+    function updateLineCount() {
+        const r = ruBox.value.trim() ? ruBox.value.replace(/\n+$/, '').split('\n').length : 0;
+        const e = enBox.value.trim() ? enBox.value.replace(/\n+$/, '').split('\n').length : 0;
+        lineCounter.textContent = `Строк: РУС (${r}) | АНГЛ (${e})`;
+        lineCounter.classList.toggle('warn', r !== e && r > 0 && e > 0);
+    }
+
+    ruBox.addEventListener('input', updateLineCount);
+    enBox.addEventListener('input', updateLineCount);
+
+    async function submitPimsleur() {
+        const ruLines = ruBox.value.split('\n');
+        const enLines = enBox.value.split('\n');
+        const max = Math.max(ruLines.length, enLines.length);
+        const pairs = [];
+
+        for (let i = 0; i < max; i++) {
+            const r = (ruLines[i] || '').trim();
+            const e = (enLines[i] || '').trim();
+            if (r || e) pairs.push({ ru: r, en: e });
+        }
+        if (!pairs.length) return alert('Пусто!');
+
+        const btn = document.getElementById('pimsleurBtn');
+        const logBox = document.getElementById('pimsleurLog');
+        logBox.style.display = 'block';
+        logBox.innerHTML = `⏳ Генерирую ${pairs.length} пар... Следи за консолью сервера.<br>Это может занять несколько минут.`;
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/pimsleur', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pairs,
+                    ru_voice: document.getElementById('ruVoice').value,
+                    en_voice: document.getElementById('enVoice').value
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                logBox.innerHTML = `<span class="ok">✅ ${data.message}</span>`;
+                alert(data.message);
+            } else {
+                logBox.innerHTML = `<span class="err">❌ ${data.error}</span>`;
+                alert('Ошибка: ' + data.error);
+            }
+        } catch (e) {
+            logBox.innerHTML = `<span class="err">❌ Ошибка соединения</span>`;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // ---------- WORDS ----------
+    const wordBox = document.getElementById('wordText');
+    const wordCounter = document.getElementById('wordCounter');
+
+    wordBox.addEventListener('input', () => {
+        const n = wordBox.value.trim() ? wordBox.value.split('\n').filter(l => l.trim()).length : 0;
+        wordCounter.textContent = `Строк: ${n}`;
+    });
+
+    async function submitWords() {
+        const lines = wordBox.value.split('\n').filter(l => l.trim());
+        if (!lines.length) return alert('Пусто!');
+
+        const btn = document.getElementById('wordsBtn');
+        const logBox = document.getElementById('wordsLog');
+        logBox.style.display = 'block';
+        logBox.innerHTML = `⏳ Генерирую ${lines.length} файлов... Следи за консолью сервера.`;
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/words', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lines,
+                    en_voice: document.getElementById('wordVoice').value,
+                    speed: parseFloat(document.getElementById('wordSpeed').value),
+                    lead_silence_ms: parseInt(document.getElementById('wordLead').value)
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                logBox.innerHTML = `<span class="ok">✅ ${data.message}</span><br><br>` +
+                    data.files.map(f => '  ' + f).join('<br>');
+                alert(data.message);
+            } else {
+                logBox.innerHTML = `<span class="err">❌ ${data.error}</span>`;
+            }
+        } catch (e) {
+            logBox.innerHTML = `<span class="err">❌ Ошибка соединения</span>`;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
