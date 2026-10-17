@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Shadowing Reader</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* СВЕТЛАЯ ТЕМА */
+            --bg: #fbfbfa;
+            --surface: #ffffff;
+            --surface-elevated: #ffffff;
+            --border: #e6e6e4;
+            --border-subtle: #eeeee9;
+
+            --text-main: #191919;
+            --text-sub: #787774;
+            --text-muted: #9b9a97;
+
+            --accent: #2e78d6;
+            --accent-soft: rgba(46, 120, 214, 0.08);
+            --accent-hover: #1b62bd;
+
+            --highlight-bg: rgba(254, 235, 143, 0.45);
+            --playing-bg: rgba(235, 243, 254, 0.8);
+
+            --danger: #eb5757;
+            --danger-bg: #fdf3f2;
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03);
+            --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+
+            --radius-pill: 9999px;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 6px;
+
+            --reader-font: 'Newsreader', serif;
+            --reader-size: 19px;
+            --reader-line-height: 1.85;
+
+            --annotation-color: #2e78d6;
+            --annotation-size: 12px;
+            --annotation-font: 'Inter', sans-serif;
+        }
+
+        /* ТЕМНАЯ ТЕМА */
+        [data-theme="dark"] {
+            --bg: #141414;
+            --surface: #1e1e1e;
+            --surface-elevated: #242424;
+            --border: #2c2c2c;
+            --border-subtle: #232323;
+
+            --text-main: #e6e6e6;
+            --text-sub: #9e9e9e;
+            --text-muted: #6a6a6a;
+
+            --accent: #4da3ff;
+            --accent-soft: rgba(77, 163, 255, 0.14);
+            --accent-hover: #70b4ff;
+
+            --highlight-bg: rgba(230, 180, 50, 0.28);
+            --playing-bg: rgba(77, 163, 255, 0.14);
+
+            --danger: #ff6b6b;
+            --danger-bg: #2b1717;
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+            --shadow-md: 0 6px 20px rgba(0,0,0,0.5);
+            --shadow-float: 0 16px 40px rgba(0,0,0,0.65);
+        }
+
+        /* ТЕМА СЕПИЯ */
+        [data-theme="sepia"] {
+            --bg: #f4ecd8;
+            --surface: #ebe3cd;
+            --surface-elevated: #f9f3e3;
+            --border: #dfd5be;
+            --border-subtle: #e7ddc4;
+
+            --text-main: #3d3429;
+            --text-sub: #7a6e5d;
+            --text-muted: #a49683;
+
+            --accent: #9c5c24;
+            --accent-soft: rgba(156, 92, 36, 0.12);
+            --accent-hover: #804a1b;
+
+            --highlight-bg: rgba(247, 214, 114, 0.5);
+            --playing-bg: rgba(156, 92, 36, 0.14);
+
+            --shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.05);
+            --shadow-md: 0 4px 16px rgba(60, 40, 20, 0.08);
+            --shadow-float: 0 12px 32px rgba(60, 40, 20, 0.14);
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 90px 20px 140px; 
+            line-height: var(--reader-line-height); 
+            min-height: 100vh;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .phrase-collector-bar { 
+            position: fixed; 
+            top: 16px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: clamp(320px, 92%, 580px); 
+            background: var(--surface); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border); 
+            border-radius: var(--radius-pill); 
+            box-shadow: var(--shadow-md); 
+            padding: 4px 6px 4px 16px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            z-index: 1001; 
+            transition: border-color 0.25s, box-shadow 0.25s, background-color 0.3s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .phrase-collector-bar:focus-within {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-float);
+            transform: translateX(-50%) translateY(-1px);
+        }
+        .phrase-input { 
+            flex: 1; 
+            border: none; 
+            outline: none; 
+            background: transparent; 
+            font-family: 'Inter', sans-serif; 
+            font-size: 13.5px; 
+            color: var(--text-main); 
+        }
+        .phrase-input::placeholder { color: var(--text-muted); }
+
+        .save-btn-circle { 
+            position: relative; 
+            width: 32px; 
+            height: 32px; 
+            border: none; 
+            background: transparent; 
+            cursor: pointer; 
+            padding: 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 50%; 
+            flex-shrink: 0; 
+            transition: transform 0.15s ease;
+        }
+        .save-btn-circle:active { transform: scale(0.9); }
+        .save-btn-circle svg.progress-ring { width: 32px; height: 32px; transform: rotate(-90deg); }
+        .save-btn-circle .ring-bg { fill: none; stroke: var(--border-subtle); stroke-width: 2.5; }
+        .save-btn-circle .ring-progress { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 94.25; stroke-dashoffset: 94.25; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
+        .save-btn-circle .icon-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; color: var(--accent); }
+
+        .app-wrapper { 
+            width: 100%; 
+            max-width: 68ch; 
+            margin: 0 auto; 
+        }
+        svg { width: 18px; height: 18px; fill: currentColor; flex-shrink: 0; }
+
+        .header { 
+            text-align: left; 
+            margin-bottom: 32px; 
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 24px;
+        }
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .header h1 { 
+            font-family: 'Inter', sans-serif; 
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--text-main); 
+            font-size: 1.5rem; 
+            margin: 0; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        .header p { 
+            color: var(--text-sub); 
+            font-size: 0.9rem; 
+            margin: 8px 0 0; 
+        }
+
+        .header-right-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .voice-selector-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            padding: 3px 10px;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+        .voice-selector-wrap select {
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+        }
+        .voice-selector-wrap select option {
+            background: var(--surface-elevated);
+            color: var(--text-main);
+        }
+
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            padding: 2px;
+            gap: 2px;
+        }
+        .theme-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-sub);
+            padding: 4px 8px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .theme-btn:hover { color: var(--text-main); }
+        .theme-btn.active {
+            background: var(--surface-elevated);
+            color: var(--text-main);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .file-controls { 
+            display: flex; 
+            flex-wrap: wrap; 
+            align-items: center; 
+            gap: 8px; 
+            margin-top: 18px; 
+            position: relative; 
+        }
+
+        .btn, .secondary-btn { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            font-family: 'Inter', sans-serif; 
+            font-weight: 500; 
+            font-size: 13px; 
+            cursor: pointer; 
+            border-radius: var(--radius-sm); 
+            transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1); 
+            outline: none; 
+            user-select: none;
+        }
+        .btn:active, .secondary-btn:active { transform: scale(0.96); }
+
+        .btn { 
+            background-color: var(--text-main); 
+            color: var(--bg); 
+            border: 1px solid transparent; 
+            padding: 8px 16px; 
+        }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .secondary-btn { 
+            background-color: var(--surface); 
+            border: 1px solid var(--border); 
+            color: var(--text-sub); 
+            padding: 6px 12px; 
+        }
+        .secondary-btn:hover { 
+            color: var(--text-main); 
+            background-color: var(--border-subtle); 
+            border-color: var(--text-muted);
+        }
+        .secondary-btn.danger { color: var(--danger); }
+        .secondary-btn.danger:hover { background-color: var(--danger-bg); border-color: var(--danger); }
+
+        /* Всплывающая панель шрифтов */
+        .font-dropdown-wrap { position: relative; display: inline-block; }
+        .font-dropdown-panel {
+            position: absolute; 
+            top: calc(100% + 8px); 
+            left: 0;
+            background: var(--surface-elevated); 
+            border: 1px solid var(--border); 
+            box-shadow: var(--shadow-float);
+            border-radius: var(--radius-md); 
+            padding: 16px; 
+            z-index: 1002;
+            display: none; 
+            flex-direction: column; 
+            gap: 14px; 
+            min-width: 260px;
+            animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transform-origin: top left;
+        }
+        .font-dropdown-panel.open { display: flex; }
+        .control-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--text-sub); }
+        .control-row select { 
+            padding: 5px 8px; 
+            border-radius: var(--radius-sm); 
+            border: 1px solid var(--border); 
+            font-family: inherit; 
+            font-size: 12.5px; 
+            outline: none; 
+            background: var(--surface); 
+            color: var(--text-main);
+        }
+        .color-palette-preset { display: flex; gap: 6px; align-items: center; }
+        .preset-dot { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border); transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .preset-dot:hover { transform: scale(1.22); }
+        .color-picker-input { width: 22px; height: 22px; padding: 0; border: none; cursor: pointer; border-radius: 50%; background: none; }
+
+        .paper-container { 
+            background: transparent; 
+            border: none;
+            font-family: var(--reader-font);
+            font-size: var(--reader-size); 
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        
+        #input-section { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+        .input-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        #raw-text-input { 
+            width: 100%; 
+            height: 240px; 
+            padding: 16px; 
+            border: 1px solid var(--border); 
+            border-radius: var(--radius-md); 
+            font-family: 'Newsreader', Georgia, serif; 
+            font-size: 18px; 
+            line-height: 1.7; 
+            resize: vertical; 
+            background: var(--surface); 
+            color: var(--text-main);
+            box-sizing: border-box; 
+            transition: border-color 0.2s, background-color 0.3s;
+        }
+        #raw-text-input:focus { border-color: var(--accent); outline: none; }
+        #loading { display: none; width: 100%; text-align: center; color: var(--text-sub); font-size: 13px; padding: 12px; font-family: 'Inter', sans-serif; align-items: center; justify-content: center; gap: 8px; }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        #workspace-section { display: none; }
+
+        #sentence-buffer {
+            background: var(--surface);
+            border-left: 2px solid var(--text-main);
+            padding: 12px 18px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin-bottom: 28px;
+            font-size: 0.95em;
+            font-style: italic;
+            color: var(--text-sub);
+            box-shadow: var(--shadow-sm);
+            display: none;
+            line-height: 1.6;
+            animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sentence { 
+            padding: 4px 8px; 
+            border-radius: var(--radius-sm); 
+            transition: background-color 0.25s ease; 
+            margin-bottom: 12px; 
+            position: relative;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        .sentence.playing { 
+            background-color: var(--playing-bg); 
+        }
+
+        .play-btn { 
+            cursor: pointer; 
+            color: var(--text-muted); 
+            font-weight: 500; 
+            font-family: 'JetBrains Mono', monospace; 
+            margin-right: 8px; 
+            user-select: none; 
+            -webkit-user-select: none;
+            display: inline-flex; 
+            align-items: center; 
+            gap: 2px; 
+            padding: 1px 6px; 
+            border-radius: 4px; 
+            font-size: 11px; 
+            vertical-align: 2px; 
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        .play-btn svg { width: 12px; height: 12px; transition: transform 0.2s; }
+        .play-btn:hover { color: var(--accent); background: var(--accent-soft); }
+        .play-btn:active svg { transform: scale(0.85); }
+        .sentence.playing .play-btn { color: var(--accent); }
+        .btn-icon { display: flex; align-items: center; }
+
+        /* ЭЛЕМЕНТЫ СЛОВА */
+        ruby.phrase-wrapper {
+            cursor: pointer;
+            border-radius: 3px;
+            padding: 0 2px;
+            margin: 0 1px;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            vertical-align: bottom;
+            user-select: text;
+            -webkit-user-select: text;
+            transition: background-color 0.2s ease;
+        }
+        ruby.phrase-wrapper > span {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        ruby.phrase-wrapper:hover { 
+            background-color: var(--accent-soft); 
+        }
+        ruby.phrase-wrapper.active-target { 
+            background-color: var(--highlight-bg); 
+            outline: 1px solid var(--border);
+        }
+
+        /* Выделение Markdown **text** */
+        ruby.phrase-wrapper.md-bold > span {
+            font-weight: 700;
+            color: var(--accent);
+            background: var(--accent-soft);
+            padding: 0 3px;
+            border-radius: var(--radius-sm);
+        }
+
+        ruby.phrase-wrapper.has-translation > span {
+            text-decoration: underline;
+            text-decoration-color: var(--annotation-color);
+            text-decoration-thickness: 1.5px;
+            text-underline-offset: 4px;
+            transition: text-decoration-color 0.2s ease;
+        }
+
+        /* ПОДПИСЬ ПЕРЕВОДА (RT) */
+        rt {
+            font-size: var(--annotation-size);
+            color: var(--annotation-color);
+            font-family: var(--annotation-font);
+            font-weight: 500;
+            line-height: 1;
+            user-select: none;
+            -webkit-user-select: none;
+            text-align: center;
+            white-space: nowrap;
+            position: absolute;
+            top: -0.85em;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            animation: floatInRt 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes floatInRt {
+            0% { opacity: 0; transform: translateX(-50%) translateY(3px) scale(0.85); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+
+        /* ПЛАВАЮЩЕЕ МЕНЮ НАД СЛОВОМ */
+        .word-action-bar {
+            position: absolute;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            padding: 3px 6px;
+            border-radius: var(--radius-pill);
+            box-shadow: var(--shadow-float);
+            display: none;
+            z-index: 1005;
+            gap: 4px;
+            align-items: center;
+            user-select: none;
+            transform-origin: center bottom;
+            animation: tooltipSpring 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .word-action-btn {
+            background: transparent;
+            color: var(--text-main);
+            border: none;
+            border-radius: var(--radius-pill);
+            padding: 4px 8px;
+            font-size: 11.5px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .word-action-btn:hover {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+        .word-action-btn:active {
+            transform: scale(0.94);
+        }
+        .word-action-btn svg {
+            width: 13px;
+            height: 13px;
+        }
+        .word-action-divider {
+            width: 1px;
+            height: 14px;
+            background: var(--border);
+            margin: 0 1px;
+        }
+
+        /* ТУЛТИП ВВОДА ПЕРЕВОДА */
+        #tooltip { 
+            position: absolute; 
+            background: var(--surface-elevated); 
+            border: 1px solid var(--border); 
+            padding: 4px; 
+            border-radius: var(--radius-pill); 
+            box-shadow: var(--shadow-float); 
+            display: none; 
+            z-index: 1006; 
+            gap: 4px; 
+            align-items: center; 
+            transform-origin: center bottom;
+            animation: tooltipSpring 0.26s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        #tooltip input { 
+            border: none; 
+            padding: 6px 12px; 
+            font-size: 13px; 
+            outline: none; 
+            background: var(--border-subtle); 
+            color: var(--text-main);
+            border-radius: var(--radius-pill); 
+            min-width: 170px; 
+            font-family: 'Inter', sans-serif;
+            transition: background 0.15s;
+        }
+        #tooltip input:focus {
+            background: var(--surface);
+        }
+        .tooltip-btn { 
+            background: var(--text-main); 
+            color: var(--bg); 
+            border: none; 
+            border-radius: 50%; 
+            width: 28px; 
+            height: 28px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s;
+        }
+        .tooltip-btn:hover { opacity: 0.9; transform: scale(1.08); }
+        .tooltip-btn:active { transform: scale(0.9); }
+        .tooltip-btn svg { width: 14px; height: 14px; }
+        .tooltip-btn.secondary { background: transparent; color: var(--text-sub); }
+        .tooltip-btn.secondary:hover { background: var(--border-subtle); color: var(--text-main); }
+
+        @keyframes tooltipSpring {
+            0% { opacity: 0; transform: translateY(6px) scale(0.92); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* МЕДИА-ПАНЕЛЬ */
+        .player-panel {
+            position: fixed; 
+            bottom: 24px; 
+            left: 50%; 
+            transform: translateX(-50%) translateY(45px);
+            width: clamp(320px, 90%, 540px); 
+            background: var(--surface-elevated); 
+            color: var(--text-main); 
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill); 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            z-index: 999; 
+            opacity: 0; 
+            visibility: hidden; 
+            box-shadow: var(--shadow-float);
+            transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease, visibility 0.25s; 
+            box-sizing: border-box; 
+        }
+        .player-panel.active { 
+            opacity: 1; 
+            visibility: visible; 
+            transform: translateX(-50%) translateY(0); 
+        }
+
+        .control-btn { 
+            background: var(--text-main); 
+            border: none; 
+            color: var(--bg); 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s; 
+            flex-shrink: 0;
+        }
+        .control-btn svg { width: 16px; height: 16px; }
+        .control-btn:hover { transform: scale(1.08); }
+        .control-btn:active { transform: scale(0.92); }
+        
+        .slow-btn { 
+            font-size: 11px; 
+            font-weight: 600; 
+            font-family: 'JetBrains Mono', monospace; 
+            height: 28px; 
+            padding: 0 8px;
+            border-radius: var(--radius-pill); 
+            background: var(--border-subtle); 
+            border: 1px solid var(--border); 
+            color: var(--text-sub); 
+            cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
+            flex-shrink: 0;
+        }
+        .slow-btn:hover { color: var(--text-main); transform: scale(1.03); }
+        .slow-btn:active { transform: scale(0.94); }
+        .slow-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .progress-container { flex-grow: 1; display: flex; align-items: center; gap: 8px; }
+        .time-label { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); min-width: 32px; text-align: center; }
+        .timeline { 
+            flex-grow: 1; 
+            cursor: pointer; 
+            accent-color: var(--text-main); 
+            height: 4px; 
+            border-radius: 2px;
+            transition: height 0.15s;
+        }
+        .timeline:hover { height: 6px; }
+        .sentence-num-badge { 
+            font-size: 11px; 
+            font-family: 'JetBrains Mono', monospace; 
+            color: var(--text-muted); 
+            font-weight: 500; 
+        }
+
+        /* МОДАЛЬНОЕ ОКНО СЛОВАРЯ */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-window {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 520px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-float);
+            animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .modal-search {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .modal-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            outline: none;
+        }
+        .modal-search input:focus { border-color: var(--accent); }
+        .modal-body {
+            padding: 12px 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .dict-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            border: 1px solid var(--border-subtle);
+            gap: 12px;
+        }
+        .dict-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+        .dict-item-word {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+        .dict-item-trans {
+            font-size: 13px;
+            color: var(--accent);
+        }
+        .dict-del-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
+            padding: 4px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .dict-del-btn:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: var(--danger-bg);
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.94) translateY(-6px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes slideDown {
+            0% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        #audio-player { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="phrase-collector-bar" id="phrase-collector-bar">
+        <input type="text" id="quick-phrase-input" class="phrase-input" placeholder="Сохранить фразу (автосохранение 2 сек)...">
+        <button class="save-btn-circle" id="quick-save-btn">
+            <svg class="progress-ring" viewBox="0 0 32 32"><circle class="ring-bg" cx="16" cy="16" r="14"></circle><circle id="quick-progress-ring" class="ring-progress" cx="16" cy="16" r="14"></circle></svg>
+            <svg class="icon-center"><use href="#icon-check"></use></svg>
+        </button>
+    </div>
+
+    <!-- ИКОНКИ -->
+    <svg style="display: none;">
+        <symbol id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+        <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></symbol>
+        <symbol id="icon-book" viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></symbol>
+        <symbol id="icon-spinner" viewBox="0 0 24 24"><path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.41 3.59-8 8-8z"/></symbol>
+        <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+        <symbol id="icon-back" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></symbol>
+        <symbol id="icon-tune" viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></symbol>
+        <symbol id="icon-paste" viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4 0.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></symbol>
+        <symbol id="icon-speak" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></symbol>
+        <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+        <symbol id="icon-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+    </svg>
+
+    <div class="app-wrapper">
+        <header class="header">
+            <div class="header-top">
+                <h1><svg><use href="#icon-book"></use></svg> Reader</h1>
+                
+                <div class="header-right-controls">
+                    <!-- ВЫБОР ГОЛОСА SILERO EN -->
+                    <div class="voice-selector-wrap" title="Голос Silero (Английский)">
+                        <span>🇬🇧 Голос:</span>
+                        <select id="silero-voice-select"></select>
+                    </div>
+
+                    <!-- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
+                    <div class="theme-switcher">
+                        <button class="theme-btn" data-set-theme="light" title="Светлая">☀️ День</button>
+                        <button class="theme-btn" data-set-theme="sepia" title="Сепия">📜 Сепия</button>
+                        <button class="theme-btn active" data-set-theme="dark" title="Ночная">🌙 Ночь</button>
+                    </div>
+                </div>
+            </div>
+            <p id="header-desc">Импортируйте текст для сфокусированного чтения и отработки.</p>
+            
+            <div class="file-controls" id="file-controls" style="display: none;">
+                <button id="back-btn" class="secondary-btn"><svg><use href="#icon-back"></use></svg> Назад</button>
+
+                <!-- ВЫПАДАЮЩАЯ ПАНЕЛЬ ШРИФТОВ -->
+                <div class="font-dropdown-wrap">
+                    <button id="font-btn" class="secondary-btn" title="Стилизация надписей"><svg><use href="#icon-tune"></use></svg> Вид</button>
+                    <div class="font-dropdown-panel" id="font-dropdown-panel">
+                        <div class="control-row">
+                            <span>Шрифт:</span>
+                            <select id="font-family-select">
+                                <option value="'Inter', sans-serif">Inter</option>
+                                <option value="'Newsreader', serif">Newsreader</option>
+                                <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                            </select>
+                        </div>
+                        <div class="control-row">
+                            <span>Цвет:</span>
+                            <div class="color-palette-preset">
+                                <span class="preset-dot" style="background: #4da3ff;" data-color="#4da3ff" title="Голубой"></span>
+                                <span class="preset-dot" style="background: #2e78d6;" data-color="#2e78d6" title="Синий"></span>
+                                <span class="preset-dot" style="background: #eb5757;" data-color="#eb5757" title="Коралловый"></span>
+                                <span class="preset-dot" style="background: #27ae60;" data-color="#27ae60" title="Зеленый"></span>
+                                <span class="preset-dot" style="background: #e5a93c;" data-color="#e5a93c" title="Янтарный"></span>
+                                <input type="color" id="custom-color-picker" class="color-picker-input" value="#4da3ff" title="Свой цвет">
+                            </div>
+                        </div>
+                        <div class="control-row">
+                            <span>Размер: <b id="font-size-val">12px</b></span>
+                            <input type="range" id="font-size-slider" min="10" max="18" value="12" step="1" style="width: 80px; accent-color: var(--accent);">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="view-dict-btn" class="secondary-btn" title="Просмотреть все сохраненные слова"><svg><use href="#icon-book"></use></svg> Словарь (<span id="dict-count">0</span>)</button>
+                <button id="export-btn" class="secondary-btn"><svg><use href="#icon-download"></use></svg> Экспорт</button>
+                <button id="import-btn" class="secondary-btn"><svg><use href="#icon-upload"></use></svg> Импорт</button>
+                <input type="file" id="import-file" style="display: none;" accept=".json">
+                <button id="clear-cache-btn" class="secondary-btn danger"><svg><use href="#icon-trash"></use></svg> Сброс аудио</button>
+            </div>
+        </header>
+
+        <main class="paper-container">
+            <section id="input-section">
+                <textarea id="raw-text-input" placeholder="Вставьте сюда любой фрагмент книги, статью или заметки..."></textarea>
+                
+                <div class="input-actions">
+                    <input type="file" id="text-file-input" style="display: none;" accept=".txt">
+                    <button id="upload-text-btn" class="secondary-btn"><svg><use href="#icon-upload"></use></svg> Загрузить файл .txt</button>
+                    <button id="main-view-dict-btn" class="secondary-btn"><svg><use href="#icon-book"></use></svg> Мой словарь (<span id="main-dict-count">0</span>)</button>
+                    <button id="generate-btn" class="btn">Начать чтение</button>
+                </div>
+
+                <div id="loading" style="display: none;"><svg class="spinner"><use href="#icon-spinner"></use></svg> Подготовка текста...</div>
+            </section>
+
+            <section id="workspace-section">
+                <div id="sentence-buffer"></div>
+                <div id="content"></div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- ПЛАВАЮЩЕЕ МЕНЮ НАД СЛОВОМ / ВЫДЕЛЕНИЕМ -->
+    <div id="word-action-bar" class="word-action-bar">
+        <button id="action-speak" class="word-action-btn" title="Озвучить на английском">
+            <svg><use href="#icon-speak"></use></svg> Озвучить
+        </button>
+        <div class="word-action-divider"></div>
+        <button id="action-translate" class="word-action-btn" title="Ввести перевод">
+            <svg><use href="#icon-edit"></use></svg> Перевод
+        </button>
+        <button id="action-paste-direct" class="word-action-btn" title="Вставить перевод из буфера">
+            <svg><use href="#icon-paste"></use></svg> Вставить
+        </button>
+        <button id="action-clear-trans" class="word-action-btn" title="Выучил / Удалить из базы" style="display: none; color: var(--danger);">
+            <svg><use href="#icon-trash"></use></svg> Выучил
+        </button>
+    </div>
+
+    <!-- ТУЛТИП ВВОДА ЗНАЧЕНИЯ -->
+    <div id="tooltip">
+        <button id="trans-paste" class="tooltip-btn secondary" title="Вставить из буфера"><svg><use href="#icon-paste"></use></svg></button>
+        <input type="text" id="trans-input" placeholder="Перевод или пояснение..." autocomplete="off">
+        <button id="trans-save" class="tooltip-btn"><svg><use href="#icon-check"></use></svg></button>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО "МОЙ СЛОВАРЬ" -->
+    <div class="modal-overlay" id="dict-modal">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Единый словарь</h3>
+                <button class="secondary-btn" id="dict-modal-close" style="padding: 4px;"><svg><use href="#icon-close"></use></svg></button>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="dict-search-input" placeholder="Поиск слова или перевода...">
+            </div>
+            <div class="modal-body" id="dict-items-list"></div>
+        </div>
+    </div>
+
+    <!-- МЕДИА ПАНЕЛЬ -->
+    <div class="player-panel" id="player-panel">
+        <div class="sentence-num-badge" id="sentence-num">#1</div>
+        <button class="control-btn" id="panel-play-btn"><svg id="panel-play-icon"><use href="#icon-play"></use></svg></button>
+        <button class="slow-btn" id="panel-slow-btn" title="Замедление">0.85×</button>
+        <div class="progress-container">
+            <span class="time-label" id="time-current">0:00</span>
+            <input type="range" class="timeline" id="timeline" value="0" max="100">
+            <span class="time-label" id="time-duration">0:00</span>
+        </div>
+    </div>
+
+    <audio id="audio-player"></audio>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            
+            // Предзагрузка голосов браузерного TTS (для отдельных слов)
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+                window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+            }
+
+            // --- ИНИЦИАЛИЗАЦИЯ СЕЛЕКТОРА ГОЛОСОВ SILERO (en_0 .. en_117) ---
+            const voiceSelect = document.getElementById('silero-voice-select');
+            const savedVoice = localStorage.getItem('silero_en_voice') || 'en_56';
+            for (let i = 0; i < 118; i++) {
+                const v = `en_${i}`;
+                const opt = new Option(v === 'en_56' ? 'en_56 (★)' : v, v);
+                voiceSelect.add(opt);
+            }
+            voiceSelect.value = savedVoice;
+
+            voiceSelect.addEventListener('change', () => {
+                localStorage.setItem('silero_en_voice', voiceSelect.value);
+                // Сбрасываем привязанные ссылки аудио у предложений, чтобы они озвучивались новым голосом
+                if (currentBgController) {
+                    currentBgController.abort();
+                    currentBgController = null;
+                }
+                bgQueue = [];
+                isBgProcessing = false;
+                document.querySelectorAll('.play-btn').forEach(b => b.dataset.audio = '');
+            });
+
+            // --- ЕДИНЫЙ ГЛОБАЛЬНЫЙ СЛОВАРЬ (СИНХРОНИЗАЦИЯ С FLASK) ---
+            let globalDictionary = {};
+
+            function updateDictCountUI() {
+                const count = Object.keys(globalDictionary).length;
+                const d1 = document.getElementById('dict-count');
+                const d2 = document.getElementById('main-dict-count');
+                if (d1) d1.textContent = count;
+                if (d2) d2.textContent = count;
+            }
+
+            async function fetchGlobalDictionary() {
+                try {
+                    const res = await fetch('/api/dictionary');
+                    const data = await res.json();
+                    if (data.success && data.dictionary) {
+                        globalDictionary = data.dictionary;
+                        localStorage.setItem('global_user_dictionary', JSON.stringify(globalDictionary));
+                    }
+                } catch (e) {
+                    globalDictionary = JSON.parse(localStorage.getItem('global_user_dictionary') || '{}');
+                }
+                updateDictCountUI();
+            }
+            fetchGlobalDictionary();
+
+            async function saveWordToServer(phrase, translation) {
+                const fd = new FormData();
+                fd.append('phrase', phrase);
+                fd.append('translation', translation);
+                try {
+                    const res = await fetch('/api/dictionary/save', { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.success) {
+                        globalDictionary[data.key] = data.translation;
+                        localStorage.setItem('global_user_dictionary', JSON.stringify(globalDictionary));
+                        updateDictCountUI();
+                    }
+                } catch (e) {}
+            }
+
+            async function deleteWordFromServer(phrase) {
+                const fd = new FormData();
+                fd.append('phrase', phrase);
+                try {
+                    const res = await fetch('/api/dictionary/delete', { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.success) {
+                        delete globalDictionary[data.key];
+                        localStorage.setItem('global_user_dictionary', JSON.stringify(globalDictionary));
+                        updateDictCountUI();
+                    }
+                } catch (e) {}
+            }
+
+
+            // --- УПРАВЛЕНИЕ ТЕМОЙ ---
+            const themeButtons = document.querySelectorAll('.theme-btn');
+            const savedTheme = localStorage.getItem('reader_theme') || 'dark';
+
+            function applyTheme(themeName) {
+                document.documentElement.setAttribute('data-theme', themeName);
+                localStorage.setItem('reader_theme', themeName);
+                themeButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.setTheme === themeName);
+                });
+            }
+            applyTheme(savedTheme);
+
+            themeButtons.forEach(btn => {
+                btn.addEventListener('click', () => applyTheme(btn.dataset.setTheme));
+            });
+
+
+            // --- НАСТРОЙКИ СТИЛЯ АННОТАЦИЙ ---
+            const fontBtn = document.getElementById('font-btn');
+            const fontPanel = document.getElementById('font-dropdown-panel');
+            const fontFamilySelect = document.getElementById('font-family-select');
+            const fontSizeSlider = document.getElementById('font-size-slider');
+            const fontSizeVal = document.getElementById('font-size-val');
+            const customColorPicker = document.getElementById('custom-color-picker');
+
+            const savedColor = localStorage.getItem('annotation_color') || '#4da3ff';
+            const savedSize = localStorage.getItem('annotation_size') || '12';
+            const savedFont = localStorage.getItem('annotation_font') || "'Inter', sans-serif";
+            
+            function applyStyleSettings(color, size, font) {
+                document.documentElement.style.setProperty('--annotation-color', color);
+                document.documentElement.style.setProperty('--annotation-size', size + 'px');
+                document.documentElement.style.setProperty('--annotation-font', font);
+                
+                fontSizeSlider.value = size;
+                fontSizeVal.textContent = size + 'px';
+                customColorPicker.value = color;
+                fontFamilySelect.value = font;
+
+                localStorage.setItem('annotation_color', color);
+                localStorage.setItem('annotation_size', size);
+                localStorage.setItem('annotation_font', font);
+            }
+            applyStyleSettings(savedColor, savedSize, savedFont);
+
+            fontBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                fontPanel.classList.toggle('open');
+            });
+
+            document.querySelectorAll('.preset-dot').forEach(dot => {
+                dot.addEventListener('click', (e) => {
+                    applyStyleSettings(e.target.dataset.color, fontSizeSlider.value, fontFamilySelect.value);
+                });
+            });
+
+            customColorPicker.addEventListener('input', (e) => applyStyleSettings(e.target.value, fontSizeSlider.value, fontFamilySelect.value));
+            fontSizeSlider.addEventListener('input', (e) => applyStyleSettings(customColorPicker.value, e.target.value, fontFamilySelect.value));
+            fontFamilySelect.addEventListener('change', (e) => applyStyleSettings(customColorPicker.value, fontSizeSlider.value, e.target.value));
+
+            document.addEventListener('click', (e) => {
+                if (!fontPanel.contains(e.target) && e.target !== fontBtn) {
+                    fontPanel.classList.remove('open');
+                }
+            });
+
+
+            // --- БЫСТРЫЙ СБОР ФРАЗ ---
+            const quickInput = document.getElementById('quick-phrase-input');
+            const quickProgressRing = document.getElementById('quick-progress-ring');
+            const CIRCUMFERENCE = 2 * Math.PI * 14;
+            quickProgressRing.style.strokeDasharray = CIRCUMFERENCE;
+            quickProgressRing.style.strokeDashoffset = CIRCUMFERENCE;
+            let animationFrameId = null, startTime = null;
+
+            function resetTimer() { if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; quickProgressRing.style.strokeDashoffset = CIRCUMFERENCE; }
+            function startTimer() {
+                resetTimer(); if (!quickInput.value.trim()) return;
+                startTime = performance.now();
+                function step(currentTime) {
+                    const remaining = Math.max(0, (2000 - (currentTime - startTime)) / 2000);
+                    quickProgressRing.style.strokeDashoffset = CIRCUMFERENCE * (1 - remaining);
+                    if (remaining > 0) animationFrameId = requestAnimationFrame(step);
+                    else savePhraseToServer();
+                }
+                animationFrameId = requestAnimationFrame(step);
+            }
+            async function savePhraseToServer() {
+                const phrase = quickInput.value.trim(); resetTimer();
+                if (!phrase) return;
+                const fd = new FormData(); fd.append('phrase', phrase);
+                try {
+                    const res = await fetch('/save_phrase', { method: 'POST', body: fd });
+                    if ((await res.json()).success) quickInput.value = '';
+                } catch (e) {}
+            }
+            quickInput.addEventListener('input', () => { resetTimer(); if (quickInput.value.trim()) startTimer(); });
+            document.getElementById('phrase-collector-bar').addEventListener('mousemove', () => { if (quickInput.value.trim()) { resetTimer(); startTimer(); } });
+            quickInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') savePhraseToServer(); });
+            document.getElementById('quick-save-btn').addEventListener('click', savePhraseToServer);
+
+
+            // --- МОДАЛЬНОЕ ОКНО ПРОСМОТРА СЛОВАРЯ ---
+            const dictModal = document.getElementById('dict-modal');
+            const dictModalClose = document.getElementById('dict-modal-close');
+            const dictItemsList = document.getElementById('dict-items-list');
+            const dictSearchInput = document.getElementById('dict-search-input');
+
+            function renderDictModal(filterText = '') {
+                dictItemsList.innerHTML = '';
+                const keys = Object.keys(globalDictionary).sort();
+                const filtered = keys.filter(k => 
+                    k.toLowerCase().includes(filterText.toLowerCase()) || 
+                    globalDictionary[k].toLowerCase().includes(filterText.toLowerCase())
+                );
+
+                if (filtered.length === 0) {
+                    dictItemsList.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px;">Слов пока нет или ничего не найдено</div>';
+                    return;
+                }
+
+                filtered.forEach(key => {
+                    const row = document.createElement('div');
+                    row.className = 'dict-item-row';
+                    row.innerHTML = `
+                        <div class="dict-item-info">
+                            <span class="dict-item-word">${key}</span>
+                            <span class="dict-item-trans">${globalDictionary[key]}</span>
+                        </div>
+                        <button class="dict-del-btn" data-key="${key}">Выучил / Удалить</button>
+                    `;
+                    row.querySelector('.dict-del-btn').addEventListener('click', async (e) => {
+                        const wordKey = e.target.dataset.key;
+                        await deleteWordFromServer(wordKey);
+                        syncAllWordOccurrences(wordKey, '');
+                        renderDictModal(dictSearchInput.value.trim());
+                    });
+                    dictItemsList.appendChild(row);
+                });
+            }
+
+            function openDictModal() {
+                dictSearchInput.value = '';
+                renderDictModal();
+                dictModal.classList.add('open');
+            }
+
+            document.getElementById('view-dict-btn').addEventListener('click', openDictModal);
+            document.getElementById('main-view-dict-btn').addEventListener('click', openDictModal);
+            dictModalClose.addEventListener('click', () => dictModal.classList.remove('open'));
+            dictModal.addEventListener('click', (e) => { if (e.target === dictModal) dictModal.classList.remove('open'); });
+            dictSearchInput.addEventListener('input', (e) => renderDictModal(e.target.value.trim()));
+
+
+            // --- ФОНОВАЯ ОЧЕРЕДЬ SILERO TTS ---
+            let bgQueue = [];
+            let currentBgController = null;
+            let isBgProcessing = false;
+
+            async function processBgQueue() {
+                if (isBgProcessing) return;
+                isBgProcessing = true;
+
+                while (bgQueue.length > 0) {
+                    const btn = bgQueue.shift();
+                    if (!btn || btn.dataset.audio) continue;
+
+                    currentBgController = new AbortController();
+                    const fd = new FormData(); 
+                    fd.append('id', btn.dataset.num);
+                    fd.append('text', btn.dataset.text);
+                    fd.append('voice', voiceSelect.value);
+
+                    try {
+                        const res = await fetch('/synthesize_sentence', { 
+                            method: 'POST', 
+                            body: fd,
+                            signal: currentBgController.signal 
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            btn.dataset.audio = data.audio_url;
+                        }
+                    } catch (e) {
+                        if (e.name === 'AbortError') {
+                            isBgProcessing = false;
+                            return;
+                        }
+                    }
+                }
+                isBgProcessing = false;
+            }
+
+            function startBgGenerationFrom(startId) {
+                if (currentBgController) {
+                    currentBgController.abort();
+                    currentBgController = null;
+                }
+                const maxId = startId + 2;
+                bgQueue = [];
+                for (let id = startId; id <= maxId; id++) {
+                    const btn = document.querySelector(`.play-btn[data-num="${id}"]`);
+                    if (btn && !btn.dataset.audio) {
+                        bgQueue.push(btn);
+                    }
+                }
+                isBgProcessing = false;
+                processBgQueue();
+            }
+
+
+            // --- ОСНОВНАЯ ЛОГИКА ТЕКСТА ---
+            const generateBtn = document.getElementById('generate-btn');
+            const rawTextInput = document.getElementById('raw-text-input');
+            const workspaceSection = document.getElementById('workspace-section');
+            const sentenceBuffer = document.getElementById('sentence-buffer');
+            
+            let currentPlayingSentence = null;
+            let isSlowMode = false;
+            let currentFilename = "default_text";
+
+            const uploadTextBtn = document.getElementById('upload-text-btn');
+            const textFileInput = document.getElementById('text-file-input');
+            const backBtn = document.getElementById('back-btn');
+
+            uploadTextBtn.addEventListener('click', () => textFileInput.click());
+
+            textFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                currentFilename = file.name;
+                const reader = new FileReader();
+                reader.onload = (evt) => { rawTextInput.value = evt.target.result; };
+                reader.readAsText(file);
+                e.target.value = '';
+            });
+            
+            backBtn.addEventListener('click', () => {
+                document.getElementById('input-section').style.display = 'flex';
+                workspaceSection.style.display = 'none';
+                document.getElementById('file-controls').style.display = 'none';
+                
+                if (currentBgController) {
+                    currentBgController.abort();
+                    currentBgController = null;
+                }
+                bgQueue = [];
+                isBgProcessing = false;
+
+                if (!audioPlayer.paused) audioPlayer.pause();
+                playerPanel.classList.remove('active');
+                if (currentPlayingSentence) {
+                    currentPlayingSentence.classList.remove('playing');
+                    updatePlayBtnIcon(currentPlayingSentence.querySelector('.play-btn'), false);
+                    currentPlayingSentence = null;
+                }
+                closeWordActionBar();
+                closeTooltip();
+            });
+
+            document.body.addEventListener('dragover', (e) => { e.preventDefault(); });
+            document.body.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0]; currentFilename = file.name;
+                    const reader = new FileReader(); reader.onload = (evt) => { rawTextInput.value = evt.target.result; }; reader.readAsText(file);
+                }
+            });
+
+            function showWorkspace() { 
+                document.getElementById('input-section').style.display = 'none'; 
+                workspaceSection.style.display = 'block'; 
+                document.getElementById('file-controls').style.display = 'flex'; 
+            }
+            function updateBuffer(text) { 
+                sentenceBuffer.style.display = 'block'; 
+                sentenceBuffer.textContent = text; 
+            }
+
+            function autoInitFirstSentence() {
+                setTimeout(() => {
+                    const firstBtn = document.querySelector('.play-btn[data-num="1"]');
+                    if (firstBtn) activateSentence(firstBtn, firstBtn.closest('.sentence'), false); 
+                }, 100);
+            }
+
+            generateBtn.addEventListener('click', async function() {
+                const text = rawTextInput.value.trim();
+                if (!text) return alert("Введите текст!");
+                
+                generateBtn.style.display = 'none';
+                document.getElementById('loading').style.display = 'flex';
+
+                const fd = new FormData(); fd.append('text', text);
+                try {
+                    const res = await fetch('/process_text', { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.success) {
+                        await fetchGlobalDictionary();
+                        buildWorkspace(data.files);
+                        showWorkspace();
+                        if (data.files.length > 0) autoInitFirstSentence();
+                    } else { alert("Ошибка: " + data.error); generateBtn.style.display = 'inline-flex'; }
+                } catch (e) { alert("Ошибка сервера."); generateBtn.style.display = 'inline-flex'; }
+                finally { document.getElementById('loading').style.display = 'none'; }
+            });
+
+
+            // --- ПОСТРОЕНИЕ ТЕКСТА И СИНХРОНИЗАЦИЯ ---
+            let sentencesData = [];
+            let activeTargetData = null;
+
+            function normalizeWordKey(str) {
+                if (!str) return '';
+                return str
+                    .toLowerCase()
+                    .replace(/\*\*/g, '')
+                    .replace(/^[\s\p{P}\p{S}]+|[\s\p{P}\p{S}]+$/gu, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            }
+
+            function getTranslationForText(normKey) {
+                if (!normKey) return '';
+                return globalDictionary[normKey] || '';
+            }
+
+            function buildWorkspace(files) {
+                sentencesData = files;
+                renderAllSentences();
+            }
+
+            function renderAllSentences() {
+                const contentDiv = document.getElementById('content');
+                contentDiv.innerHTML = '';
+
+                sentencesData.forEach(fileData => {
+                    const sentenceDiv = document.createElement('div');
+                    sentenceDiv.className = 'sentence';
+                    sentenceDiv.dataset.sentenceId = fileData.id;
+
+                    const cleanTextForAudio = fileData.text.replace(/\*\*/g, '');
+
+                    const playBtn = document.createElement('span');
+                    playBtn.className = 'play-btn';
+                    playBtn.innerHTML = `<span class="btn-icon"><svg><use href="#icon-play"></use></svg></span>&nbsp;${fileData.id}`;
+                    playBtn.dataset.audio = fileData.audio_url || '';
+                    playBtn.dataset.num = fileData.id;
+                    playBtn.dataset.text = cleanTextForAudio;
+
+                    playBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        activateSentence(playBtn, sentenceDiv, true);
+                    });
+                    sentenceDiv.appendChild(playBtn);
+
+                    // Токенизация Markdown **жирного выделения**
+                    const tokens = [];
+                    const mdRegex = /\*\*([^*]+)\*\*|([^\s*]+)/g;
+                    let match;
+
+                    while ((match = mdRegex.exec(fileData.text)) !== null) {
+                        if (match[1]) {
+                            const boldWords = match[1].trim().split(/\s+/).filter(Boolean);
+                            boldWords.forEach(w => tokens.push({ text: w, isBold: true }));
+                        } else if (match[2]) {
+                            tokens.push({ text: match[2], isBold: false });
+                        }
+                    }
+
+                    let wordIndex = 0;
+                    while (wordIndex < tokens.length) {
+                        let matchedLen = 0;
+                        let matchedNormKey = null;
+                        let matchedVal = '';
+
+                        for (let len = Math.min(6, tokens.length - wordIndex); len >= 2; len--) {
+                            const candidatePhrase = tokens.slice(wordIndex, wordIndex + len).map(t => t.text).join(' ');
+                            const norm = normalizeWordKey(candidatePhrase);
+                            const val = getTranslationForText(norm);
+                            if (val) {
+                                matchedLen = len;
+                                matchedNormKey = norm;
+                                matchedVal = val;
+                                break;
+                            }
+                        }
+
+                        if (matchedLen > 0) {
+                            const phraseSlice = tokens.slice(wordIndex, wordIndex + matchedLen);
+                            const phraseWords = phraseSlice.map(t => t.text).join(' ');
+                            const isBold = phraseSlice.some(t => t.isBold);
+                            const endIdx = wordIndex + matchedLen - 1;
+                            const ruby = createRubyElement(fileData.id, wordIndex, endIdx, phraseWords, matchedVal, matchedNormKey, playBtn, sentenceDiv, isBold);
+                            sentenceDiv.appendChild(ruby);
+                            sentenceDiv.appendChild(document.createTextNode(' '));
+                            wordIndex += matchedLen;
+                        } else {
+                            const token = tokens[wordIndex];
+                            const rawWord = token.text;
+                            const norm = normalizeWordKey(rawWord);
+                            const val = getTranslationForText(norm);
+                            const ruby = createRubyElement(fileData.id, wordIndex, wordIndex, rawWord, val, norm, playBtn, sentenceDiv, token.isBold);
+                            sentenceDiv.appendChild(ruby);
+                            sentenceDiv.appendChild(document.createTextNode(' '));
+                            wordIndex++;
+                        }
+                    }
+
+                    contentDiv.appendChild(sentenceDiv);
+                });
+            }
+
+            function createRubyElement(sentenceId, startIdx, endIdx, text, translation, normKey, playBtn, sentenceDiv, isBold = false) {
+                const ruby = document.createElement('ruby');
+                ruby.className = 'phrase-wrapper';
+                if (isBold) {
+                    ruby.classList.add('md-bold');
+                }
+                ruby.dataset.sId = sentenceId;
+                ruby.dataset.start = startIdx;
+                ruby.dataset.end = endIdx;
+                ruby.dataset.normKey = normKey;
+                ruby.dataset.originalText = text;
+
+                if (translation && translation.trim().length > 0) {
+                    ruby.classList.add('has-translation');
+                }
+
+                const span = document.createElement('span');
+                span.textContent = text;
+                const rt = document.createElement('rt');
+                rt.textContent = translation || '';
+
+                ruby.appendChild(span);
+                ruby.appendChild(rt);
+
+                ruby.addEventListener('click', function(e) {
+                    if (e.button !== 0) return;
+                    
+                    const sel = window.getSelection().toString().trim();
+                    if (sel.length > 0) return;
+
+                    activateSentence(playBtn, sentenceDiv, false);
+                    clearActiveHighlights();
+                    ruby.classList.add('active-target');
+
+                    const lookup = ruby.dataset.normKey || normalizeWordKey(text);
+                    const curTrans = rt.textContent.trim();
+                    activeTargetData = {
+                        type: 'single',
+                        text: text,
+                        lookupKey: lookup,
+                        sId: sentenceId,
+                        min: startIdx,
+                        max: endIdx,
+                        element: ruby,
+                        currentTrans: curTrans,
+                        rect: ruby.getBoundingClientRect()
+                    };
+
+                    openWordActionBar(ruby.getBoundingClientRect(), curTrans);
+                });
+
+                return ruby;
+            }
+
+            // Перехват выделения мышкой фразы
+            document.addEventListener('mouseup', function(e) {
+                if (e.button !== 0) return;
+                if (tooltip.contains(e.target) || wordActionBar.contains(e.target) || dictModal.contains(e.target)) return;
+
+                const selection = window.getSelection();
+                const selectedText = selection.toString().trim();
+
+                if (!selectedText) return;
+
+                const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+                if (!range) return;
+
+                const commonAncestor = range.commonAncestorContainer;
+                const sentenceElement = commonAncestor.nodeType === Node.ELEMENT_NODE 
+                    ? commonAncestor.closest('.sentence') 
+                    : commonAncestor.parentElement?.closest('.sentence');
+
+                if (!sentenceElement) return;
+
+                const sentenceId = sentenceElement.dataset.sentenceId;
+                const rubies = Array.from(sentenceElement.querySelectorAll('.phrase-wrapper'));
+                const selectedRubies = rubies.filter(ruby => selection.containsNode(ruby, true));
+
+                if (selectedRubies.length > 0) {
+                    const playBtn = sentenceElement.querySelector('.play-btn');
+                    activateSentence(playBtn, sentenceElement, false);
+
+                    const starts = selectedRubies.map(r => parseInt(r.dataset.start));
+                    const ends = selectedRubies.map(r => parseInt(r.dataset.end));
+                    const min = Math.min(...starts);
+                    const max = Math.max(...ends);
+
+                    const normLookup = normalizeWordKey(selectedText);
+                    const existingTrans = selectedRubies.length === 1 
+                        ? selectedRubies[0].querySelector('rt').textContent.trim() 
+                        : (globalDictionary[normLookup] || '');
+
+                    clearActiveHighlights();
+                    selectedRubies.forEach(r => r.classList.add('active-target'));
+
+                    const rangeRect = range.getBoundingClientRect();
+                    activeTargetData = {
+                        type: selectedRubies.length === 1 ? 'single' : 'range',
+                        text: selectedText,
+                        lookupKey: normLookup,
+                        sId: sentenceId,
+                        min: min,
+                        max: max,
+                        element: selectedRubies.length === 1 ? selectedRubies[0] : null,
+                        elements: selectedRubies,
+                        currentTrans: existingTrans,
+                        rect: rangeRect
+                    };
+
+                    openWordActionBar(rangeRect, existingTrans);
+                }
+            });
+
+            function clearActiveHighlights() {
+                document.querySelectorAll('.phrase-wrapper.active-target').forEach(el => el.classList.remove('active-target'));
+            }
+
+            // --- МЕНЮ ДЕЙСТВИЙ НАД СЛОВОМ / ВЫДЕЛЕНИЕМ ---
+            const wordActionBar = document.getElementById('word-action-bar');
+            const actionSpeak = document.getElementById('action-speak');
+            const actionTranslate = document.getElementById('action-translate');
+            const actionPasteDirect = document.getElementById('action-paste-direct');
+            const actionClearTrans = document.getElementById('action-clear-trans');
+
+            function openWordActionBar(rect, currentTrans) {
+                tooltip.style.display = 'none';
+                wordActionBar.style.display = 'inline-flex';
+
+                actionClearTrans.style.display = currentTrans ? 'inline-flex' : 'none';
+
+                const barWidth = wordActionBar.offsetWidth || 230;
+                let left = (rect.left + window.scrollX + (rect.width / 2) - (barWidth / 2));
+                left = Math.max(12, Math.min(window.innerWidth - barWidth - 16, left));
+                
+                let top = (rect.top + window.scrollY - 38);
+                if (top < 10) {
+                    top = (rect.bottom + window.scrollY + 8);
+                }
+
+                wordActionBar.style.left = left + 'px';
+                wordActionBar.style.top = top + 'px';
+            }
+
+            function closeWordActionBar() {
+                wordActionBar.style.display = 'none';
+            }
+
+            actionSpeak.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!activeTargetData || !activeTargetData.text) return;
+                
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(activeTargetData.text.replace(/[*_]/g, ''));
+                
+                utter.lang = 'en-US';
+                const voices = window.speechSynthesis.getVoices();
+                const enVoice = voices.find(v => v.lang && (v.lang === 'en-US' || v.lang.startsWith('en')));
+                if (enVoice) utter.voice = enVoice;
+
+                utter.rate = isSlowMode ? 0.8 : 1.0;
+                window.speechSynthesis.speak(utter);
+            });
+
+            actionTranslate.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!activeTargetData) return;
+                closeWordActionBar();
+                openTooltipForRect(activeTargetData.rect, activeTargetData.currentTrans || '', true);
+            });
+
+            actionPasteDirect.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!activeTargetData) return;
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (text && text.trim()) {
+                        applyTranslationDirectly(text.trim());
+                    } else {
+                        alert("Буфер обмена пуст");
+                    }
+                } catch (err) {
+                    closeWordActionBar();
+                    openTooltipForRect(activeTargetData.rect, activeTargetData.currentTrans || '', true);
+                }
+            });
+
+            actionClearTrans.addEventListener('click', (e) => {
+                e.stopPropagation();
+                applyTranslationDirectly('');
+            });
+
+            async function applyTranslationDirectly(newTrans) {
+                if (!activeTargetData) return;
+                const { type, lookupKey } = activeTargetData;
+
+                if (lookupKey) {
+                    if (newTrans) {
+                        globalDictionary[lookupKey] = newTrans;
+                        await saveWordToServer(lookupKey, newTrans);
+                    } else {
+                        delete globalDictionary[lookupKey];
+                        await deleteWordFromServer(lookupKey);
+                    }
+                }
+
+                if (type === 'single') {
+                    syncAllWordOccurrences(lookupKey, newTrans);
+                } else {
+                    renderAllSentences();
+                }
+
+                closeWordActionBar();
+                closeTooltip();
+            }
+
+
+            // --- ТУЛТИП ДЛЯ ЗНАЧЕНИЯ ---
+            const tooltip = document.getElementById('tooltip');
+            const transInput = document.getElementById('trans-input');
+            const transPaste = document.getElementById('trans-paste');
+
+            tooltip.addEventListener('mousedown', (e) => {
+                if (e.target !== transInput) e.preventDefault();
+            });
+
+            function openTooltipForRect(rect, currentValue, shouldFocus = true) {
+                tooltip.style.left = Math.max(10, (rect.left + window.scrollX + (rect.width / 2) - 110)) + 'px';
+                tooltip.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+                tooltip.style.display = 'flex';
+                transInput.value = currentValue || '';
+                if (shouldFocus) transInput.focus();
+            }
+
+            transPaste.addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (text) {
+                        transInput.value = text.trim();
+                        transInput.focus();
+                    }
+                } catch (e) {
+                    transInput.focus();
+                }
+            });
+
+            function syncAllWordOccurrences(normKey, newTrans) {
+                if (!normKey) return;
+                const allRubies = document.querySelectorAll('.phrase-wrapper');
+                allRubies.forEach(ruby => {
+                    const rNorm = ruby.dataset.normKey || normalizeWordKey(ruby.dataset.originalText || '');
+                    if (rNorm === normKey) {
+                        const rt = ruby.querySelector('rt');
+                        if (rt) {
+                            rt.textContent = newTrans;
+                            rt.style.animation = 'none';
+                            rt.offsetHeight;
+                            rt.style.animation = '';
+                        }
+                        if (newTrans) {
+                            ruby.classList.add('has-translation');
+                        } else {
+                            ruby.classList.remove('has-translation');
+                        }
+                    }
+                });
+            }
+
+            function saveTranslation() {
+                if (!activeTargetData) return;
+                const newTrans = transInput.value.trim();
+                applyTranslationDirectly(newTrans);
+            }
+
+            function closeTooltip() {
+                tooltip.style.display = 'none';
+                clearActiveHighlights();
+                activeTargetData = null;
+            }
+
+            document.getElementById('trans-save').addEventListener('click', saveTranslation);
+            transInput.addEventListener('keydown', (e) => { 
+                if (e.key === 'Enter') saveTranslation(); 
+                if (e.key === 'Escape') {
+                    closeTooltip();
+                    closeWordActionBar();
+                }
+            });
+
+            document.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                if (!tooltip.contains(e.target) && !wordActionBar.contains(e.target) && !dictModal.contains(e.target) && !e.target.closest('.phrase-wrapper')) {
+                    closeWordActionBar();
+                    closeTooltip();
+                }
+            });
+
+
+            // --- АУДИО И ПЛЕЕР ---
+            const audioPlayer = document.getElementById('audio-player');
+            const playerPanel = document.getElementById('player-panel');
+
+            function updatePlayBtnIcon(btn, isPlaying) {
+                if (btn) btn.querySelector('use').setAttribute('href', isPlaying ? '#icon-pause' : '#icon-play');
+                document.getElementById('panel-play-icon').querySelector('use').setAttribute('href', isPlaying ? '#icon-pause' : '#icon-play');
+            }
+
+            async function activateSentence(btn, sentenceDiv, autoPlay = true) {
+                updateBuffer(btn.dataset.text);
+                
+                if (currentPlayingSentence === sentenceDiv && btn.dataset.audio) {
+                    if (autoPlay) {
+                        if (audioPlayer.paused) { 
+                            audioPlayer.play(); sentenceDiv.classList.add('playing'); 
+                            updatePlayBtnIcon(btn, true); playerPanel.classList.add('active');
+                            startBgGenerationFrom(parseInt(btn.dataset.num) + 1);
+                        } else { 
+                            audioPlayer.pause(); sentenceDiv.classList.remove('playing'); 
+                            updatePlayBtnIcon(btn, false); 
+                        }
+                    } else { playerPanel.classList.add('active'); }
+                    return;
+                }
+
+                if (currentPlayingSentence) {
+                    currentPlayingSentence.classList.remove('playing');
+                    updatePlayBtnIcon(currentPlayingSentence.querySelector('.play-btn'), false);
+                }
+                
+                currentPlayingSentence = sentenceDiv;
+                sentenceDiv.classList.add('playing');
+                document.getElementById('sentence-num').textContent = "#" + btn.dataset.num;
+                playerPanel.classList.add('active');
+                
+                if (currentBgController) {
+                    currentBgController.abort();
+                    currentBgController = null;
+                }
+                bgQueue = [];
+                isBgProcessing = false;
+                
+                if (!btn.dataset.audio) {
+                    const iconSpan = btn.querySelector('.btn-icon');
+                    const oldHtml = iconSpan.innerHTML;
+                    iconSpan.innerHTML = `<svg class="spinner"><use href="#icon-spinner"></use></svg>`;
+                    
+                    const fd = new FormData(); 
+                    fd.append('id', btn.dataset.num);
+                    fd.append('text', btn.dataset.text);
+                    fd.append('voice', voiceSelect.value);
+                    
+                    try {
+                        const res = await fetch('/synthesize_sentence', { method: 'POST', body: fd });
+                        const data = await res.json();
+                        if (data.success) { btn.dataset.audio = data.audio_url; } 
+                        else { throw new Error(data.error || 'Synth error'); }
+                    } catch(e) {
+                        iconSpan.innerHTML = oldHtml;
+                        sentenceDiv.classList.remove('playing'); playerPanel.classList.remove('active');
+                        return; 
+                    }
+                    iconSpan.innerHTML = oldHtml;
+                }
+
+                audioPlayer.src = btn.dataset.audio + "?t=" + new Date().getTime();
+                audioPlayer.playbackRate = isSlowMode ? 0.85 : 1.0;
+                
+                if (autoPlay) {
+                    updatePlayBtnIcon(btn, true);
+                    audioPlayer.play().catch(() => { sentenceDiv.classList.remove('playing'); updatePlayBtnIcon(btn, false); });
+                    startBgGenerationFrom(parseInt(btn.dataset.num) + 1);
+                } else { updatePlayBtnIcon(btn, false); }
+            }
+
+            document.getElementById('panel-play-btn').addEventListener('click', () => {
+                if (currentPlayingSentence) activateSentence(currentPlayingSentence.querySelector('.play-btn'), currentPlayingSentence, true);
+            });
+
+            document.getElementById('panel-slow-btn').addEventListener('click', function() {
+                isSlowMode = !isSlowMode; this.classList.toggle('active', isSlowMode);
+                audioPlayer.playbackRate = isSlowMode ? 0.85 : 1.0;
+            });
+
+            audioPlayer.addEventListener('timeupdate', () => {
+                if (!isNaN(audioPlayer.duration)) {
+                    document.getElementById('timeline').value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                    document.getElementById('time-current').textContent = formatTime(audioPlayer.currentTime);
+                }
+            });
+            audioPlayer.addEventListener('loadedmetadata', () => { document.getElementById('time-duration').textContent = formatTime(audioPlayer.duration); document.getElementById('timeline').value = 0; });
+            document.getElementById('timeline').addEventListener('input', function() { if (!isNaN(audioPlayer.duration)) audioPlayer.currentTime = (this.value / 100) * audioPlayer.duration; });
+            audioPlayer.addEventListener('ended', () => {
+                if (currentPlayingSentence) { currentPlayingSentence.classList.remove('playing'); updatePlayBtnIcon(currentPlayingSentence.querySelector('.play-btn'), false); }
+                playerPanel.classList.remove('active'); document.getElementById('timeline').value = 0;
+            });
+            function formatTime(secs) { let m = Math.floor(secs / 60); let s = Math.floor(secs % 60); return m + ":" + (s < 10 ? "0" + s : s); }
+
+            // --- ЭКСПОРТ И ИМПОРТ ЕДИНОГО СЛОВАРЯ ---
+            document.getElementById('export-btn').addEventListener('click', () => {
+                const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(globalDictionary, null, 2));
+                a.download = `my_global_dictionary.json`; document.body.appendChild(a); a.click(); a.remove();
+            });
+            document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
+            document.getElementById('import-file').addEventListener('change', (e) => {
+                const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    try {
+                        const imported = JSON.parse(evt.target.result);
+                        for (const [w, t] of Object.entries(imported)) {
+                            await saveWordToServer(w, t);
+                        }
+                        await fetchGlobalDictionary();
+                        renderAllSentences();
+                        alert('Словарь успешно импортирован и объединен с базой!');
+                    } catch (err) { alert('Ошибка формата файла словаря.'); }
+                }; reader.readAsText(file); e.target.value = ''; 
+            });
+
+            document.getElementById('clear-cache-btn').addEventListener('click', async () => {
+                try { 
+                    await fetch('/reset', { method: 'POST' }); 
+                    document.querySelectorAll('.play-btn').forEach(b => b.dataset.audio = '');
+                    alert('Папка с аудио очищена. Аудио будет генерироваться заново.');
+                } catch (e) {}
+            });
+        });
+    </script>
+</body>
+</html>

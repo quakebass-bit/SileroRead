@@ -162,13 +162,14 @@
         background: #0c0e14;
         border: 1px solid #262c40;
         border-radius: 6px;
-        padding: 12px;
+        padding: 10px 12px;
         font-family: 'Consolas', monospace;
         font-size: 12px;
         color: #94a3b8;
-        max-height: 200px;
+        height: 72px;
         overflow-y: auto;
-        margin-top: 15px;
+        margin-bottom: 12px;
+        margin-top: 0;
     }
     .log-box .ok { color: #10b981; }
     .log-box .err { color: #ef4444; }
@@ -223,8 +224,10 @@
             </div>
         </div>
 
+        <div class="log-box" id="pimsleurLog">Готов к генерации</div>
         <button class="btn btn-full" id="pimsleurBtn" onclick="submitPimsleur()">🚀 Создать урок</button>
-        <div class="log-box" id="pimsleurLog" style="display:none;"></div>
+        <button class="btn btn-full" id="openLessonsBtn" onclick="openFolder('lessons')"
+                style="display:none; margin-top:8px; background:#475569; font-size:14px; padding:10px;">📂 Открыть папку с уроками</button>
     </div>
 
     <!-- ================= TAB 2: WORDS ================= -->
@@ -258,8 +261,10 @@
             <textarea id="wordText" style="height: 400px;" placeholder="apple&#10;Good morning&#10;How are you?&#10;..."></textarea>
         </div>
 
+        <div class="log-box" id="wordsLog">Готов к генерации</div>
         <button class="btn btn-full" id="wordsBtn" onclick="submitWords()">🚀 Создать аудио в word_audio/</button>
-        <div class="log-box" id="wordsLog" style="display:none;"></div>
+        <button class="btn btn-full" id="openWordsBtn" onclick="openFolder('words')"
+                style="display:none; margin-top:8px; background:#475569; font-size:14px; padding:10px;">📂 Открыть папку со словами</button>
     </div>
 
 </div>
@@ -275,6 +280,74 @@
     }
     fillEnVoices('enVoice');
     fillEnVoices('wordVoice');
+
+    // ---------- OPEN FOLDER (PC only) ----------
+    async function openFolder(target) {
+        try {
+            const res = await fetch('/api/open-folder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target })
+            });
+            const data = await res.json();
+            if (!data.success) console.warn('open-folder failed:', data.error);
+        } catch (e) {
+            console.error('open-folder error:', e);
+        }
+    }
+
+    // Показать кнопки "Открыть папку" только на десктопе
+    if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        const bw = document.getElementById('openWordsBtn');
+        const bl = document.getElementById('openLessonsBtn');
+        if (bw) bw.style.display = 'block';
+        if (bl) bl.style.display = 'block';
+    }
+
+    // Разморозка инпутов после возврата из фона (баг Android Chrome)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            const body = document.body;
+            const d = body.style.display;
+            body.style.display = 'none';
+            void body.offsetHeight;
+            body.style.display = d;
+        }
+    });
+
+    // ---------- OPEN FOLDER (PC only) ----------
+    async function openFolder(target) {
+        try {
+            const res = await fetch('/api/open-folder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target })
+            });
+            const data = await res.json();
+            if (!data.success) console.warn('open-folder failed:', data.error);
+        } catch (e) {
+            console.error('open-folder error:', e);
+        }
+    }
+
+    // Показать кнопки "Открыть папку" только на десктопе
+    if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        const bw = document.getElementById('openWordsBtn');
+        const bl = document.getElementById('openLessonsBtn');
+        if (bw) bw.style.display = 'block';
+        if (bl) bl.style.display = 'block';
+    }
+
+    // Разморозка инпутов после возврата из фона (баг Android Chrome)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            const body = document.body;
+            const d = body.style.display;
+            body.style.display = 'none';
+            void body.offsetHeight;
+            body.style.display = d;
+        }
+    });
 
     // ---------- TABS ----------
     function switchTab(name) {
@@ -301,7 +374,7 @@
             const idx = clean.indexOf('->');
             if (idx === -1) return;
 
-            let r = clean.substring(0, idx).trim().replace(/^\d+[\s\.)]*/, '');
+            let r = clean.substring(0, idx).trim().replace(/^\d+[\s\.)]*/, '').replace(/\*/g, '').trim();
             if (r) r = r.charAt(0).toUpperCase() + r.slice(1);
             const e = clean.substring(idx + 2).replace(/\*/g, '').trim();
 
@@ -341,7 +414,6 @@
 
         const btn = document.getElementById('pimsleurBtn');
         const logBox = document.getElementById('pimsleurLog');
-        logBox.style.display = 'block';
         logBox.innerHTML = `⏳ Генерирую ${pairs.length} пар... Следи за консолью сервера.<br>Это может занять несколько минут.`;
         btn.disabled = true;
 
@@ -358,15 +430,14 @@
             const data = await res.json();
             if (data.success) {
                 logBox.innerHTML = `<span class="ok">✅ ${data.message}</span>`;
-                alert(data.message);
             } else {
                 logBox.innerHTML = `<span class="err">❌ ${data.error}</span>`;
-                alert('Ошибка: ' + data.error);
             }
         } catch (e) {
             logBox.innerHTML = `<span class="err">❌ Ошибка соединения</span>`;
         } finally {
             btn.disabled = false;
+            try { ruBox.focus({ preventScroll: true }); } catch (e) {}
         }
     }
 
@@ -385,7 +456,6 @@
 
         const btn = document.getElementById('wordsBtn');
         const logBox = document.getElementById('wordsLog');
-        logBox.style.display = 'block';
         logBox.innerHTML = `⏳ Генерирую ${lines.length} файлов... Следи за консолью сервера.`;
         btn.disabled = true;
 
@@ -402,9 +472,8 @@
             });
             const data = await res.json();
             if (data.success) {
-                logBox.innerHTML = `<span class="ok">✅ ${data.message}</span><br><br>` +
+                logBox.innerHTML = `<span class="ok">✅ ${data.message}</span><br>` +
                     data.files.map(f => '  ' + f).join('<br>');
-                alert(data.message);
             } else {
                 logBox.innerHTML = `<span class="err">❌ ${data.error}</span>`;
             }
@@ -412,6 +481,7 @@
             logBox.innerHTML = `<span class="err">❌ Ошибка соединения</span>`;
         } finally {
             btn.disabled = false;
+            try { wordBox.focus({ preventScroll: true }); } catch (e) {}
         }
     }
 </script>

@@ -41,6 +41,90 @@ def normalize_text(text: str) -> str:
         return text
 
 
+# ================= ABBREVIATIONS (JSON) =================
+_ABBREV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'abbreviations.json')
+try:
+    with open(_ABBREV_FILE, 'r', encoding='utf-8') as _f:
+        _ABBREV_DICT = json.load(_f)
+    print(f"✅ abbreviations.json загружен ({len(_ABBREV_DICT)} записей)")
+except Exception:
+    _ABBREV_DICT = {}
+    print("⚠️ abbreviations.json не найден — аббревиатуры без замены")
+
+
+# ================= АНГЛИЙСКАЯ НОРМАЛИЗАЦИЯ (num2words) =================
+try:
+    from num2words import num2words
+    EN_NORMALIZATION_AVAILABLE = True
+    print("✅ English Normalizer (num2words) загружен")
+except ImportError:
+    EN_NORMALIZATION_AVAILABLE = False
+    print("⚠️ num2words не установлен. Английские числа не будут озвучены. "
+          "Установи: pip install num2words")
+
+
+def normalize_en_text(text: str) -> str:
+    """Превращает цифры и спецсимволы в английские слова для Silero."""
+    if not text or not EN_NORMALIZATION_AVAILABLE:
+        return text
+    try:
+        # 0. Аббревиатуры из JSON (длинные первыми)
+        for abbr in sorted(_ABBREV_DICT.keys(), key=len, reverse=True):
+            if abbr[-1] == '.':
+                pattern = re.escape(abbr)
+            else:
+                pattern = r'\b' + re.escape(abbr) + r'\b'
+            text = re.sub(pattern, ' ' + _ABBREV_DICT[abbr] + ' ', text)
+        text = re.sub(r'\s+', ' ', text).strip()
+
+        # 1. Валюты
+        text = re.sub(r'\$(\d+(?:\.\d+)?)', r'\1 dollars', text)
+        text = re.sub(r'£(\d+(?:\.\d+)?)', r'\1 pounds', text)
+        text = re.sub(r'€(\d+(?:\.\d+)?)', r'\1 euros', text)
+
+        # 2. Проценты
+        text = re.sub(r'(\d+)%', r'\1 percent', text)
+
+        # 3. Порядковые (1st, 2nd, 3rd, 21st, 4th)
+        def replace_ordinal(match):
+            val = int(match.group(1))
+            return num2words(val, to='ordinal', lang='en')
+        text = re.sub(r'\b(\d+)(?:st|nd|rd|th)\b', replace_ordinal, text, flags=re.IGNORECASE)
+
+        # 4. Года (1800–2099)
+        def replace_year(match):
+            val = int(match.group(0))
+            if 1800 <= val <= 2099:
+                return num2words(val, to='year', lang='en')
+            return num2words(val, lang='en')
+        text = re.sub(r'\b(1[89]\d{2}|20\d{2})\b', replace_year, text)
+
+        # 5. Дроби и десятичные (3.14 → three point one four)
+        def replace_decimal(match):
+            whole, frac = match.group(1), match.group(2)
+            whole_str = num2words(int(whole), lang='en')
+            frac_str = " ".join([num2words(int(d), lang='en') for d in frac])
+            return f"{whole_str} point {frac_str}"
+        text = re.sub(r'\b(\d+)\.(\d+)\b', replace_decimal, text)
+
+        # 6. Обычные целые числа
+        def replace_number(match):
+            return num2words(int(match.group(0)), lang='en')
+        text = re.sub(r'\b\d+\b', replace_number, text)
+
+        # 7. Спецсимволы
+        text = text.replace('&', ' and ')
+        text = text.replace('@', ' at ')
+        text = text.replace('+', ' plus ')
+
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+    except Exception as e:
+        print(f"⚠️ Ошибка EN-нормализации: {e}")
+        return text
+# =========================================================================
+
+
 # ================= ОСВОБОЖДЕНИЕ ПАМЯТИ =================
 try:
     _libc = ctypes.CDLL("libc.so.6")
@@ -85,6 +169,7 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static')
 AUDIO_DIR = os.path.join(STATIC_DIR, 'audio')
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
 PROGRESS_FILE = os.path.join(BASE_DIR, 'progress.json')
+BOOKMARKS_FILE = os.path.join(BASE_DIR, 'bookmarks.json')
 TEMP_TXT = os.path.join(BASE_DIR, 'temp_input.txt')
 
 CACHE_TTL_SECONDS = 600
@@ -124,33 +209,47 @@ MODELS = {
 }
 
 # ================= SILERO =================
-SILERO_VOICES = {'silero-aidar', 'silero-baya', 'silero-kseniya', 'silero-xenia', 'silero-eugene'}
-SILERO_RELOAD_EVERY = 40   # перезагружать модель каждые N запросов
-SILERO_RSS_LOG_EVERY = 10   # логировать RSS каждые N запросов
+SILERO_RU_MODEL = os.path.join(MODELS_DIR, 'v5_ru.pt')
+SILERO_EN_MODEL = os.path.join(MODELS_DIR, 'v3_en.pt')
+
+SILERO_RU_VOICES = {'aidar', 'baya', 'kseniya', 'xenia', 'eugene'}
+SILERO_EN_VOICE_IDS = list(range(118))
+SILERO_VOICES = ({f'silero-{v}' for v in SILERO_RU_VOICES} |
+                 {f'silero-en_{i}' for i in SILERO_EN_VOICE_IDS})
+
+SILERO_RELOAD_EVERY = 40
+SILERO_RSS_LOG_EVERY = 10
 
 silero_model = None
+silero_model_path = None
 torch_module = None
 _silero_request_count = 0
 
 
-def get_silero_model():
-    global silero_model, torch_module
+def get_silero_model(model_path):
+    global silero_model, silero_model_path, torch_module
     with silero_lock:
-        if silero_model is not None:
+        if silero_model is not None and silero_model_path == model_path:
             return silero_model
-        model_path = os.path.join(MODELS_DIR, 'v5_ru.pt')
+        if silero_model is not None:
+            print(f"♻️ Выгружаю {os.path.basename(silero_model_path or '?')}...", flush=True)
+            del silero_model
+            silero_model = None
+            silero_model_path = None
+            _force_memory_release()
         if not os.path.exists(model_path):
             raise FileNotFoundError(
                 f"Модель Silero не найдена: {model_path}. "
-                f"Скачай вручную: https://models.silero.ai/models/tts/ru/v5_ru.pt"
+                f"Скачай вручную с https://models.silero.ai/models/tts/"
             )
         if torch_module is None:
             import torch
             torch.set_num_threads(2)
             torch_module = torch
-        print("⏳ Загружаю Silero в память...", flush=True)
+        print(f"⏳ Загружаю {os.path.basename(model_path)}...", flush=True)
         silero_model = torch_module.package.PackageImporter(model_path).load_pickle("tts_models", "model")
         silero_model.to(torch_module.device('cpu'))
+        silero_model_path = model_path
         print(f"✅ Silero готова | RSS: {_get_rss_mb()} MB", flush=True)
         return silero_model
 
@@ -164,35 +263,35 @@ def save_tensor_to_wav(audio_tensor, output_path, sample_rate=24000):
         wf.writeframes(audio_data.tobytes())
 
 
-def synthesize_silero(text, speaker, output_path):
-    global silero_model, _silero_request_count
-    model = get_silero_model()
-    sample_rate = 24000
+def synthesize_silero(text, voice_id, output_path):
+    """voice_id: 'xenia' (RU) или 'en_56' (EN)."""
+    global silero_model, silero_model_path, _silero_request_count
+    is_english = voice_id.startswith('en_')
 
-    audio = model.apply_tts(
-        text=text,
-        speaker=speaker,
-        sample_rate=sample_rate,
-        put_accent=True,
-        put_yo=True
-    )
+    if is_english:
+        model = get_silero_model(SILERO_EN_MODEL)
+        sample_rate = 24000
+        audio = model.apply_tts(text=text, speaker=voice_id, sample_rate=sample_rate)
+    else:
+        model = get_silero_model(SILERO_RU_MODEL)
+        sample_rate = 24000
+        audio = model.apply_tts(
+            text=text, speaker=voice_id, sample_rate=sample_rate,
+            put_accent=True, put_yo=True
+        )
+
     save_tensor_to_wav(audio, output_path, sample_rate)
-
-    # Освобождаем tensor и возвращаем память ОС
     del audio
     _force_memory_release()
 
     _silero_request_count += 1
-
-    # Периодический лог RSS
     if _silero_request_count % SILERO_RSS_LOG_EVERY == 0:
         print(f"📊 Silero #{_silero_request_count} | RSS: {_get_rss_mb()} MB", flush=True)
-
-    # Периодическая перезагрузка модели
     if _silero_request_count % SILERO_RELOAD_EVERY == 0:
         rss_before = _get_rss_mb()
         print(f"♻️ Перезагрузка Silero после {_silero_request_count} запросов (RSS до: {rss_before} MB)", flush=True)
         silero_model = None
+        silero_model_path = None
         _force_memory_release()
         print(f"✅ Silero выгружена | RSS после: {_get_rss_mb()} MB", flush=True)
 
@@ -315,6 +414,22 @@ def save_progress_data(data):
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 
+# ================= ЗАКЛАДКИ =================
+def load_bookmarks_data():
+    if os.path.exists(BOOKMARKS_FILE):
+        try:
+            with open(BOOKMARKS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def save_bookmarks_data(data):
+    with open(BOOKMARKS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+
 # ================= РОУТЫ =================
 @app.route('/')
 def index():
@@ -356,6 +471,63 @@ def load_progress():
     return jsonify(progress.get(book_name, {'index': 0}))
 
 
+@app.route('/api/bookmarks', methods=['GET'])
+def get_bookmarks():
+    book_name = request.args.get('book_name')
+    if not book_name:
+        return jsonify({'success': False, 'error': 'Missing book_name'})
+    data = load_bookmarks_data()
+    return jsonify({'success': True, 'bookmarks': data.get(book_name, [])})
+
+
+@app.route('/api/bookmarks/save', methods=['POST'])
+def save_bookmark():
+    data = request.json or {}
+    book_name = data.get('book_name')
+    if not book_name:
+        return jsonify({'success': False, 'error': 'Missing book_name'})
+    unit_index = data.get('unit_index')
+    if unit_index is None:
+        return jsonify({'success': False, 'error': 'Missing unit_index'})
+
+    paragraph_index = data.get('paragraph_index', 0)
+    text = (data.get('text') or '')[:200]
+    name = (data.get('name') or '').strip() or text[:30]
+
+    bookmarks = load_bookmarks_data()
+    book_bm = bookmarks.get(book_name, [])
+
+    bm = {
+        'id': int(time.time() * 1000),
+        'unit_index': unit_index,
+        'paragraph_index': paragraph_index,
+        'text': text,
+        'name': name,
+        'created_at': time.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    book_bm.append(bm)
+    book_bm.sort(key=lambda x: x['unit_index'])
+    bookmarks[book_name] = book_bm
+    save_bookmarks_data(bookmarks)
+    return jsonify({'success': True, 'bookmark': bm})
+
+
+@app.route('/api/bookmarks/delete', methods=['POST'])
+def delete_bookmark():
+    data = request.json or {}
+    book_name = data.get('book_name')
+    bm_id = data.get('id')
+    if not book_name or bm_id is None:
+        return jsonify({'success': False, 'error': 'Missing params'})
+
+    bookmarks = load_bookmarks_data()
+    book_bm = bookmarks.get(book_name, [])
+    book_bm = [b for b in book_bm if b['id'] != bm_id]
+    bookmarks[book_name] = book_bm
+    save_bookmarks_data(bookmarks)
+    return jsonify({'success': True})
+
+
 @app.route('/api/split', methods=['POST'])
 def api_split():
     data = request.get_json(silent=True) or {}
@@ -387,6 +559,8 @@ def synthesize():
         # --- 1. SILERO ---
         if voice in SILERO_VOICES:
             speaker_name = voice.replace('silero-', '')
+            is_english = speaker_name.startswith('en_')
+            tts_text = normalize_en_text(text) if is_english else normalize_text(text)
             filename = f"speech_silero_{cache_hash}.wav"
             filepath = os.path.join(AUDIO_DIR, filename)
 
@@ -395,17 +569,12 @@ def synthesize():
                                 'engine': 'silero', 'cached': True})
 
             try:
-                synthesize_silero(text=normalized_text, speaker=speaker_name, output_path=filepath)
+                synthesize_silero(text=tts_text, voice_id=speaker_name, output_path=filepath)
                 return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
                                 'engine': 'silero', 'cached': False})
             except Exception as silero_err:
-                print(f"⚠️ Silero упал ({silero_err}). Fallback → Edge Svetlana.", flush=True)
-                fallback_filename = f"speech_fallback_{cache_hash}.mp3"
-                fallback_filepath = os.path.join(AUDIO_DIR, fallback_filename)
-                run_edge_tts_cli(text=normalized_text, voice='ru-RU-SvetlanaNeural',
-                                 output_path=fallback_filepath, timeout_sec=25)
-                return jsonify({'success': True, 'audio_url': f'/static/audio/{fallback_filename}',
-                                'engine': 'edge_fallback', 'cached': False})
+                print(f"⚠️ Silero упал ({silero_err})", flush=True)
+                return jsonify({'success': False, 'error': f'Silero: {silero_err}'}), 500
 
         # --- 2. PIPER ---
         elif voice in MODELS:
@@ -423,7 +592,7 @@ def synthesize():
                                 'engine': 'piper', 'cached': True})
 
             cmd = [PIPER_CMD, '--model', model_path, '--output_file', filepath]
-            result = subprocess.run(cmd, input=normalized_text.encode('utf-8'),
+            result = subprocess.run(cmd, input=normalize_text(text).encode('utf-8'),
                                     capture_output=True, timeout=60)
 
             if result.returncode != 0:
@@ -433,18 +602,8 @@ def synthesize():
             return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
                             'engine': 'piper', 'cached': False})
 
-        # --- 3. EDGE ---
         else:
-            filename = f"speech_{cache_hash}.mp3"
-            filepath = os.path.join(AUDIO_DIR, filename)
-
-            if os.path.exists(filepath) and (time.time() - os.path.getmtime(filepath) < CACHE_TTL_SECONDS):
-                return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
-                                'engine': 'edge', 'cached': True})
-
-            run_edge_tts_cli(text=normalized_text, voice=voice, output_path=filepath, timeout_sec=30)
-            return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
-                            'engine': 'edge', 'cached': False})
+            return jsonify({'success': False, 'error': f'Неизвестный голос: {voice}'}), 400
 
     except subprocess.TimeoutExpired:
         return jsonify({'success': False, 'error': 'Audio generation timed out.'}), 504
@@ -458,11 +617,13 @@ if __name__ == '__main__':
 
     print("\n" + "=" * 60)
     print("📖 SileroRead TTS Server")
-    print("🔊 Engines: Silero (lazy) | Piper | Edge")
-    print(f"📝 Normalization: {'✅ ru-normalizr' if NORMALIZATION_AVAILABLE else '❌ disabled'}")
+    print("🔊 Engine: Silero (RU + EN)")
+    print(f"📦 RU модель: {os.path.basename(SILERO_RU_MODEL)}")
+    print(f"📦 EN модель: {os.path.basename(SILERO_EN_MODEL)}")
+    print(f"📝 RU Normalization: {'✅ ru-normalizr' if NORMALIZATION_AVAILABLE else '❌ disabled'}")
+    print(f"📝 EN Normalization: {'✅ num2words' if EN_NORMALIZATION_AVAILABLE else '❌ disabled'}")
     print(f"🧹 malloc_trim:   {'✅ available' if _HAS_MALLOC_TRIM else '❌ not available'}")
     print(f"♻️  Silero reload: every {SILERO_RELOAD_EVERY} requests")
-    print(f"📍 Piper:  {PIPER_CMD}")
     print("📍 UI:     http://127.0.0.1:5008")
     print("=" * 60 + "\n")
 

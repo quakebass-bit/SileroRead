@@ -6,12 +6,31 @@ pimsleur_app.py — отдельный сервер для генерации у
 import os
 import sys
 import gc
+import json
 import wave
 import re
 import subprocess
 from datetime import datetime
 from threading import Lock
 from flask import Flask, request, jsonify, render_template
+
+# ---------- NUM2WORDS ----------
+try:
+    from num2words import num2words
+    EN_NORMALIZATION_AVAILABLE = True
+except ImportError:
+    EN_NORMALIZATION_AVAILABLE = False
+    print("⚠️ num2words не установлен. pip install num2words")
+
+# ---------- ABBREVIATIONS ----------
+_ABBREV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'abbreviations.json')
+try:
+    with open(_ABBREV_FILE, 'r', encoding='utf-8') as _f:
+        _ABBREV_DICT = json.load(_f)
+    print(f"✅ abbreviations.json загружен ({len(_ABBREV_DICT)} записей)")
+except Exception:
+    _ABBREV_DICT = {}
+    print("⚠️ abbreviations.json не найден — аббревиатуры без замены")
 
 # ---------- FFMPEG / PYDUB ----------
 try:
@@ -38,20 +57,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
 RU_DIR = os.path.join(BASE_DIR, 'ru_audio')
 EN_DIR = os.path.join(BASE_DIR, 'en_audio')
-
-# --- Android shared storage ---
-# На телефоне (proot Ubuntu) файлы сохраняются в /sdcard/Music/Youtube/1/
-# На Windows этого пути нет → fallback на локальные папки проекта.
-ANDROID_OUTPUT = '/sdcard/Music/Youtube/1'
-
-if os.path.isdir(ANDROID_OUTPUT):
-    WORD_DIR = os.path.join(ANDROID_OUTPUT, 'words')
-    OUTPUT_DIR = os.path.join(ANDROID_OUTPUT, 'lessons')
-    print(f"📁 Android storage: {ANDROID_OUTPUT}")
-else:
-    WORD_DIR = os.path.join(BASE_DIR, 'word_audio')
-    OUTPUT_DIR = os.path.join(BASE_DIR, 'output_lesson')
-    print("📁 Local folders (Windows mode)")
+WORD_DIR = os.path.join(BASE_DIR, 'word_audio')
+OUTPUT_DIR = os.path.join(BASE_DIR, 'output_lesson')
 
 SILERO_RU_MODEL = os.path.join(MODELS_DIR, 'v5_ru.pt')
 SILERO_EN_MODEL = os.path.join(MODELS_DIR, 'v3_en.pt')
@@ -61,6 +68,70 @@ SILERO_EN_VOICES = [f'en_{i}' for i in range(118)]
 
 for d in [RU_DIR, EN_DIR, WORD_DIR, OUTPUT_DIR]:
     os.makedirs(d, exist_ok=True)
+
+
+# ---------- АНГЛИЙСКАЯ НОРМАЛИЗАЦИЯ ----------
+def normalize_en_text(text: str) -> str:
+    """Числа + аббревиатуры → английские слова для Silero."""
+    if not text:
+        return text
+
+    # 0. Аббревиатуры (JSON-словарь, длинные первыми)
+    for abbr in sorted(_ABBREV_DICT.keys(), key=len, reverse=True):
+        pattern = r'\b' + re.escape(abbr) if abbr[0].isalnum() else re.escape(abbr)
+        if abbr[-1] == '.':
+            pattern = re.escape(abbr)
+        else:
+            pattern = r'\b' + re.escape(abbr) + r'\b'
+        text = re.sub(pattern, ' ' + _ABBREV_DICT[abbr] + ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    if not EN_NORMALIZATION_AVAILABLE:
+        return text
+
+    try:
+        # 1. Валюты
+        text = re.sub(r'\$(\d+(?:\.\d+)?)', r'\1 dollars', text)
+        text = re.sub(r'£(\d+(?:\.\d+)?)', r'\1 pounds', text)
+        text = re.sub(r'€(\d+(?:\.\d+)?)', r'\1 euros', text)
+
+        # 2. Проценты
+        text = re.sub(r'(\d+)%', r'\1 percent', text)
+
+        # 3. Порядковые (1st, 2nd, 3rd)
+        def replace_ordinal(m):
+            return num2words(int(m.group(1)), to='ordinal', lang='en')
+        text = re.sub(r'\b(\d+)(?:st|nd|rd|th)\b', replace_ordinal, text, flags=re.IGNORECASE)
+
+        # 4. Года 1800–2099
+        def replace_year(m):
+            v = int(m.group(0))
+            if 1800 <= v <= 2099:
+                return num2words(v, to='year', lang='en')
+            return num2words(v, lang='en')
+        text = re.sub(r'\b(1[89]\d{2}|20\d{2})\b', replace_year, text)
+
+        # 5. Дроби
+        def replace_decimal(m):
+            w, f = m.group(1), m.group(2)
+            ws = num2words(int(w), lang='en')
+            fs = " ".join(num2words(int(d), lang='en') for d in f)
+            return f"{ws} point {fs}"
+        text = re.sub(r'\b(\d+)\.(\d+)\b', replace_decimal, text)
+
+        # 6. Обычные числа
+        def replace_number(m):
+            return num2words(int(m.group(0)), lang='en')
+        text = re.sub(r'\b\d+\b', replace_number, text)
+
+        # 7. Спецсимволы
+        text = text.replace('&', ' and ').replace('@', ' at ').replace('+', ' plus ')
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+    except Exception as e:
+        print(f"⚠️ EN normalize error: {e}")
+        return text
+
 
 # ---------- ПАРАМЕТРЫ ПИМСЛЕРА (как в оригинале) ----------
 EN_SPEED = 0.85
@@ -161,6 +232,7 @@ def synth_silero_ru(text, speaker, output_path):
 
 
 def synth_silero_en(text, speaker, output_path):
+    text = normalize_en_text(text)  # числа + аббревиатуры
     model = load_silero(SILERO_EN_MODEL)
     audio = model.apply_tts(
         text=text, speaker=speaker, sample_rate=48000
@@ -311,6 +383,32 @@ def api_pimsleur():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/open-folder', methods=['POST'])
+def api_open_folder():
+    data = request.json or {}
+    target = data.get('target', 'words')
+    if target == 'words':
+        path = WORD_DIR
+    elif target == 'lessons':
+        path = OUTPUT_DIR
+    else:
+        return jsonify({'success': False, 'error': 'unknown target'}), 400
+
+    if not os.path.isdir(path):
+        return jsonify({'success': False, 'error': f'not found: {path}'}), 404
+
+    try:
+        if os.name == 'nt':
+            os.startfile(path)
+        elif sys.platform == 'darwin':
+            subprocess.Popen(['open', path])
+        else:
+            subprocess.Popen(['xdg-open', path])
+        return jsonify({'success': True, 'path': path})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/words', methods=['POST'])
 def api_words():
     data = request.json or {}
@@ -367,7 +465,8 @@ def api_words():
 
             results.append(base + '.mp3')
 
-        unload_silero()
+        # Модель НЕ выгружаем — держим в памяти до Ctrl+C / закрытия окна
+        # (следующая генерация будет в 10+ раз быстрее)
 
         print(f"\n✅ ГОТОВО: {len(results)} файлов в {WORD_DIR}\n")
         return jsonify({

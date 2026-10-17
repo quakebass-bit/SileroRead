@@ -303,6 +303,134 @@
             text-align: center;
         }
 
+        .speed-container {
+            position: relative;
+            display: inline-block;
+        }
+        .speed-popover {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 50;
+            min-width: 220px;
+        }
+        .speed-popover.hidden {
+            display: none;
+        }
+        .speed-popover input[type="range"] {
+            width: 150px;
+            accent-color: var(--accent-cyan);
+        }
+        .speed-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            min-width: 52px;
+            text-align: right;
+        }
+
+        .chunk-nav {
+            display: flex;
+            gap: 20px;
+            margin-left: auto;
+        }
+
+        /* MODALS */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 99998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.hidden { display: none; }
+        .modal-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: var(--text-main);
+        }
+        .modal-box h3 { margin-top: 0; margin-bottom: 15px; font-size: 16px; }
+        .modal-box input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-base);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 14px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        .modal-box input:focus { outline: none; border-color: var(--accent-cyan); }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .modal-actions button {
+            padding: 10px 16px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .modal-actions .btn-cancel { background: #475569; color: #fff; }
+        .modal-actions .btn-primary { background: var(--accent-cyan); color: #0c0e14; }
+        .bookmark-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            gap: 10px;
+            background: var(--bg-card);
+        }
+        .bookmark-item .bm-text { flex: 1; overflow: hidden; min-width: 0; }
+        .bookmark-item .bm-name {
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .bookmark-item .bm-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .bookmark-item .bm-btn {
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
+            color: var(--text-main);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .bookmark-item .bm-btn.delete { background: #7f1d1d; color: #fff; border-color: #7f1d1d; }
+
         /* 3. TRACK & FILE INFO */
         .track-info-strip {
             padding: 4px 12px;
@@ -468,31 +596,134 @@
                 <input type="file" id="fb2File" accept=".fb2,.txt,.docx,.pdf,text/xml,text/plain,application/pdf">
             </div>
 
-            <!-- Voice Selection: Silero, Edge, Piper -->
+            <!-- Voice Selection: Silero only (RU + EN) -->
             <select id="voiceSelect" class="modern-select" title="Voice">
-                <optgroup label="🇷🇺 Russian (Silero Offline)">
-                    <option value="silero-xenia" selected>Silero: Ксения</option>
-                    <option value="silero-aidar">Silero: Айдар</option>
-                    <option value="silero-baya">Silero: Бая</option>
-                    <option value="silero-kseniya">Silero: Ксения (альт)</option>
-                    <option value="silero-eugene">Silero: Евгений</option>
+                <optgroup label="🇷🇺 Russian (Silero)">
+                    <option value="silero-xenia" selected>Ксения</option>
+                    <option value="silero-kseniya">Ксения (альт)</option>
+                    <option value="silero-aidar">Айдар</option>
+                    <option value="silero-baya">Бая</option>
+                    <option value="silero-eugene">Евгений</option>
                 </optgroup>
-                <optgroup label="🇺🇸 English (Edge Cloud)">
-                    <option value="en-US-JennyNeural">Edge: Jenny (US)</option>
-                    <option value="en-US-GuyNeural">Edge: Guy (US)</option>
-                    <option value="en-GB-SoniaNeural">Edge: Sonia (UK)</option>
-                </optgroup>
-                <optgroup label="🇺🇸 English (Piper Offline)">
-                    <option value="piper-en-lessac">Piper: Lessac (US)</option>
-                    <option value="piper-en-ryan">Piper: Ryan (US)</option>
-                </optgroup>
-                <optgroup label="🇷🇺 Russian (Edge Cloud)">
-                    <option value="ru-RU-SvetlanaNeural">Edge: Svetlana</option>
-                    <option value="ru-RU-DmitryNeural">Edge: Dmitry</option>
-                </optgroup>
-                <optgroup label="🇷🇺 Russian (Piper Offline)">
-                    <option value="piper-ru-irina">Piper: Irina</option>
-                    <option value="piper-ru-ruslan">Piper: Ruslan</option>
+                <optgroup label="🇬🇧 English (Silero)">
+                    <option value="silero-en_56">en_56</option>
+                    <option value="silero-en_82">en_82</option>
+                    <option value="silero-en_1">en_1</option>
+                    <option value="silero-en_0">en_0</option>
+                    <option value="silero-en_2">en_2</option>
+                    <option value="silero-en_3">en_3</option>
+                    <option value="silero-en_4">en_4</option>
+                    <option value="silero-en_5">en_5</option>
+                    <option value="silero-en_6">en_6</option>
+                    <option value="silero-en_7">en_7</option>
+                    <option value="silero-en_8">en_8</option>
+                    <option value="silero-en_9">en_9</option>
+                    <option value="silero-en_10">en_10</option>
+                    <option value="silero-en_11">en_11</option>
+                    <option value="silero-en_12">en_12</option>
+                    <option value="silero-en_13">en_13</option>
+                    <option value="silero-en_14">en_14</option>
+                    <option value="silero-en_15">en_15</option>
+                    <option value="silero-en_16">en_16</option>
+                    <option value="silero-en_17">en_17</option>
+                    <option value="silero-en_18">en_18</option>
+                    <option value="silero-en_19">en_19</option>
+                    <option value="silero-en_20">en_20</option>
+                    <option value="silero-en_21">en_21</option>
+                    <option value="silero-en_22">en_22</option>
+                    <option value="silero-en_23">en_23</option>
+                    <option value="silero-en_24">en_24</option>
+                    <option value="silero-en_25">en_25</option>
+                    <option value="silero-en_26">en_26</option>
+                    <option value="silero-en_27">en_27</option>
+                    <option value="silero-en_28">en_28</option>
+                    <option value="silero-en_29">en_29</option>
+                    <option value="silero-en_30">en_30</option>
+                    <option value="silero-en_31">en_31</option>
+                    <option value="silero-en_32">en_32</option>
+                    <option value="silero-en_33">en_33</option>
+                    <option value="silero-en_34">en_34</option>
+                    <option value="silero-en_35">en_35</option>
+                    <option value="silero-en_36">en_36</option>
+                    <option value="silero-en_37">en_37</option>
+                    <option value="silero-en_38">en_38</option>
+                    <option value="silero-en_39">en_39</option>
+                    <option value="silero-en_40">en_40</option>
+                    <option value="silero-en_41">en_41</option>
+                    <option value="silero-en_42">en_42</option>
+                    <option value="silero-en_43">en_43</option>
+                    <option value="silero-en_44">en_44</option>
+                    <option value="silero-en_45">en_45</option>
+                    <option value="silero-en_46">en_46</option>
+                    <option value="silero-en_47">en_47</option>
+                    <option value="silero-en_48">en_48</option>
+                    <option value="silero-en_49">en_49</option>
+                    <option value="silero-en_50">en_50</option>
+                    <option value="silero-en_51">en_51</option>
+                    <option value="silero-en_52">en_52</option>
+                    <option value="silero-en_53">en_53</option>
+                    <option value="silero-en_54">en_54</option>
+                    <option value="silero-en_55">en_55</option>
+                    <option value="silero-en_57">en_57</option>
+                    <option value="silero-en_58">en_58</option>
+                    <option value="silero-en_59">en_59</option>
+                    <option value="silero-en_60">en_60</option>
+                    <option value="silero-en_61">en_61</option>
+                    <option value="silero-en_62">en_62</option>
+                    <option value="silero-en_63">en_63</option>
+                    <option value="silero-en_64">en_64</option>
+                    <option value="silero-en_65">en_65</option>
+                    <option value="silero-en_66">en_66</option>
+                    <option value="silero-en_67">en_67</option>
+                    <option value="silero-en_68">en_68</option>
+                    <option value="silero-en_69">en_69</option>
+                    <option value="silero-en_70">en_70</option>
+                    <option value="silero-en_71">en_71</option>
+                    <option value="silero-en_72">en_72</option>
+                    <option value="silero-en_73">en_73</option>
+                    <option value="silero-en_74">en_74</option>
+                    <option value="silero-en_75">en_75</option>
+                    <option value="silero-en_76">en_76</option>
+                    <option value="silero-en_77">en_77</option>
+                    <option value="silero-en_78">en_78</option>
+                    <option value="silero-en_79">en_79</option>
+                    <option value="silero-en_80">en_80</option>
+                    <option value="silero-en_81">en_81</option>
+                    <option value="silero-en_83">en_83</option>
+                    <option value="silero-en_84">en_84</option>
+                    <option value="silero-en_85">en_85</option>
+                    <option value="silero-en_86">en_86</option>
+                    <option value="silero-en_87">en_87</option>
+                    <option value="silero-en_88">en_88</option>
+                    <option value="silero-en_89">en_89</option>
+                    <option value="silero-en_90">en_90</option>
+                    <option value="silero-en_91">en_91</option>
+                    <option value="silero-en_92">en_92</option>
+                    <option value="silero-en_93">en_93</option>
+                    <option value="silero-en_94">en_94</option>
+                    <option value="silero-en_95">en_95</option>
+                    <option value="silero-en_96">en_96</option>
+                    <option value="silero-en_97">en_97</option>
+                    <option value="silero-en_98">en_98</option>
+                    <option value="silero-en_99">en_99</option>
+                    <option value="silero-en_100">en_100</option>
+                    <option value="silero-en_101">en_101</option>
+                    <option value="silero-en_102">en_102</option>
+                    <option value="silero-en_103">en_103</option>
+                    <option value="silero-en_104">en_104</option>
+                    <option value="silero-en_105">en_105</option>
+                    <option value="silero-en_106">en_106</option>
+                    <option value="silero-en_107">en_107</option>
+                    <option value="silero-en_108">en_108</option>
+                    <option value="silero-en_109">en_109</option>
+                    <option value="silero-en_110">en_110</option>
+                    <option value="silero-en_111">en_111</option>
+                    <option value="silero-en_112">en_112</option>
+                    <option value="silero-en_113">en_113</option>
+                    <option value="silero-en_114">en_114</option>
+                    <option value="silero-en_115">en_115</option>
+                    <option value="silero-en_116">en_116</option>
+                    <option value="silero-en_117">en_117</option>
                 </optgroup>
             </select>
 
@@ -523,14 +754,15 @@
             <option value="'JetBrains Mono', monospace">💻 Mono (Monospace)</option>
         </select>
 
-        <select id="speedSelect" class="modern-select" title="Speech speed">
-            <option value="0.75">⏩ 0.75x</option>
-            <option value="1.0" selected>⏩ 1.0x</option>
-            <option value="1.25">⏩ 1.25x</option>
-            <option value="1.5">⏩ 1.5x</option>
-            <option value="1.75">⏩ 1.75x</option>
-            <option value="2.0">⏩ 2.0x</option>
-        </select>
+        <div class="speed-container">
+            <button class="icon-action-btn" id="speedToggleBtn" title="Adjust speed">
+                ⏩ <span id="speedBtnText" style="margin-left:4px; font-size:11px; opacity:0.8;">1.00x</span>
+            </button>
+            <div class="speed-popover hidden" id="speedPopover">
+                <input type="range" id="speedRange" min="0.5" max="2.0" step="0.05" value="1.0">
+                <span class="speed-val" id="speedDisp">1.00x</span>
+            </div>
+        </div>
 
         <div class="font-size-container">
             <button class="icon-action-btn" id="fontSizeToggleBtn" title="Adjust font size">
@@ -544,10 +776,13 @@
             </div>
         </div>
 
-        <!-- Lock Screen — перенесена из верхней панели -->
+        <button class="icon-action-btn" id="addBookmarkBtn" title="Add bookmark">⭐</button>
+        <button class="icon-action-btn" id="showBookmarksBtn" title="Show bookmarks">📌</button>
         <button class="icon-action-btn" id="lockBtn" style="color:var(--accent-amber);" title="Lock Screen">🔒</button>
-        <button class="icon-action-btn" id="prevBtn" title="Previous chunk">⏮</button>
-        <button class="icon-action-btn" id="nextBtn" title="Next chunk">⏭</button>
+        <div class="chunk-nav">
+            <button class="icon-action-btn" id="prevBtn" title="Previous chunk">⏮</button>
+            <button class="icon-action-btn" id="nextBtn" title="Next chunk">⏭</button>
+        </div>
     </div>
 
     <!-- 3. BOOK TITLE STRIP -->
@@ -571,6 +806,7 @@
             <span class="prefetch-pill" id="bufferInfo">buf: 0/2</span>
         </div>
         <span class="progress-badge" id="progressInfo">0 / 0</span>
+        <span class="progress-badge" id="timeInfo">⏱ --</span>
     </footer>
 
     <!-- LOCK SCREEN OVERLAY -->
@@ -585,6 +821,29 @@
 
 <audio id="audioPlayer"></audio>
 
+<!-- MODAL: Add bookmark -->
+<div class="modal-overlay hidden" id="bookmarkModal">
+    <div class="modal-box">
+        <h3>⭐ Сохранить закладку</h3>
+        <input type="text" id="bookmarkNameInput" placeholder="Название закладки...">
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeBookmarkModal()">Отмена</button>
+            <button class="btn-primary" onclick="confirmSaveBookmark()">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Bookmarks list -->
+<div class="modal-overlay hidden" id="bookmarksListModal">
+    <div class="modal-box">
+        <h3>📌 Закладки</h3>
+        <div id="bookmarksList"></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeBookmarksList()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const playBtn = document.getElementById('playBtn'), stopBtn = document.getElementById('stopBtn'), pauseBtn = document.getElementById('pauseBtn');
     const readerBody = document.getElementById('readerBody'), voiceSelect = document.getElementById('voiceSelect');
@@ -594,7 +853,11 @@
     const deckBookTitle = document.getElementById('deck-book-title'), deckFormatInfo = document.getElementById('deck-format-info');
     
     const fontSelect = document.getElementById('fontSelect');
-    const speedSelect = document.getElementById('speedSelect');
+    const speedToggleBtn = document.getElementById('speedToggleBtn');
+    const speedPopover = document.getElementById('speedPopover');
+    const speedRange = document.getElementById('speedRange');
+    const speedBtnText = document.getElementById('speedBtnText');
+    const speedDisp = document.getElementById('speedDisp');
     const fontSizeToggleBtn = document.getElementById('fontSizeToggleBtn');
     const fontSizePopover = document.getElementById('fontSizePopover');
     const fontSizeBtnText = document.getElementById('fontSizeBtnText');
@@ -620,8 +883,12 @@
     let currentSessionId = 0;
     let hasPendingJump = false; // true, если пользователь вручную прыгнул на чанк
     
-    const PREFETCH_AHEAD = 6; // Ровно 2-6 кусков вперед
-    const MAX_PLAYLIST = 12;   // Максимум в буфере
+    const PREFETCH_AHEAD = 6;
+    const MAX_PLAYLIST = 12;
+
+    // Оценка времени воспроизведения
+    let timingStats = { totalChars: 0, totalDuration: 0, sampleCount: 0 };
+    const SAMPLE_SIZE = 5;
 
     // ================= WAKE LOCK =================
     // Не даём экрану гаснуть во время воспроизведения
@@ -693,15 +960,40 @@
         localStorage.setItem('reader-font', val);
     });
 
-    // 2. Playback Speed Preference
+    // 2. Playback Speed Preference (slider)
     let currentPlaybackRate = parseFloat(localStorage.getItem('reader-speed')) || 1.0;
-    speedSelect.value = currentPlaybackRate.toString();
-    audioPlayer.playbackRate = currentPlaybackRate;
+    // Защита от старых значений вне диапазона
+    if (currentPlaybackRate < 0.5) currentPlaybackRate = 0.5;
+    if (currentPlaybackRate > 2.0) currentPlaybackRate = 2.0;
 
-    speedSelect.addEventListener('change', () => {
-        currentPlaybackRate = parseFloat(speedSelect.value);
+    function updateSpeedUI() {
+        const txt = currentPlaybackRate.toFixed(2) + 'x';
+        speedRange.value = currentPlaybackRate.toString();
+        speedBtnText.textContent = txt;
+        speedDisp.textContent = txt;
         audioPlayer.playbackRate = currentPlaybackRate;
+    }
+    updateSpeedUI();
+
+    speedToggleBtn.onclick = (e) => {
+        e.stopPropagation();
+        speedPopover.classList.toggle('hidden');
+    };
+
+    speedRange.addEventListener('input', () => {
+        currentPlaybackRate = parseFloat(speedRange.value);
+        updateSpeedUI();
+    });
+
+    speedRange.addEventListener('change', () => {
         localStorage.setItem('reader-speed', currentPlaybackRate);
+        updateTimeEstimate();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!speedPopover.contains(e.target) && e.target !== speedToggleBtn) {
+            speedPopover.classList.add('hidden');
+        }
     });
 
     // 3. Font Size Controls
@@ -1143,6 +1435,8 @@
         stopBtn.style.display = 'none';
         statusInfo.textContent = "Stopped";
         clearChunkHighlight();
+        timingStats = { totalChars: 0, totalDuration: 0, sampleCount: 0 };
+        updateTimeEstimate();
         updateProgress();
     }
 
@@ -1172,6 +1466,7 @@
             saveDebounced();
         }
         updateProgress();
+        updateTimeEstimate();
 
         if (wasPlaying) {
             // Продолжаем воспроизведение с новой позиции
@@ -1355,6 +1650,20 @@
             console.error("Playback prevented:", e);
         });
 
+        // Сбор длительности для оценки времени
+        const onMeta = () => {
+            const dur = audioPlayer.duration;
+            if (isFinite(dur) && dur > 0 && timingStats.sampleCount < SAMPLE_SIZE) {
+                timingStats.totalChars += audioItem.text.length;
+                timingStats.totalDuration += dur;
+                timingStats.sampleCount++;
+                updateTimeEstimate();
+            }
+            audioPlayer.removeEventListener('loadedmetadata', onMeta);
+        };
+        audioPlayer.addEventListener('loadedmetadata', onMeta);
+        updateTimeEstimate();
+
         fetchNext();
     }
 
@@ -1371,6 +1680,160 @@
             }
         }
     };
+
+    // ================= ОЦЕНКА ВРЕМЕНИ =================
+    function formatTime(sec) {
+        if (!isFinite(sec) || sec < 0) return '--';
+        if (sec < 60) return Math.round(sec) + 'с';
+        if (sec < 3600) return Math.round(sec / 60) + 'м';
+        const h = Math.floor(sec / 3600);
+        const m = Math.round((sec % 3600) / 60);
+        return h + 'ч ' + m + 'м';
+    }
+
+    function updateTimeEstimate() {
+        const timeInfo = document.getElementById('timeInfo');
+        if (!timeInfo) return;
+        if (timingStats.sampleCount < 1 || !readingUnits.length) {
+            timeInfo.textContent = '⏱ --';
+            return;
+        }
+        const charsPerSec = timingStats.totalChars / timingStats.totalDuration;
+        if (!isFinite(charsPerSec) || charsPerSec <= 0) {
+            timeInfo.textContent = '⏱ --';
+            return;
+        }
+        let remainingChars = 0;
+        for (let i = currentUnitIndex; i < readingUnits.length; i++) {
+            remainingChars += readingUnits[i].text.length;
+        }
+        const remainingSec = remainingChars / charsPerSec / currentPlaybackRate;
+        timeInfo.textContent = '⏱ ~' + formatTime(remainingSec);
+    }
+
+    // ================= ЗАКЛАДКИ =================
+    async function loadBookmarks() {
+        if (!bookKey) return [];
+        try {
+            const res = await fetch(`/api/bookmarks?book_name=${encodeURIComponent(bookKey)}`);
+            const data = await res.json();
+            return data.success ? data.bookmarks : [];
+        } catch (e) {
+            console.error('loadBookmarks error:', e);
+            return [];
+        }
+    }
+
+    function openBookmarkModal() {
+        if (!readingUnits.length) {
+            statusInfo.textContent = '⚠️ Сначала загрузи книгу';
+            return;
+        }
+        const currentItem = readingUnits[currentUnitIndex];
+        const defaultName = currentItem ? currentItem.text.substring(0, 40) : '';
+        document.getElementById('bookmarkNameInput').value = defaultName;
+        document.getElementById('bookmarkModal').classList.remove('hidden');
+        setTimeout(() => {
+            const inp = document.getElementById('bookmarkNameInput');
+            inp.focus();
+            inp.select();
+        }, 100);
+    }
+
+    function closeBookmarkModal() {
+        document.getElementById('bookmarkModal').classList.add('hidden');
+    }
+
+    async function confirmSaveBookmark() {
+        const name = document.getElementById('bookmarkNameInput').value.trim();
+        const currentItem = readingUnits[currentUnitIndex];
+        if (!currentItem) return;
+
+        try {
+            const res = await fetch('/api/bookmarks/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    book_name: bookKey,
+                    unit_index: currentUnitIndex,
+                    paragraph_index: currentItem.paragraphIndex,
+                    text: currentItem.text,
+                    name: name || currentItem.text.substring(0, 30)
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeBookmarkModal();
+                statusInfo.textContent = '⭐ Закладка сохранена';
+                setTimeout(() => {
+                    if (isPlaying) statusInfo.textContent = 'Speaking...';
+                    else statusInfo.textContent = 'Ready to read';
+                }, 2000);
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        } catch (e) {
+            alert('Ошибка соединения');
+        }
+    }
+
+    async function openBookmarksList() {
+        if (!bookKey) {
+            statusInfo.textContent = '⚠️ Сначала загрузи книгу';
+            return;
+        }
+        const bm = await loadBookmarks();
+        const list = document.getElementById('bookmarksList');
+        if (!bm.length) {
+            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center;">Закладок пока нет</div>';
+        } else {
+            list.innerHTML = bm.map(b => `
+                <div class="bookmark-item">
+                    <div class="bm-text">
+                        <div class="bm-name">${escapeHtml(b.name)}</div>
+                        <div class="bm-meta">${b.created_at} · чанк ${b.unit_index + 1}</div>
+                    </div>
+                    <button class="bm-btn" onclick="jumpToBookmark(${b.unit_index})">→</button>
+                    <button class="bm-btn delete" onclick="deleteBookmark(${b.id})">🗑</button>
+                </div>
+            `).join('');
+        }
+        document.getElementById('bookmarksListModal').classList.remove('hidden');
+    }
+
+    function closeBookmarksList() {
+        document.getElementById('bookmarksListModal').classList.add('hidden');
+    }
+
+    function jumpToBookmark(unitIndex) {
+        closeBookmarksList();
+        if (unitIndex >= 0 && unitIndex < readingUnits.length) {
+            jumpToUnit(unitIndex);
+        }
+    }
+
+    async function deleteBookmark(id) {
+        try {
+            const res = await fetch('/api/bookmarks/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ book_name: bookKey, id: id })
+            });
+            const data = await res.json();
+            if (data.success) openBookmarksList();
+        } catch (e) {
+            alert('Ошибка удаления');
+        }
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    const _addBmBtn = document.getElementById('addBookmarkBtn');
+    const _showBmBtn = document.getElementById('showBookmarksBtn');
+    if (_addBmBtn) _addBmBtn.onclick = openBookmarkModal;
+    if (_showBmBtn) _showBmBtn.onclick = openBookmarksList;
 
     // 7. Lock Screen Logic
     const lockBtn = document.getElementById('lockBtn');
