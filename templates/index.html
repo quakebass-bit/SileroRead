@@ -18,6 +18,7 @@
     <!-- UI & Reading Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap">
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
@@ -487,6 +488,63 @@
             border-left: 3px solid var(--accent-cyan);
         }
 
+        /* ================= MARKDOWN ================= */
+        .md-h1 { font-size: 1.8em; font-weight: 800; margin-top: 1.2em; line-height: 1.3; }
+        .md-h2 { font-size: 1.5em; font-weight: 700; margin-top: 1.1em; line-height: 1.3; }
+        .md-h3 { font-size: 1.3em; font-weight: 700; margin-top: 1.0em; }
+        .md-h4, .md-h5, .md-h6 { font-size: 1.15em; font-weight: 700; margin-top: 0.8em; }
+
+        .md-li {
+            padding-left: 2em;
+            position: relative;
+        }
+        .md-li::before {
+            content: '•';
+            position: absolute;
+            left: 0.6em;
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .md-quote {
+            border-left: 4px solid var(--accent-cyan);
+            padding-left: 1.2em;
+            font-style: italic;
+            color: var(--text-dim);
+        }
+
+        .md-pre {
+            background: #1e2430;
+            padding: 15px 20px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            line-height: 1.5;
+            white-space: pre;
+            color: #a0e8d0;
+            cursor: default;
+        }
+        .md-pre:hover { background: #1e2430; color: #a0e8d0; }
+
+        .md-hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 1.5em 0;
+        }
+
+        .paragraph strong { font-weight: 700; }
+        .paragraph em { font-style: italic; }
+        .paragraph del { text-decoration: line-through; opacity: 0.7; }
+        .paragraph code {
+            background: #1e2430;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            color: #a0e8d0;
+        }
+
         .chunk-active {
             text-decoration: underline;
             text-decoration-color: var(--accent-cyan);
@@ -593,7 +651,7 @@
             <div class="file-upload-badge" id="fileBtnWrap" title="Select book file">
                 <span>📁</span>
                 <span id="fileNameDisp">Choose File</span>
-                <input type="file" id="fb2File" accept=".fb2,.txt,.docx,.pdf,text/xml,text/plain,application/pdf">
+                <input type="file" id="fb2File" accept=".fb2,.txt,.md,.markdown,.docx,.pdf,text/xml,text/plain,text/markdown,application/pdf">
             </div>
 
             <!-- Voice Selection: Silero only (RU + EN) -->
@@ -1079,7 +1137,21 @@
         } 
         else if (ext === 'txt') {
             const reader = new FileReader();
-            reader.onload = (evt) => parseTXT(evt.target.result);
+            reader.onload = (evt) => {
+                const txt = evt.target.result;
+                const looksLikeMarkdown = /(^|\n)(#{1,6}\s|>\s|[-*]\s|\d+\.\s)|(\*\*[^*\n]+\*\*)|(`[^`\n]+`)/m.test(txt);
+                if (looksLikeMarkdown) {
+                    console.log("📝 .txt содержит markdown — рендерю как MD");
+                    parseMD(txt);
+                } else {
+                    parseTXT(txt);
+                }
+            };
+            reader.readAsText(file);
+        }
+        else if (ext === 'md' || ext === 'markdown') {
+            const reader = new FileReader();
+            reader.onload = (evt) => parseMD(evt.target.result);
             reader.readAsText(file);
         } 
         else if (ext === 'docx') {
@@ -1169,6 +1241,80 @@
             };
             walk(bodies[b]);
         }
+        buildReadingUnitsServer().then(() => loadProgressAndRender());
+    }
+
+    function parseMD(textString) {
+        allBlocks = []; textParagraphs = []; let pIndex = 0;
+
+        if (typeof marked === 'undefined') {
+            console.warn("⚠️ marked.js не загружен — fallback на plain text");
+            return parseTXT(textString);
+        }
+
+        let html;
+        try {
+            html = marked.parse(textString, { breaks: true, gfm: true });
+        } catch (e) {
+            console.error("marked.parse failed:", e);
+            return parseTXT(textString);
+        }
+
+        const container = document.createElement('div');
+        container.innerHTML = html;
+
+        // Strip links → plain text (чтобы не уводили из читалки)
+        container.querySelectorAll('a').forEach(a => {
+            a.replaceWith(document.createTextNode(a.textContent));
+        });
+
+        const norm = (s) => (s || '').replace(/\s+/g, ' ').trim();
+
+        const addTextBlock = (el, className) => {
+            const text = norm(el.textContent);
+            if (!text) return;
+            const block = {
+                type: 'text',
+                text: text,
+                html: el.innerHTML,
+                className: className || '',
+                index: pIndex++
+            };
+            allBlocks.push(block);
+            textParagraphs.push(block);
+        };
+
+        for (const child of Array.from(container.children)) {
+            const tag = child.tagName.toLowerCase();
+
+            if (/^h[1-6]$/.test(tag)) {
+                addTextBlock(child, 'md-' + tag);
+            } else if (tag === 'p') {
+                addTextBlock(child, '');
+            } else if (tag === 'ul' || tag === 'ol') {
+                for (const li of Array.from(child.children)) {
+                    if (li.tagName.toLowerCase() === 'li') {
+                        addTextBlock(li, 'md-li');
+                    }
+                }
+            } else if (tag === 'blockquote') {
+                addTextBlock(child, 'md-quote');
+            } else if (tag === 'pre') {
+                const codeText = child.textContent || '';
+                if (codeText.trim()) {
+                    allBlocks.push({
+                        type: 'code',
+                        html: child.innerHTML,
+                        text: codeText
+                    });
+                }
+            } else if (tag === 'hr') {
+                allBlocks.push({ type: 'hr' });
+            } else {
+                addTextBlock(child, '');
+            }
+        }
+
         buildReadingUnitsServer().then(() => loadProgressAndRender());
     }
 
@@ -1287,10 +1433,18 @@
         allBlocks.forEach(block => {
             if (block.type === 'text') {
                 const div = document.createElement('div');
-                div.className = 'paragraph'; div.id = 'p-' + block.index;
-                div.textContent = block.text;
+                let cls = 'paragraph';
+                if (block.className) cls += ' ' + block.className;
+                div.className = cls;
+                div.id = 'p-' + block.index;
+
+                if (block.html) {
+                    div.innerHTML = block.html;
+                } else {
+                    div.textContent = block.text;
+                }
+
                 div.onclick = () => { 
-                    // Не реагируем, если пользователь выделяет/копирует текст
                     const sel = window.getSelection();
                     if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
                         return;
@@ -1308,6 +1462,15 @@
                     }
                 };
                 readerBody.appendChild(div);
+            } else if (block.type === 'code') {
+                const div = document.createElement('div');
+                div.className = 'paragraph md-pre';
+                div.innerHTML = block.html;
+                readerBody.appendChild(div);
+            } else if (block.type === 'hr') {
+                const hr = document.createElement('hr');
+                hr.className = 'md-hr';
+                readerBody.appendChild(hr);
             } else if (block.type === 'image') {
                 const img = document.createElement('img');
                 img.src = block.src; img.className = 'fb2-image';
@@ -1587,26 +1750,59 @@
         const para = document.getElementById('p-' + paragraphIndex);
         if (!para) return;
 
-        const fullText = para.textContent;
+        // Собираем все текстовые узлы по порядку
+        const walker = document.createTreeWalker(para, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        let fullText = '';
+        let n;
+        while (n = walker.nextNode()) {
+            nodes.push({ node: n, start: fullText.length });
+            fullText += n.nodeValue;
+        }
+
         const range = findChunkRange(fullText, chunkText);
         if (!range) {
             console.warn("Chunk not found in paragraph:", chunkText.substring(0, 40));
             return;
         }
 
-        const before = fullText.substring(0, range.start);
-        const middle = fullText.substring(range.start, range.end);
-        const after = fullText.substring(range.end);
+        const { start, end } = range;
 
-        para.textContent = '';
-        if (before) para.appendChild(document.createTextNode(before));
-        const span = document.createElement('span');
-        span.className = 'chunk-active';
-        span.textContent = middle;
-        para.appendChild(span);
-        if (after) para.appendChild(document.createTextNode(after));
+        // Находим пересекающиеся текстовые узлы
+        const pieces = [];
+        for (const { node, start: nodeStart } of nodes) {
+            const nodeLen = node.nodeValue.length;
+            const nodeEnd = nodeStart + nodeLen;
+            if (nodeEnd <= start || nodeStart >= end) continue;
+            pieces.push({
+                node: node,
+                from: Math.max(0, start - nodeStart),
+                to: Math.min(nodeLen, end - nodeStart)
+            });
+        }
 
-        scrollToElementCenter(span);
+        // Обходим с конца — чтобы замена не смещала offsets
+        for (let i = pieces.length - 1; i >= 0; i--) {
+            const { node, from, to } = pieces[i];
+            const val = node.nodeValue;
+            const before = val.substring(0, from);
+            const middle = val.substring(from, to);
+            const after = val.substring(to);
+
+            const span = document.createElement('span');
+            span.className = 'chunk-active';
+            span.textContent = middle;
+
+            const frag = document.createDocumentFragment();
+            if (before) frag.appendChild(document.createTextNode(before));
+            frag.appendChild(span);
+            if (after) frag.appendChild(document.createTextNode(after));
+
+            node.parentNode.replaceChild(frag, node);
+        }
+
+        const firstSpan = para.querySelector('.chunk-active');
+        if (firstSpan) scrollToElementCenter(firstSpan);
     }
 
     function scrollToElementCenter(el) {
