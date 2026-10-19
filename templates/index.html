@@ -638,6 +638,50 @@
             color: var(--accent-amber);
         }
 
+        .paste-textarea {
+            width: 100%;
+            min-height: 220px;
+            background: var(--bg-base);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 12px;
+            resize: vertical;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        .paste-textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+        .paste-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .paste-tool-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .paste-tool-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-cyan);
+        }
+
         audio { display: none; }
     </style>
 </head>
@@ -648,11 +692,15 @@
     <!-- 1. TOP CONTROL BAR -->
     <header class="top-switch-bar">
         <div class="bar-left-cluster">
-            <div class="file-upload-badge" id="fileBtnWrap" title="Select book file">
+            <div class="file-upload-badge" id="fileBtnWrap" title="Выбрать файл (.fb2, .txt, .md, .docx, .pdf)">
                 <span>📁</span>
                 <span id="fileNameDisp">Choose File</span>
-                <input type="file" id="fb2File" accept=".fb2,.txt,.md,.markdown,.docx,.pdf,text/xml,text/plain,text/markdown,application/pdf">
+                <input type="file" id="fb2File">
             </div>
+            <button class="file-upload-badge" id="pasteTabBtn" type="button" title="Вставить свой текст или Markdown" style="color: var(--accent-amber);">
+                <span>📋</span>
+                <span>Текст</span>
+            </button>
 
             <!-- Voice Selection: Silero only (RU + EN) -->
             <select id="voiceSelect" class="modern-select" title="Voice">
@@ -898,6 +946,22 @@
         <div id="bookmarksList"></div>
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeBookmarksList()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Paste Custom Text -->
+<div class="modal-overlay hidden" id="pasteTextModal">
+    <div class="modal-box" style="max-width: 640px;">
+        <h3>📋 Вставить текст / Markdown</h3>
+        <div class="paste-toolbar">
+            <button type="button" class="paste-tool-btn" id="btnClipboardPaste">📋 Вставить</button>
+            <button type="button" class="paste-tool-btn" id="btnClipboardClear">🧹 Очистить</button>
+        </div>
+        <textarea id="pastedTextInput" class="paste-textarea" placeholder="Вставьте или введите сюда любой текст или Markdown..."></textarea>
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="btnClosePasteModal">Отмена</button>
+            <button type="button" class="btn-primary" id="btnReadPastedText">📖 Читать текст</button>
         </div>
     </div>
 </div>
@@ -1149,7 +1213,7 @@
             };
             reader.readAsText(file);
         }
-        else if (ext === 'md' || ext === 'markdown') {
+        else if (['md', 'markdown', 'mdown', 'mkd'].includes(ext)) {
             const reader = new FileReader();
             reader.onload = (evt) => parseMD(evt.target.result);
             reader.readAsText(file);
@@ -1163,6 +1227,11 @@
             const reader = new FileReader();
             reader.onload = (evt) => parsePDF(evt.target.result);
             reader.readAsArrayBuffer(file);
+        }
+        else {
+            const reader = new FileReader();
+            reader.onload = (evt) => parseMD(evt.target.result);
+            reader.readAsText(file);
         }
     });
 
@@ -2073,6 +2142,90 @@
     lockOverlay.addEventListener('click', (e) => {
         if (e.target === lockOverlay) {
             e.stopPropagation();
+        }
+    });
+
+    // 7.5. Вкладка вставки текста (Вставить / Очистить / Читать)
+    const pasteTabBtn = document.getElementById('pasteTabBtn');
+    const pasteTextModal = document.getElementById('pasteTextModal');
+    const pastedTextInput = document.getElementById('pastedTextInput');
+    const btnClipboardPaste = document.getElementById('btnClipboardPaste');
+    const btnClipboardClear = document.getElementById('btnClipboardClear');
+    const btnClosePasteModal = document.getElementById('btnClosePasteModal');
+    const btnReadPastedText = document.getElementById('btnReadPastedText');
+
+    // Восстанавливаем черновик из localStorage
+    const savedDraft = localStorage.getItem('sileroread-pasted-draft');
+    if (savedDraft) pastedTextInput.value = savedDraft;
+
+    pastedTextInput.addEventListener('input', () => {
+        localStorage.setItem('sileroread-pasted-draft', pastedTextInput.value);
+    });
+
+    pasteTabBtn.addEventListener('click', () => {
+        pasteTextModal.classList.remove('hidden');
+        setTimeout(() => pastedTextInput.focus(), 100);
+    });
+
+    btnClosePasteModal.addEventListener('click', () => {
+        pasteTextModal.classList.add('hidden');
+    });
+
+    pasteTextModal.addEventListener('click', (e) => {
+        if (e.target === pasteTextModal) pasteTextModal.classList.add('hidden');
+    });
+
+    btnClipboardPaste.addEventListener('click', async () => {
+        try {
+            const clipText = await navigator.clipboard.readText();
+            if (clipText) {
+                const start = pastedTextInput.selectionStart;
+                const end = pastedTextInput.selectionEnd;
+                const current = pastedTextInput.value;
+                pastedTextInput.value = current.slice(0, start) + clipText + current.slice(end);
+                localStorage.setItem('sileroread-pasted-draft', pastedTextInput.value);
+                pastedTextInput.focus();
+            }
+        } catch (err) {
+            pastedTextInput.focus();
+            alert('Браузер запросил ручную вставку (нажмите Ctrl+V или удерживайте палец в поле ввода).');
+        }
+    });
+
+    btnClipboardClear.addEventListener('click', () => {
+        pastedTextInput.value = '';
+        localStorage.removeItem('sileroread-pasted-draft');
+        pastedTextInput.focus();
+    });
+
+    btnReadPastedText.addEventListener('click', () => {
+        const rawText = pastedTextInput.value.trim();
+        if (!rawText) {
+            statusInfo.textContent = '⚠️ Поле текста пустое';
+            return;
+        }
+        pasteTextModal.classList.add('hidden');
+        stop();
+
+        // Генерируем короткий ключ по содержимому, чтобы сохранялся прогресс и закладки
+        let hash = 0;
+        for (let i = 0; i < rawText.length; i++) {
+            hash = ((hash << 5) - hash) + rawText.charCodeAt(i);
+            hash |= 0;
+        }
+        const firstLine = rawText.split(/\r?\n/)[0].replace(/[#>*_`~]/g, '').trim().slice(0, 28) || 'Вставленный текст';
+        bookKey = `pasted_${Math.abs(hash)}`;
+
+        fileNameDisp.textContent = 'Из буфера';
+        deckBookTitle.textContent = `📋 ${firstLine}`;
+        deckFormatInfo.textContent = 'TEXT/MD • READY';
+        statusInfo.textContent = 'Processing text...';
+
+        const looksLikeMarkdown = /(^|\n)(#{1,6}\s|>\s|[-*]\s|\d+\.\s)|(\*\*[^*\n]+\*\*)|(`[^`\n]+`)/m.test(rawText);
+        if (looksLikeMarkdown) {
+            parseMD(rawText);
+        } else {
+            parseTXT(rawText);
         }
     });
 
