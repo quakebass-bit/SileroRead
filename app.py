@@ -10,7 +10,7 @@ import gc
 import ctypes
 import subprocess
 import wave
-from threading import Lock
+from threading import RLock, Lock
 from flask import Flask, render_template, request, jsonify, send_from_directory
 
 # ================= НОРМАЛИЗАЦИЯ ТЕКСТА =================
@@ -155,6 +155,18 @@ def _get_rss_mb():
     return -1
 
 
+def _get_swap_mb():
+    """Swap текущего процесса в мегабайтах (только Linux)."""
+    try:
+        with open('/proc/self/status', 'r') as f:
+            for line in f:
+                if line.startswith('VmSwap:'):
+                    return int(line.split()[1]) // 1024
+    except Exception:
+        pass
+    return -1
+
+
 def _force_memory_release():
     """gc.collect + malloc_trim — освобождает память Python и возвращает её ОС."""
     gc.collect()
@@ -178,7 +190,7 @@ os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 
 # ================= LOCK'И =================
-silero_lock = Lock()
+silero_lock = RLock()
 edge_tts_lock = Lock()
 
 # ================= PIPER =================
@@ -250,7 +262,7 @@ def get_silero_model(model_path):
         silero_model = torch_module.package.PackageImporter(model_path).load_pickle("tts_models", "model")
         silero_model.to(torch_module.device('cpu'))
         silero_model_path = model_path
-        print(f"✅ Silero готова | RSS: {_get_rss_mb()} MB", flush=True)
+        print(f"✅ Silero готова | RSS: {_get_rss_mb()} MB | Swap: {_get_swap_mb()} MB", flush=True)
         return silero_model
 
 
@@ -268,32 +280,47 @@ def synthesize_silero(text, voice_id, output_path):
     global silero_model, silero_model_path, _silero_request_count
     is_english = voice_id.startswith('en_')
 
-    if is_english:
-        model = get_silero_model(SILERO_EN_MODEL)
-        sample_rate = 24000
-        audio = model.apply_tts(text=text, speaker=voice_id, sample_rate=sample_rate)
-    else:
-        model = get_silero_model(SILERO_RU_MODEL)
-        sample_rate = 24000
-        audio = model.apply_tts(
-            text=text, speaker=voice_id, sample_rate=sample_rate,
-            put_accent=True, put_yo=True
-        )
+    with silero_lock:
+        if is_english:
+            model = get_silero_model(SILERO_EN_MODEL)
+            sample_rate = 24000
+            with torch_module.no_grad():
+                audio = model.apply_tts(text=text, speaker=voice_id, sample_rate=sample_rate)
+        else:
+            model = get_silero_model(SILERO_RU_MODEL)
+            sample_rate = 24000
+            with torch_module.no_grad():
+                audio = model.apply_tts(
+                    text=text, speaker=voice_id, sample_rate=sample_rate,
+                    put_accent=True, put_yo=True
+                )
 
-    save_tensor_to_wav(audio, output_path, sample_rate)
-    del audio
-    _force_memory_release()
-
-    _silero_request_count += 1
-    if _silero_request_count % SILERO_RSS_LOG_EVERY == 0:
-        print(f"📊 Silero #{_silero_request_count} | RSS: {_get_rss_mb()} MB", flush=True)
-    if _silero_request_count % SILERO_RELOAD_EVERY == 0:
-        rss_before = _get_rss_mb()
-        print(f"♻️ Перезагрузка Silero после {_silero_request_count} запросов (RSS до: {rss_before} MB)", flush=True)
-        silero_model = None
-        silero_model_path = None
+        save_tensor_to_wav(audio, output_path, sample_rate)
+        del audio
         _force_memory_release()
-        print(f"✅ Silero выгружена | RSS после: {_get_rss_mb()} MB", flush=True)
+
+        _silero_request_count += 1
+        if _silero_request_count % SILERO_RSS_LOG_EVERY == 0:
+            print(
+                f"📊 Silero #{_silero_request_count} | "
+                f"RSS: {_get_rss_mb()} MB | Swap: {_get_swap_mb()} MB",
+                flush=True
+            )
+        if _silero_request_count % SILERO_RELOAD_EVERY == 0:
+            rss_before = _get_rss_mb()
+            swap_before = _get_swap_mb()
+            print(
+                f"♻️ Перезагрузка Silero после {_silero_request_count} запросов "
+                f"(RSS до: {rss_before} MB, Swap: {swap_before} MB)",
+                flush=True
+            )
+            silero_model = None
+            silero_model_path = None
+            _force_memory_release()
+            print(
+                f"✅ Silero выгружена | RSS после: {_get_rss_mb()} MB | Swap: {_get_swap_mb()} MB",
+                flush=True
+            )
 
 
 # ================= EDGE TTS =================
@@ -330,9 +357,14 @@ def cleanup_old_audio():
                 pass
 
 
+def _has_speakable_chars(s: str) -> bool:
+    """Проверяет, есть ли в строке хотя бы одна буква или цифра."""
+    return bool(re.search(r'[A-Za-zА-Яа-яЁё0-9]', s or ''))
+
+
 def split_into_chunks(text, max_chars=300, min_chars=20):
     cleaned = " ".join(text.split()).strip()
-    if not cleaned:
+    if not cleaned or not _has_speakable_chars(cleaned):
         return []
     abbreviations = [
         "т.е.", "т.к.", "т.д.", "т.п.", "и т.д.", "и т.п.",
@@ -358,7 +390,7 @@ def split_into_chunks(text, max_chars=300, min_chars=20):
             if token in s_restored:
                 s_restored = s_restored.replace(token, original)
         s_restored = s_restored.strip()
-        if s_restored:
+        if s_restored and _has_speakable_chars(s_restored):
             restored_sentences.append(s_restored)
     sub_divided = []
     for sent in restored_sentences:
@@ -369,10 +401,10 @@ def split_into_chunks(text, max_chars=300, min_chars=20):
                 if len(curr) + len(cl) + 1 <= max_chars:
                     curr = f"{curr} {cl}".strip()
                 else:
-                    if curr:
+                    if curr and _has_speakable_chars(curr):
                         sub_divided.append(curr)
                     curr = cl
-            if curr:
+            if curr and _has_speakable_chars(curr):
                 sub_divided.append(curr)
         else:
             sub_divided.append(sent)
@@ -392,6 +424,8 @@ def split_into_chunks(text, max_chars=300, min_chars=20):
         chunks.append(buffer)
     merged = []
     for chunk in chunks:
+        if not _has_speakable_chars(chunk):
+            continue
         if merged and (len(chunk) < min_chars or len(merged[-1]) < min_chars):
             merged[-1] = f"{merged[-1]} {chunk}".strip()
         else:
@@ -491,8 +525,8 @@ def save_bookmark():
         return jsonify({'success': False, 'error': 'Missing unit_index'})
 
     paragraph_index = data.get('paragraph_index', 0)
-    text = (data.get('text') or '')[:200]
-    name = (data.get('name') or '').strip() or text[:30]
+    text = (data.get('text') or '')[:300]
+    name = (data.get('name') or '').strip() or text[:40]
 
     bookmarks = load_bookmarks_data()
     book_bm = bookmarks.get(book_name, [])
@@ -545,10 +579,8 @@ def synthesize():
     text = (request.form.get('text') or (request.json or {}).get('text') or '').strip()
     voice = (request.form.get('voice') or (request.json or {}).get('voice') or 'ru-RU-DmitryNeural').strip()
 
-    if not text:
-        return jsonify({'success': False, 'error': 'Text is empty'})
-
-    normalized_text = normalize_text(text)
+    if not text or not _has_speakable_chars(text):
+        return jsonify({'success': False, 'error': 'Text has no speakable characters'}), 400
 
     cleanup_old_audio()
 
@@ -561,6 +593,9 @@ def synthesize():
             speaker_name = voice.replace('silero-', '')
             is_english = speaker_name.startswith('en_')
             tts_text = normalize_en_text(text) if is_english else normalize_text(text)
+            if not _has_speakable_chars(tts_text):
+                return jsonify({'success': False, 'error': 'Normalized text is empty'}), 400
+
             filename = f"speech_silero_{cache_hash}.wav"
             filepath = os.path.join(AUDIO_DIR, filename)
 
