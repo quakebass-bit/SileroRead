@@ -140,6 +140,42 @@
             border: 1px solid #464d37;
         }
 
+        /* 🧮 MONO LCD THEME (Нейтральный серый ч/б экран калькулятора/часов) */
+        body[data-theme="lcd-mono"] {
+            --bg-base: #a3a8a3;
+            --bg-surface: #949994;
+            --bg-card: #9a9f9a;
+            --bg-card-hover: #8b908b;
+            --border-color: #4a4d4a;
+            --border-focus: #121312;
+
+            --text-main: #121312;
+            --text-muted: #4a4d4a;
+            --text-dim: #292b29;
+
+            --accent-blue: #1f211f;
+            --accent-cyan: #0d0e0d;
+            --accent-amber: #2c2e2c;
+            --accent-red: #381d1d;
+        }
+
+        body[data-theme="lcd-mono"] .btn-play-hero {
+            background: #171817;
+            color: #a3a8a3;
+            box-shadow: 2px 2px 0px #4a4d4a;
+            border: 1px solid #121312;
+        }
+        body[data-theme="lcd-mono"] .paragraph.active-text {
+            background: rgba(18, 19, 18, 0.12);
+            border-left: 4px solid #121312;
+        }
+        body[data-theme="lcd-mono"] .md-pre,
+        body[data-theme="lcd-mono"] .paragraph code {
+            background: #8b908b;
+            color: #121312;
+            border: 1px solid #4a4d4a;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -969,6 +1005,7 @@
             <option value="sepia">📜 Sepia</option>
             <option value="oled">🖤 OLED</option>
             <option value="lcd">⌚ Casio LCD</option>
+            <option value="lcd-mono">🧮 Mono LCD (Ч/Б)</option>
         </select>
 
         <select id="fontSelect" class="modern-select" style="max-width: 150px;" title="Select font family">
