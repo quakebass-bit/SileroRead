@@ -104,7 +104,7 @@
             --accent-red: #ff1744;
         }
 
-        /* ⌚ CASIO LCD THEME (Серо-оливковый ЖК-экран и чёрные сегменты) */
+        /* ⌚ CASIO LCD THEME */
         body[data-theme="lcd"] {
             --bg-base: #939d7a;
             --bg-surface: #848e6c;
@@ -140,7 +140,7 @@
             border: 1px solid #464d37;
         }
 
-        /* 🧮 MONO LCD THEME (Нейтральный серый ч/б экран калькулятора/часов) */
+        /* 🧮 MONO LCD THEME */
         body[data-theme="lcd-mono"] {
             --bg-base: #a3a8a3;
             --bg-surface: #949994;
@@ -214,11 +214,11 @@
         /* 1. TOP CONTROL BAR */
         .top-switch-bar {
             background: var(--bg-surface);
-            padding: 8px 12px;
+            padding: 8px 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
+            gap: 10px;
             border-bottom: 1px solid var(--border-color);
             z-index: 30;
             flex-shrink: 0;
@@ -228,28 +228,28 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            flex: 1;
+            flex: 1 1 auto;
             min-width: 0;
-            overflow-x: auto;
-            scrollbar-width: none;
+            overflow: hidden;
+            padding-right: 4px;
         }
-        .bar-left-cluster::-webkit-scrollbar { display: none; }
 
         .file-upload-badge {
             position: relative;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             color: var(--accent-cyan);
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
-            padding: 6px 10px;
+            height: 34px;
+            padding: 0 9px;
             border-radius: var(--radius-sm);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             cursor: pointer;
             transition: 0.2s;
-            max-width: 130px;
+            max-width: 112px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -269,11 +269,22 @@
             font-family: inherit;
             font-size: 12px;
             font-weight: 600;
-            padding: 6px 8px;
+            height: 34px;
+            padding: 0 8px;
             border-radius: var(--radius-sm);
             outline: none;
             cursor: pointer;
             flex-shrink: 0;
+        }
+
+        /* Аккуратный селектор голоса — не наезжает на кнопку READ */
+        #voiceSelect {
+            flex: 0 1 130px;
+            min-width: 74px;
+            max-width: 135px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .icon-action-btn {
@@ -305,79 +316,53 @@
             align-items: center;
             gap: 6px;
             flex-shrink: 0;
+            margin-left: 2px;
         }
 
         .btn-play-hero {
             background: linear-gradient(135deg, var(--accent-blue), #1d4ed8);
             border: none;
             color: #ffffff;
-            height: 36px;
-            padding: 0 14px;
+            height: 34px;
+            padding: 0 13px;
             border-radius: var(--radius-sm);
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 800;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             flex-shrink: 0;
+            white-space: nowrap;
         }
         .btn-pause-hero {
             background: linear-gradient(135deg, var(--accent-amber), #b45309);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+            box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
             display: none;
         }
         .btn-stop-hero {
             background: linear-gradient(135deg, var(--accent-red), #991b1b);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+            box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
             display: none;
         }
 
         /* 2. READER SETTINGS SUB-BAR */
         .reader-settings-deck {
             background: var(--bg-surface);
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
             flex-shrink: 0;
             position: relative;
+            z-index: 25;
         }
 
-        .font-size-container {
-            position: relative;
-            display: inline-block;
-        }
-        .font-size-popover {
-            position: absolute;
-            top: 40px;
-            left: 0;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            padding: 8px 10px;
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 50;
-        }
-        .font-size-popover.hidden {
-            display: none;
-        }
-        .font-size-val {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-main);
-            min-width: 40px;
-            text-align: center;
-        }
-
+        /* ВЕРТИКАЛЬНЫЙ ПОЛЗУНОК СКОРОСТИ (УВЕЛИЧЕНИЕ ВНИЗ + КНОПКА ЗАКРЫТЬ) */
         .speed-container {
             position: relative;
             display: inline-block;
@@ -385,37 +370,155 @@
         .speed-popover {
             position: absolute;
             top: 40px;
-            left: 0;
+            left: 50%;
+            transform: translateX(-50%);
             background: var(--bg-surface);
             border: 1px solid var(--border-color);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.65);
+            padding: 10px 8px;
+            border-radius: var(--radius-md);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 12px;
-            z-index: 50;
-            min-width: 220px;
+            gap: 8px;
+            z-index: 120;
+            width: 76px;
+            touch-action: none;
         }
         .speed-popover.hidden {
             display: none;
         }
-        .speed-popover input[type="range"] {
-            width: 150px;
-            accent-color: var(--accent-cyan);
-        }
         .speed-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            text-align: center;
+        }
+        .speed-dir-hint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1;
+        }
+        /* Обёртка для вертикального слайдера (сверху 0.5x -> вниз 2.0x) */
+        .v-slider-wrap {
+            width: 36px;
+            height: 136px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .v-slider-wrap input[type="range"] {
+            width: 130px;
+            height: 28px;
+            margin: 0;
+            transform: rotate(90deg);
+            transform-origin: center;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        /* ОБЪЕДИНЁННОЕ МЕНЮ ШРИФТА И РАЗМЕРА (Aa) */
+        .font-menu-container {
+            position: relative;
+            display: inline-block;
+        }
+        .font-popover {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.65);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 120;
+            width: 185px;
+        }
+        .font-popover.hidden {
+            display: none;
+        }
+        .popover-section-label {
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .font-family-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .font-choice-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .font-choice-btn:hover {
+            background: var(--bg-card-hover);
+        }
+        .font-choice-btn.active {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background: var(--bg-card-hover);
+            font-weight: 800;
+        }
+        .font-size-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            padding-top: 4px;
+            border-top: 1px solid var(--border-color);
+        }
+        .font-size-val {
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
             font-weight: 700;
             color: var(--text-main);
-            min-width: 52px;
-            text-align: right;
+            min-width: 44px;
+            text-align: center;
+        }
+
+        .popover-close-btn {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-dim);
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.15s;
+            margin-top: 2px;
+        }
+        .popover-close-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-main);
+            border-color: var(--border-focus);
         }
 
         .chunk-nav {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             margin-left: auto;
         }
 
@@ -435,14 +538,45 @@
             background: var(--bg-surface);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 18px;
+            padding: 16px 18px;
             max-width: 540px;
             width: 100%;
             max-height: 82vh;
             overflow-y: auto;
             color: var(--text-main);
         }
-        .modal-box h3 { margin-top: 0; margin-bottom: 14px; font-size: 15px; }
+        .modal-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header-row h3 {
+            margin: 0;
+            font-size: 15px;
+        }
+        .modal-top-close {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .modal-top-close:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
         .modal-box input {
             width: 100%;
             padding: 10px 12px;
@@ -472,7 +606,7 @@
         .modal-actions .btn-cancel { background: #475569; color: #fff; }
         .modal-actions .btn-primary { background: var(--accent-cyan); color: var(--bg-base); }
 
-        /* ЗАКЛАДКИ (Компактный шрифт + превью + всплывающий текст) */
+        /* BOOKMARKS */
         .bookmark-item {
             position: relative;
             display: flex;
@@ -544,7 +678,7 @@
         }
         .bookmark-item .bm-btn.delete { background: #7f1d1d; color: #fff; border-color: #7f1d1d; }
 
-        /* ОГЛАВЛЕНИЕ (TOC) */
+        /* TABLE OF CONTENTS (TOC) */
         .toc-item {
             display: flex;
             align-items: center;
@@ -844,26 +978,26 @@
 <div class="app-shell">
 
     <!-- 1. TOP CONTROL BAR -->
-    <header class="top-switch-bar">
+    <header class="top-switch-bar" id="topControlBar">
         <div class="bar-left-cluster">
-            <div class="file-upload-badge" id="fileBtnWrap" title="Выбрать файл (.fb2, .txt, .md, .docx, .pdf)">
+            <div class="file-upload-badge" id="fileBtnWrap" title="Choose file (.fb2, .txt, .md, .docx, .pdf)">
                 <span>📁</span>
-                <span id="fileNameDisp">Choose File</span>
+                <span id="fileNameDisp">Open File</span>
                 <input type="file" id="fb2File">
             </div>
-            <button class="file-upload-badge" id="pasteTabBtn" type="button" title="Вставить свой текст или Markdown" style="color: var(--accent-amber);">
+            <button class="file-upload-badge" id="pasteTabBtn" type="button" title="Paste custom text or Markdown" style="color: var(--accent-amber);">
                 <span>📋</span>
-                <span>Текст</span>
+                <span>Paste</span>
             </button>
 
             <!-- Voice Selection: Silero only (RU + EN) -->
-            <select id="voiceSelect" class="modern-select" title="Voice">
+            <select id="voiceSelect" class="modern-select" title="Select Voice">
                 <optgroup label="🇷🇺 Russian (Silero)">
-                    <option value="silero-xenia" selected>Ксения</option>
-                    <option value="silero-kseniya">Ксения (альт)</option>
-                    <option value="silero-aidar">Айдар</option>
-                    <option value="silero-baya">Бая</option>
-                    <option value="silero-eugene">Евгений</option>
+                    <option value="silero-xenia" selected>Xenia</option>
+                    <option value="silero-kseniya">Kseniya (alt)</option>
+                    <option value="silero-aidar">Aidar</option>
+                    <option value="silero-baya">Baya</option>
+                    <option value="silero-eugene">Eugene</option>
                 </optgroup>
                 <optgroup label="🇬🇧 English (Silero)">
                     <option value="silero-en_56">en_56</option>
@@ -986,10 +1120,9 @@
                     <option value="silero-en_117">en_117</option>
                 </optgroup>
             </select>
-
         </div>
 
-        <!-- Кнопки управления воспроизведением -->
+        <!-- Playback Controls -->
         <div class="playback-controls-group">
             <button class="btn-play-hero" id="playBtn">▶ READ</button>
             <button class="btn-play-hero btn-pause-hero" id="pauseBtn">⏸ PAUSE</button>
@@ -997,54 +1130,67 @@
         </div>
     </header>
 
-    <!-- 2. SUB-BAR: FONT, SPEED, SIZE & THEME -->
-    <div class="reader-settings-deck">
-        <select id="themeSelect" class="modern-select" title="Theme">
+    <!-- 2. SUB-BAR: THEME, SPEED, COMBINED FONT & SIZE, TOC, BOOKMARKS -->
+    <div class="reader-settings-deck" id="settingsDeckBar">
+        <select id="themeSelect" class="modern-select" title="Color Theme">
             <option value="dark">🌙 Dark</option>
             <option value="light">☀️ Light</option>
             <option value="sepia">📜 Sepia</option>
             <option value="oled">🖤 OLED</option>
             <option value="lcd">⌚ Casio LCD</option>
-            <option value="lcd-mono">🧮 Mono LCD (Ч/Б)</option>
+            <option value="lcd-mono">🧮 Mono LCD</option>
         </select>
 
-        <select id="fontSelect" class="modern-select" style="max-width: 150px;" title="Select font family">
-            <option value="'Lora', Georgia, serif">📖 Lora (Serif)</option>
-            <option value="Georgia, serif">📜 Georgia (Serif)</option>
-            <option value="'Times New Roman', Times, serif">🏛️ Times (Serif)</option>
-            <option value="'Plus Jakarta Sans', sans-serif">🔤 Modern (Sans-serif)</option>
-            <option value="'JetBrains Mono', monospace">💻 Mono (Monospace)</option>
-        </select>
-
+        <!-- Vertical Speed Slider (0.5x at top -> 2.0x at bottom) -->
         <div class="speed-container">
-            <button class="icon-action-btn" id="speedToggleBtn" title="Adjust speed">
-                ⏩ <span id="speedBtnText" style="margin-left:4px; font-size:11px; opacity:0.8;">1.00x</span>
+            <button class="icon-action-btn" id="speedToggleBtn" title="Playback Speed">
+                ⏩ <span id="speedBtnText" style="margin-left:4px; font-size:11px; opacity:0.85;">1.00x</span>
             </button>
             <div class="speed-popover hidden" id="speedPopover">
-                <input type="range" id="speedRange" min="0.5" max="2.0" step="0.05" value="1.0">
                 <span class="speed-val" id="speedDisp">1.00x</span>
+                <span class="speed-dir-hint">0.5x ▲</span>
+                <div class="v-slider-wrap">
+                    <input type="range" id="speedRange" min="0.5" max="2.0" step="0.05" value="1.0">
+                </div>
+                <span class="speed-dir-hint">2.0x ▼</span>
+                <button type="button" class="popover-close-btn" id="btnCloseSpeed">✕ Close</button>
             </div>
         </div>
 
-        <div class="font-size-container">
-            <button class="icon-action-btn" id="fontSizeToggleBtn" title="Adjust font size">
-                Aa <span id="fontSizeBtnText" style="margin-left:4px; font-size:11px; opacity:0.8;">[19px]</span>
+        <!-- Combined Font Family & Font Size Menu -->
+        <div class="font-menu-container">
+            <button class="icon-action-btn" id="fontSizeToggleBtn" title="Font & Size Settings">
+                Aa <span id="fontSizeBtnText" style="margin-left:4px; font-size:11px; opacity:0.85;">[19px]</span>
             </button>
             
-            <div class="font-size-popover hidden" id="fontSizePopover">
-                <button class="icon-action-btn" id="btnFontMinus" style="padding: 0 10px;">A-</button>
-                <span class="font-size-val" id="fontSizeDisp">19px</span>
-                <button class="icon-action-btn" id="btnFontPlus" style="padding: 0 10px;">A+</button>
+            <div class="font-popover hidden" id="fontSizePopover">
+                <span class="popover-section-label">Font Family</span>
+                <div class="font-family-list" id="fontFamilyButtons">
+                    <button type="button" class="font-choice-btn active" data-font="'Lora', Georgia, serif">📖 Lora (Serif)</button>
+                    <button type="button" class="font-choice-btn" data-font="Georgia, serif">📜 Georgia</button>
+                    <button type="button" class="font-choice-btn" data-font="'Times New Roman', Times, serif">🏛️ Times New Roman</button>
+                    <button type="button" class="font-choice-btn" data-font="'Plus Jakarta Sans', sans-serif">🔤 Modern Sans</button>
+                    <button type="button" class="font-choice-btn" data-font="'JetBrains Mono', monospace">💻 JetBrains Mono</button>
+                </div>
+
+                <span class="popover-section-label" style="margin-top:2px;">Font Size</span>
+                <div class="font-size-row">
+                    <button type="button" class="icon-action-btn" id="btnFontMinus" style="padding: 0 12px;">A-</button>
+                    <span class="font-size-val" id="fontSizeDisp">19px</span>
+                    <button type="button" class="icon-action-btn" id="btnFontPlus" style="padding: 0 12px;">A+</button>
+                </div>
+
+                <button type="button" class="popover-close-btn" id="btnCloseFont">✕ Close</button>
             </div>
         </div>
 
-        <button class="icon-action-btn" id="tocBtn" title="Оглавление (Главы)">📑</button>
-        <button class="icon-action-btn" id="addBookmarkBtn" title="Добавить закладку">⭐</button>
-        <button class="icon-action-btn" id="showBookmarksBtn" title="Список закладок">📌</button>
+        <button class="icon-action-btn" id="tocBtn" title="Table of Contents (Chapters)">📑</button>
+        <button class="icon-action-btn" id="addBookmarkBtn" title="Add Bookmark">⭐</button>
+        <button class="icon-action-btn" id="showBookmarksBtn" title="Saved Bookmarks">📌</button>
         <button class="icon-action-btn" id="lockBtn" style="color:var(--accent-amber);" title="Lock Screen">🔒</button>
         <div class="chunk-nav">
-            <button class="icon-action-btn" id="prevBtn" title="Предыдущий чанк (удерживайте 0.6с для перехода в начало книги)">⏮</button>
-            <button class="icon-action-btn" id="nextBtn" title="Следующий чанк">⏭</button>
+            <button class="icon-action-btn" id="prevBtn" title="Previous chunk (Hold 0.6s to jump to start)">⏮</button>
+            <button class="icon-action-btn" id="nextBtn" title="Next chunk">⏭</button>
         </div>
     </div>
 
@@ -1084,36 +1230,45 @@
 
 <audio id="audioPlayer"></audio>
 
-<!-- MODAL: Table of Contents (Оглавление) -->
+<!-- MODAL: Table of Contents -->
 <div class="modal-overlay hidden" id="tocModal">
     <div class="modal-box">
-        <h3>📑 Оглавление</h3>
+        <div class="modal-header-row">
+            <h3>📑 Table of Contents</h3>
+            <button type="button" class="modal-top-close" onclick="closeTocModal()" title="Close">✕</button>
+        </div>
         <div id="tocList"></div>
         <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeTocModal()">Закрыть</button>
+            <button type="button" class="btn-cancel" onclick="closeTocModal()">Close</button>
         </div>
     </div>
 </div>
 
-<!-- MODAL: Add bookmark -->
+<!-- MODAL: Add Bookmark -->
 <div class="modal-overlay hidden" id="bookmarkModal">
     <div class="modal-box">
-        <h3>⭐ Сохранить закладку</h3>
-        <input type="text" id="bookmarkNameInput" placeholder="Название закладки...">
+        <div class="modal-header-row">
+            <h3>⭐ Save Bookmark</h3>
+            <button type="button" class="modal-top-close" onclick="closeBookmarkModal()" title="Close">✕</button>
+        </div>
+        <input type="text" id="bookmarkNameInput" placeholder="Bookmark title...">
         <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeBookmarkModal()">Отмена</button>
-            <button class="btn-primary" onclick="confirmSaveBookmark()">Сохранить</button>
+            <button type="button" class="btn-cancel" onclick="closeBookmarkModal()">Cancel</button>
+            <button type="button" class="btn-primary" onclick="confirmSaveBookmark()">Save</button>
         </div>
     </div>
 </div>
 
-<!-- MODAL: Bookmarks list -->
+<!-- MODAL: Bookmarks List -->
 <div class="modal-overlay hidden" id="bookmarksListModal">
     <div class="modal-box">
-        <h3>📌 Закладки</h3>
+        <div class="modal-header-row">
+            <h3>📌 Bookmarks</h3>
+            <button type="button" class="modal-top-close" onclick="closeBookmarksList()" title="Close">✕</button>
+        </div>
         <div id="bookmarksList"></div>
         <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeBookmarksList()">Закрыть</button>
+            <button type="button" class="btn-cancel" onclick="closeBookmarksList()">Close</button>
         </div>
     </div>
 </div>
@@ -1121,15 +1276,18 @@
 <!-- MODAL: Paste Custom Text -->
 <div class="modal-overlay hidden" id="pasteTextModal">
     <div class="modal-box" style="max-width: 640px;">
-        <h3>📋 Вставить текст / Markdown</h3>
-        <div class="paste-toolbar">
-            <button type="button" class="paste-tool-btn" id="btnClipboardPaste">📋 Вставить</button>
-            <button type="button" class="paste-tool-btn" id="btnClipboardClear">🧹 Очистить</button>
+        <div class="modal-header-row">
+            <h3>📋 Paste Text / Markdown</h3>
+            <button type="button" class="modal-top-close" id="btnTopClosePasteModal" title="Close">✕</button>
         </div>
-        <textarea id="pastedTextInput" class="paste-textarea" placeholder="Вставьте или введите сюда любой текст или Markdown..."></textarea>
+        <div class="paste-toolbar">
+            <button type="button" class="paste-tool-btn" id="btnClipboardPaste">📋 Paste</button>
+            <button type="button" class="paste-tool-btn" id="btnClipboardClear">🧹 Clear</button>
+        </div>
+        <textarea id="pastedTextInput" class="paste-textarea" placeholder="Paste or type any text or Markdown here..."></textarea>
         <div class="modal-actions">
-            <button type="button" class="btn-cancel" id="btnClosePasteModal">Отмена</button>
-            <button type="button" class="btn-primary" id="btnReadPastedText">📖 Читать текст</button>
+            <button type="button" class="btn-cancel" id="btnClosePasteModal">Cancel</button>
+            <button type="button" class="btn-primary" id="btnReadPastedText">📖 Read Text</button>
         </div>
     </div>
 </div>
@@ -1142,31 +1300,32 @@
     const progressInfo = document.getElementById('progressInfo'), fileNameDisp = document.getElementById('fileNameDisp');
     const deckBookTitle = document.getElementById('deck-book-title'), deckFormatInfo = document.getElementById('deck-format-info');
     
-    const fontSelect = document.getElementById('fontSelect');
     const speedToggleBtn = document.getElementById('speedToggleBtn');
     const speedPopover = document.getElementById('speedPopover');
     const speedRange = document.getElementById('speedRange');
     const speedBtnText = document.getElementById('speedBtnText');
     const speedDisp = document.getElementById('speedDisp');
+    const btnCloseSpeed = document.getElementById('btnCloseSpeed');
+
     const fontSizeToggleBtn = document.getElementById('fontSizeToggleBtn');
     const fontSizePopover = document.getElementById('fontSizePopover');
     const fontSizeBtnText = document.getElementById('fontSizeBtnText');
     const fontSizeDisp = document.getElementById('fontSizeDisp');
+    const fontFamilyButtons = document.querySelectorAll('.font-choice-btn');
+    const btnCloseFont = document.getElementById('btnCloseFont');
     const themeSelect = document.getElementById('themeSelect');
 
     let allBlocks = []; 
     let textParagraphs = []; 
     let tocItems = []; // [{ title, level, paragraphIndex }]
-    let currentIndex = 0; // Индекс текущего абзаца
+    let currentIndex = 0;
     
-    // Единицы чтения: плоский массив под-кусков (чанков)
     let readingUnits = []; 
     let currentUnitIndex = 0;
 
-    // Prefetch Очередь
     let playlist = []; // [ { url, paragraphIndex, unitIndex, text } ]
     let lastRequestedUnitIndex = -1;
-    let currentPlayingItem = null; // Текущий озвучиваемый чанк (для возврата при сбое)
+    let currentPlayingItem = null;
 
     let isFetching = false;
     let fetchAbortController = null;
@@ -1177,14 +1336,13 @@
     let bookKey = '';
     let currentSessionId = 0;
     let hasPendingJump = false;
-    let observerBlocked = true; // Защита от сброса позиции при старте/скролле
+    let observerBlocked = true;
     let userTouchScrolling = false;
     
     const PREFETCH_AHEAD = 6;
     const MAX_PLAYLIST = 12;
     const FETCH_TIMEOUT_MS = 30000;
 
-    // Оценка времени воспроизведения
     let timingStats = { totalChars: 0, totalDuration: 0, sampleCount: 0 };
     const SAMPLE_SIZE = 5;
 
@@ -1213,9 +1371,9 @@
         }
     }
 
-    // ================= ЖЁСТКАЯ ПАУЗА ПРИ ОШИБКЕ (БЕЗ ПРОПУСКА ЧАНКОВ) =================
+    // ================= HARD PAUSE ON ERROR (NO CHUNK SKIPPING) =================
     function pauseOnError(reasonText) {
-        console.warn("⏸ Пауза из-за ошибки:", reasonText);
+        console.warn("⏸ Paused due to error:", reasonText);
         releaseWakeLock();
         isPaused = true;
         audioPlayer.pause();
@@ -1227,7 +1385,6 @@
         clearTimeout(fetchTimeoutId);
         isFetching = false;
 
-        // Если текущий чанк не доиграл — возвращаем его в начало очереди, чтобы не перескочить!
         if (currentPlayingItem) {
             if (!playlist.length || playlist[0].unitIndex !== currentPlayingItem.unitIndex) {
                 playlist.unshift(currentPlayingItem);
@@ -1239,40 +1396,38 @@
 
         playBtn.style.display = 'flex';
         pauseBtn.style.display = 'none';
-        statusInfo.textContent = reasonText || `⚠️ Пауза на чанке #${currentUnitIndex + 1}`;
+        statusInfo.textContent = reasonText || `⚠️ Paused on chunk #${currentUnitIndex + 1}`;
         updateProgress();
     }
 
-    // ================= АУДИО-ОШИБКИ =================
+    // ================= AUDIO ERRORS =================
     audioPlayer.addEventListener('error', () => {
         const errCode = audioPlayer.error ? audioPlayer.error.code : '?';
         console.error(`❌ Audio error (code ${errCode}) on unit #${currentUnitIndex + 1}`);
         if (isPlaying && !isPaused) {
-            // Сбрасываем битый элемент из очереди и откатываем индекс, чтобы при Play запросить заново
             if (currentPlayingItem && playlist.length && playlist[0].unitIndex === currentPlayingItem.unitIndex) {
                 playlist.shift();
             }
             playlist = [];
             lastRequestedUnitIndex = currentUnitIndex - 1;
             currentPlayingItem = null;
-            pauseOnError(`⚠️ Сбой аудио на чанке #${currentUnitIndex + 1} (нажми Play)`);
+            pauseOnError(`⚠️ Audio error on chunk #${currentUnitIndex + 1} (press Play)`);
         }
     });
     audioPlayer.addEventListener('stalled', () => console.warn("⚠️ Audio stalled"));
     audioPlayer.addEventListener('waiting', () => console.warn("⚠️ Audio waiting"));
 
-    // ================= ВОЗВРАТ ИЗ ФОНА =================
+    // ================= BACKGROUND RESUME =================
     document.addEventListener('visibilitychange', () => {
         console.log(`📱 visibilitychange: hidden=${document.hidden}, isPlaying=${isPlaying}, isPaused=${isPaused}, isFetching=${isFetching}`);
         if (!document.hidden && isPlaying && !isPaused) {
             setTimeout(() => {
                 if (!wakeLock) requestWakeLock();
-                // Если аудио не играет, но есть готовые чанки или завис фетч
                 if (audioPlayer.paused && isPlaying && !isPaused) {
                     if (audioPlayer.src && audioPlayer.currentTime > 0 && !audioPlayer.ended) {
                         audioPlayer.play().catch(e => {
                             console.error("Resume play failed:", e);
-                            pauseOnError(`⚠️ Остановлено на чанке #${currentUnitIndex + 1}`);
+                            pauseOnError(`⚠️ Paused on chunk #${currentUnitIndex + 1}`);
                         });
                     } else if (playlist.length > 0) {
                         playAudio();
@@ -1284,18 +1439,26 @@
         }
     });
 
-    // 1. Font Family Preference
-    const savedFont = localStorage.getItem('reader-font') || "'Lora', Georgia, serif";
-    fontSelect.value = savedFont;
-    document.documentElement.style.setProperty('--reader-font-family', savedFont);
+    // 1. Font Family Buttons (Inside Combined Aa Menu)
+    let savedFont = localStorage.getItem('reader-font') || "'Lora', Georgia, serif";
+    function applyFontFamily(fontVal) {
+        savedFont = fontVal;
+        document.documentElement.style.setProperty('--reader-font-family', fontVal);
+        localStorage.setItem('reader-font', fontVal);
+        fontFamilyButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-font') === fontVal);
+        });
+    }
+    applyFontFamily(savedFont);
 
-    fontSelect.addEventListener('change', () => {
-        const val = fontSelect.value;
-        document.documentElement.style.setProperty('--reader-font-family', val);
-        localStorage.setItem('reader-font', val);
+    fontFamilyButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            applyFontFamily(btn.getAttribute('data-font'));
+        });
     });
 
-    // 2. Playback Speed Preference
+    // 2. Playback Speed Preference (Vertical Slider: Top=0.5x, Bottom=2.0x)
     let currentPlaybackRate = parseFloat(localStorage.getItem('reader-speed')) || 1.0;
     if (currentPlaybackRate < 0.5) currentPlaybackRate = 0.5;
     if (currentPlaybackRate > 2.0) currentPlaybackRate = 2.0;
@@ -1311,7 +1474,15 @@
 
     speedToggleBtn.onclick = (e) => {
         e.stopPropagation();
+        fontSizePopover.classList.add('hidden');
         speedPopover.classList.toggle('hidden');
+    };
+
+    speedPopover.addEventListener('click', (e) => e.stopPropagation());
+
+    btnCloseSpeed.onclick = (e) => {
+        e.stopPropagation();
+        speedPopover.classList.add('hidden');
     };
 
     speedRange.addEventListener('input', () => {
@@ -1324,13 +1495,7 @@
         updateTimeEstimate();
     });
 
-    document.addEventListener('click', (e) => {
-        if (!speedPopover.contains(e.target) && e.target !== speedToggleBtn) {
-            speedPopover.classList.add('hidden');
-        }
-    });
-
-    // 3. Font Size Controls
+    // 3. Combined Font & Size Menu Controls
     let currentFontSize = parseInt(localStorage.getItem('reader-font-size')) || 19;
     function updateFontSize() {
         document.documentElement.style.setProperty('--font-size', currentFontSize + 'px');
@@ -1342,14 +1507,16 @@
 
     fontSizeToggleBtn.onclick = (e) => {
         e.stopPropagation();
+        speedPopover.classList.add('hidden');
         fontSizePopover.classList.toggle('hidden');
     };
 
-    document.addEventListener('click', (e) => {
-        if (!fontSizePopover.contains(e.target) && e.target !== fontSizeToggleBtn) {
-            fontSizePopover.classList.add('hidden');
-        }
-    });
+    fontSizePopover.addEventListener('click', (e) => e.stopPropagation());
+
+    btnCloseFont.onclick = (e) => {
+        e.stopPropagation();
+        fontSizePopover.classList.add('hidden');
+    };
 
     document.getElementById('btnFontMinus').onclick = (e) => {
         e.stopPropagation();
@@ -1361,6 +1528,16 @@
         currentFontSize = Math.min(36, currentFontSize + 2);
         updateFontSize();
     };
+
+    // Close popovers when clicking anywhere outside (including top bars)
+    document.addEventListener('click', (e) => {
+        if (!speedPopover.contains(e.target) && e.target !== speedToggleBtn) {
+            speedPopover.classList.add('hidden');
+        }
+        if (!fontSizePopover.contains(e.target) && e.target !== fontSizeToggleBtn) {
+            fontSizePopover.classList.add('hidden');
+        }
+    });
 
     // 4. Color Theme Selection
     const savedTheme = localStorage.getItem('reader-theme') || 'dark';
@@ -1374,14 +1551,13 @@
         });
     }
 
-    // 5. Scroll Observation (Защищено от перезаписи 0-го абзаца при старте!)
+    // 5. Scroll Observation
     readerBody.addEventListener('touchmove', () => { userTouchScrolling = true; }, { passive: true });
     readerBody.addEventListener('wheel', () => { userTouchScrolling = true; }, { passive: true });
 
     const observer = new IntersectionObserver((entries) => {
         if (isPlaying || isPaused || observerBlocked || !userTouchScrolling) return;
 
-        // Если мы в самом верху страницы — всегда держим 0-й абзац
         if (readerBody.scrollTop <= 30) {
             if (currentIndex !== 0) {
                 currentIndex = 0;
@@ -1715,7 +1891,6 @@
             });
     }
 
-    // Разбиение через серверный эндпоинт /api/split
     async function buildReadingUnitsServer() {
         readingUnits = [];
         let unitCounter = 0;
@@ -1942,7 +2117,7 @@
             syncCurrentUnitFromParagraph();
         }
         hasPendingJump = false;
-        console.log(`▶️ Старт чтения: paragraph=${currentIndex}, unit=${currentUnitIndex}/${readingUnits.length}`);
+        console.log(`▶️ Start reading: paragraph=${currentIndex}, unit=${currentUnitIndex}/${readingUnits.length}`);
         statusInfo.textContent = "Buffering audio...";
         fetchNext();
     };
@@ -1984,7 +2159,7 @@
         updateProgress();
     }
 
-    // ================= ПЕРЕСКОК ПО ЧАНКАМ (⏮ / ⏭ + ДОЛГИЙ ТАП В НАЧАЛО) =================
+    // ================= CHUNK NAVIGATION (⏮ / ⏭ + HOLD 0.6s FOR START) =================
     function jumpToUnit(targetIndex) {
         if (!readingUnits.length) return;
         if (targetIndex < 0) targetIndex = 0;
@@ -2031,12 +2206,11 @@
             playBtn.style.display = 'flex';
             pauseBtn.style.display = 'none';
             stopBtn.style.display = 'none';
-            statusInfo.textContent = `Чанк ${targetIndex + 1} / ${readingUnits.length}`;
+            statusInfo.textContent = `Chunk ${targetIndex + 1} / ${readingUnits.length}`;
             hasPendingJump = true;
         }
     }
 
-    // Кнопка ⏮: короткий клик — на 1 чанк назад, удержание 600 мс — в самое начало книги (чанк 0)
     const prevBtnEl = document.getElementById('prevBtn');
     let prevHoldTimer = null;
     let prevLongPressed = false;
@@ -2047,7 +2221,7 @@
         prevHoldTimer = setTimeout(() => {
             prevLongPressed = true;
             jumpToUnit(0);
-            statusInfo.textContent = "⏮ В начало книги (чанк 1)";
+            statusInfo.textContent = "⏮ Jumped to start (chunk 1)";
         }, 600);
     }
     function endPrevHold() {
@@ -2073,7 +2247,7 @@
         jumpToUnit(currentUnitIndex + 1);
     };
 
-    // ================= PREFETCH С ТАЙМАУТОМ 30 СЕК И ОСТАНОВКОЙ НА ОШИБКЕ =================
+    // ================= PREFETCH WITH 30s TIMEOUT & ERROR PAUSE =================
     function fetchNext() {
         if (!isPlaying || isFetching || isPaused) return;
 
@@ -2132,11 +2306,10 @@
                 } else {
                     console.error(`❌ Server synthesize error on unit #${item.unitIndex + 1}:`, data.error);
                     lastRequestedUnitIndex = item.unitIndex - 1;
-                    // Если очередь пуста — сразу ставим на паузу, не перескакивая
                     if (playlist.length === 0 && audioPlayer.paused) {
-                        pauseOnError(`⚠️ Ошибка синтеза чанка #${item.unitIndex + 1}`);
+                        pauseOnError(`⚠️ Synth error on chunk #${item.unitIndex + 1}`);
                     } else {
-                        statusInfo.textContent = `⚠️ Ошибка префетча #${item.unitIndex + 1}`;
+                        statusInfo.textContent = `⚠️ Prefetch error #${item.unitIndex + 1}`;
                     }
                 }
             }).catch((err) => { 
@@ -2149,12 +2322,12 @@
                 lastRequestedUnitIndex = item.unitIndex - 1;
 
                 if (playlist.length === 0 && audioPlayer.paused) {
-                    pauseOnError(`⚠️ Сеть/таймаут на чанке #${item.unitIndex + 1} (нажми Play)`);
+                    pauseOnError(`⚠️ Network timeout on chunk #${item.unitIndex + 1} (press Play)`);
                 }
             });
     }
 
-    // ================= ПОДСВЕТКА ТЕКУЩЕГО ЧАНКА =================
+    // ================= CHUNK HIGHLIGHTING =================
     function findChunkRange(fullText, chunkText) {
         let idx = fullText.indexOf(chunkText);
         if (idx !== -1) return { start: idx, end: idx + chunkText.length };
@@ -2276,8 +2449,7 @@
         
         audioPlayer.play().catch(e => {
             console.error("❌ Playback prevented or failed:", e);
-            // Не пропускаем чанк — возвращаем его в очередь и ставим на паузу!
-            pauseOnError(`⚠️ Нажми Play (чанк #${audioItem.unitIndex + 1})`);
+            pauseOnError(`⚠️ Press Play (chunk #${audioItem.unitIndex + 1})`);
         });
 
         const onMeta = () => {
@@ -2311,14 +2483,14 @@
         }
     };
 
-    // ================= ОЦЕНКА ВРЕМЕНИ =================
+    // ================= TIME ESTIMATE =================
     function formatTime(sec) {
         if (!isFinite(sec) || sec < 0) return '--';
-        if (sec < 60) return Math.round(sec) + 'с';
-        if (sec < 3600) return Math.round(sec / 60) + 'м';
+        if (sec < 60) return Math.round(sec) + 's';
+        if (sec < 3600) return Math.round(sec / 60) + 'm';
         const h = Math.floor(sec / 3600);
         const m = Math.round((sec % 3600) / 60);
-        return h + 'ч ' + m + 'м';
+        return h + 'h ' + m + 'm';
     }
 
     function updateTimeEstimate() {
@@ -2341,17 +2513,16 @@
         timeInfo.textContent = '⏱ ~' + formatTime(remainingSec);
     }
 
-    // ================= ОГЛАВЛЕНИЕ (TOC) =================
+    // ================= TABLE OF CONTENTS (TOC) =================
     function openTocModal() {
         if (!textParagraphs.length) {
-            statusInfo.textContent = '⚠️ Сначала загрузи книгу или текст';
+            statusInfo.textContent = '⚠️ Load a book or text first';
             return;
         }
         const list = document.getElementById('tocList');
         if (!tocItems.length) {
-            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center; font-size:13px;">В этом документе нет заголовков (#, ##, ###)</div>';
+            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center; font-size:13px;">No headings (#, ##, ###) found in this document</div>';
         } else {
-            // Определяем текущую активную главу
             let activeTocIdx = -1;
             for (let i = 0; i < tocItems.length; i++) {
                 if (tocItems[i].paragraphIndex <= currentIndex) {
@@ -2392,7 +2563,7 @@
         if (e.target.id === 'tocModal') closeTocModal();
     });
 
-    // ================= ЗАКЛАДКИ =================
+    // ================= BOOKMARKS =================
     async function loadBookmarks() {
         if (!bookKey) return [];
         try {
@@ -2407,7 +2578,7 @@
 
     function openBookmarkModal() {
         if (!readingUnits.length) {
-            statusInfo.textContent = '⚠️ Сначала загрузи книгу';
+            statusInfo.textContent = '⚠️ Load a book first';
             return;
         }
         const currentItem = readingUnits[currentUnitIndex];
@@ -2445,16 +2616,16 @@
             const data = await res.json();
             if (data.success) {
                 closeBookmarkModal();
-                statusInfo.textContent = '⭐ Закладка сохранена';
+                statusInfo.textContent = '⭐ Bookmark saved';
                 setTimeout(() => {
                     if (isPlaying) statusInfo.textContent = 'Speaking...';
                     else statusInfo.textContent = 'Ready to read';
                 }, 2000);
             } else {
-                alert('Ошибка: ' + data.error);
+                alert('Error: ' + data.error);
             }
         } catch (e) {
-            alert('Ошибка соединения');
+            alert('Connection error');
         }
     }
 
@@ -2465,13 +2636,13 @@
 
     async function openBookmarksList() {
         if (!bookKey) {
-            statusInfo.textContent = '⚠️ Сначала загрузи книгу';
+            statusInfo.textContent = '⚠️ Load a book first';
             return;
         }
         const bm = await loadBookmarks();
         const list = document.getElementById('bookmarksList');
         if (!bm.length) {
-            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center;">Закладок пока нет</div>';
+            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center;">No bookmarks yet</div>';
         } else {
             list.innerHTML = bm.map(b => {
                 const fullText = b.text || b.name || '';
@@ -2480,12 +2651,12 @@
                     <div class="bm-text" onclick="toggleBookmarkSnippet(${b.id})" style="cursor:pointer;">
                         <div class="bm-name">${escapeHtml(b.name)}</div>
                         ${b.text ? `<div class="bm-snippet" id="bm-snip-${b.id}">${escapeHtml(b.text)}</div>` : ''}
-                        <div class="bm-meta">${b.created_at} · чанк ${b.unit_index + 1} (нажми на текст, чтобы развернуть)</div>
+                        <div class="bm-meta">${b.created_at} · chunk ${b.unit_index + 1} (tap text to expand)</div>
                     </div>
                     <div class="bm-actions">
-                        <button class="bm-btn" title="Показать весь текст" onclick="toggleBookmarkSnippet(${b.id})">👁</button>
-                        <button class="bm-btn" title="Перейти к закладке" onclick="jumpToBookmark(${b.unit_index})">→</button>
-                        <button class="bm-btn delete" title="Удалить" onclick="deleteBookmark(${b.id})">🗑</button>
+                        <button class="bm-btn" title="Show full text" onclick="toggleBookmarkSnippet(${b.id})">👁</button>
+                        <button class="bm-btn" title="Jump to bookmark" onclick="jumpToBookmark(${b.unit_index})">→</button>
+                        <button class="bm-btn delete" title="Delete bookmark" onclick="deleteBookmark(${b.id})">🗑</button>
                     </div>
                 </div>
             `}).join('');
@@ -2514,7 +2685,7 @@
             const data = await res.json();
             if (data.success) openBookmarksList();
         } catch (e) {
-            alert('Ошибка удаления');
+            alert('Failed to delete bookmark');
         }
     }
 
@@ -2526,6 +2697,13 @@
     const _showBmBtn = document.getElementById('showBookmarksBtn');
     if (_addBmBtn) _addBmBtn.onclick = openBookmarkModal;
     if (_showBmBtn) _showBmBtn.onclick = openBookmarksList;
+
+    document.getElementById('bookmarkModal').addEventListener('click', (e) => {
+        if (e.target.id === 'bookmarkModal') closeBookmarkModal();
+    });
+    document.getElementById('bookmarksListModal').addEventListener('click', (e) => {
+        if (e.target.id === 'bookmarksListModal') closeBookmarksList();
+    });
 
     // 7. Lock Screen Logic
     const lockBtn = document.getElementById('lockBtn');
@@ -2572,13 +2750,14 @@
         }
     });
 
-    // 7.5. Вкладка вставки текста (Вставить / Очистить / Читать)
+    // 7.5. Paste Custom Text Modal
     const pasteTabBtn = document.getElementById('pasteTabBtn');
     const pasteTextModal = document.getElementById('pasteTextModal');
     const pastedTextInput = document.getElementById('pastedTextInput');
     const btnClipboardPaste = document.getElementById('btnClipboardPaste');
     const btnClipboardClear = document.getElementById('btnClipboardClear');
     const btnClosePasteModal = document.getElementById('btnClosePasteModal');
+    const btnTopClosePasteModal = document.getElementById('btnTopClosePasteModal');
     const btnReadPastedText = document.getElementById('btnReadPastedText');
 
     const savedDraft = localStorage.getItem('sileroread-pasted-draft');
@@ -2594,6 +2773,9 @@
     });
 
     btnClosePasteModal.addEventListener('click', () => {
+        pasteTextModal.classList.add('hidden');
+    });
+    btnTopClosePasteModal.addEventListener('click', () => {
         pasteTextModal.classList.add('hidden');
     });
 
@@ -2614,7 +2796,7 @@
             }
         } catch (err) {
             pastedTextInput.focus();
-            alert('Браузер запросил ручную вставку (нажмите Ctrl+V или удерживайте палец в поле ввода).');
+            alert('Browser requested manual paste (press Ctrl+V or long-press inside the text box).');
         }
     });
 
@@ -2627,7 +2809,7 @@
     btnReadPastedText.addEventListener('click', () => {
         const rawText = pastedTextInput.value.trim();
         if (!rawText) {
-            statusInfo.textContent = '⚠️ Поле текста пустое';
+            statusInfo.textContent = '⚠️ Text field is empty';
             return;
         }
         pasteTextModal.classList.add('hidden');
@@ -2638,10 +2820,10 @@
             hash = ((hash << 5) - hash) + rawText.charCodeAt(i);
             hash |= 0;
         }
-        const firstLine = rawText.split(/\r?\n/)[0].replace(/[#>*_`~]/g, '').trim().slice(0, 28) || 'Вставленный текст';
+        const firstLine = rawText.split(/\r?\n/)[0].replace(/[#>*_`~]/g, '').trim().slice(0, 28) || 'Pasted Text';
         bookKey = `pasted_${Math.abs(hash)}`;
 
-        fileNameDisp.textContent = 'Из буфера';
+        fileNameDisp.textContent = 'Clipboard';
         deckBookTitle.textContent = `📋 ${firstLine}`;
         deckFormatInfo.textContent = 'TEXT/MD • READY';
         statusInfo.textContent = 'Processing text...';
