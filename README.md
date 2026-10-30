@@ -1,8 +1,6 @@
-Готовый шаблон `README.md` для Git-репозитория на английском языке. В него включены описание концепции проекта, разбор ключевых технических решений (Kokoro ONNX, изоляция окружений, синхронизация с Android) и минималистичные инструкции по установке.
 
----
 
-```markdown
+
 # SileroRead • Hybrid Local TTS Reader & Pimsleur Engine
 
 A lightweight, self-hosted Web TTS audiobook reader and language trainer optimized for low-spec desktop environments and Android (Termux / PRoot Ubuntu).
@@ -201,6 +199,3 @@ alias st-shadow='proot-distro login ubuntu -- bash -c "cd ~/SileroRead && source
 
 ```
 
-```
-
-```
