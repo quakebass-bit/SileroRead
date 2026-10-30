@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import os
+os.environ.setdefault('OMP_NUM_THREADS', '4')
 import glob
 import re
 import json
@@ -7,6 +8,16 @@ import hashlib
 import wave
 import gc
 from threading import Lock
+# ================= KOKORO (EN) =================
+try:
+    import kokoro_onnx
+    import soundfile as sf
+    KOKORO_AVAILABLE = True
+    print("✅ kokoro-onnx загружен")
+except ImportError as e:
+    KOKORO_AVAILABLE = False
+    print(f"⚠️ kokoro-onnx не установлен: {e}")
+
 try:
     from deep_translator import GoogleTranslator
     TRANSLATOR_AVAILABLE = True
@@ -97,10 +108,44 @@ PHRASES_FILE = os.path.join(BASE_DIR, 'saved_phrases.txt')
 DICTIONARY_FILE = os.path.join(BASE_DIR, 'user_dictionary.json')
 
 SILERO_EN_MODEL = os.path.join(MODELS_DIR, 'v3_en.pt')
-SILERO_EN_VOICES = [f'en_{i}' for i in range(118)]
+SILERO_EN_VOICES = ['en_56']  # только Silero EN
+
+# ================= KOKORO КОНСТАНТЫ =================
+KOKORO_MODEL_PATH = os.path.join(MODELS_DIR, 'kokoro-v1.0.fp16.onnx')
+KOKORO_VOICES_PATH = os.path.join(MODELS_DIR, 'voices-v1.0.bin')
 
 dict_lock = Lock()
 _silero_lock = Lock()
+_kokoro_lock = Lock()
+_kokoro_model = None
+
+
+def get_kokoro_model():
+    """Ленивая загрузка Kokoro ONNX."""
+    global _kokoro_model
+    with _kokoro_lock:
+        if _kokoro_model is not None:
+            return _kokoro_model
+        if not KOKORO_AVAILABLE:
+            raise RuntimeError("kokoro-onnx не установлен")
+        if not os.path.exists(KOKORO_MODEL_PATH):
+            raise FileNotFoundError(f"Модель Kokoro: {KOKORO_MODEL_PATH}")
+        if not os.path.exists(KOKORO_VOICES_PATH):
+            raise FileNotFoundError(f"Голоса Kokoro: {KOKORO_VOICES_PATH}")
+        print("⏳ Загружаю Kokoro ONNX...", flush=True)
+        _kokoro_model = kokoro_onnx.Kokoro(KOKORO_MODEL_PATH, KOKORO_VOICES_PATH)
+        print("✅ Kokoro готов", flush=True)
+        return _kokoro_model
+
+
+def synthesize_kokoro(text, kokoro_voice, output_path):
+    """Kokoro inference, speed=1.0, slowdown — на фронте."""
+    model = get_kokoro_model()
+    samples, sample_rate = model.create(
+        text, voice=kokoro_voice, speed=1.0, lang="en-us"
+    )
+    sf.write(output_path, samples, sample_rate)
+
 _silero_model = None
 _torch_module = None
 _silero_loaded_path = None
@@ -327,10 +372,12 @@ def synthesize_sentence():
     """Генерирует аудио для одного предложения через локальный Silero (v3_en.pt)"""
     sentence_id = request.form.get('id')
     sentence = request.form.get('text', '').strip()
-    voice = request.form.get('voice', 'en_56').strip()
+    voice = request.form.get('voice', 'kokoro-af_heart').strip()
 
-    if voice not in SILERO_EN_VOICES:
-        voice = 'en_56'
+    is_kokoro = voice.startswith('kokoro-')
+    if not is_kokoro and voice not in SILERO_EN_VOICES:
+        voice = 'kokoro-af_heart'
+        is_kokoro = True
 
     if not sentence or not sentence_id:
         return jsonify({'success': False, 'error': 'Нет данных'})
@@ -351,8 +398,53 @@ def synthesize_sentence():
         return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}'})
 
     try:
-        synth_silero_en(clean_sentence, voice, filepath)
+        if is_kokoro:
+            kokoro_voice = voice.replace('kokoro-', '')
+            synthesize_kokoro(clean_sentence, kokoro_voice, filepath)
+        else:
+            synth_silero_en(clean_sentence, voice, filepath)
         return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}'})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/synthesize_word', methods=['POST'])
+def synthesize_word():
+    """Генерация аудио для отдельного слова (Silero или Kokoro)."""
+    text = request.form.get('text', '').strip()
+    voice = request.form.get('voice', 'kokoro-af_heart').strip()
+
+    if not text:
+        return jsonify({'success': False, 'error': 'Пустое слово'}), 400
+
+    clean_text = text.replace('*', '').strip()
+    clean_text = normalize_en_text(clean_text)
+    if not any(c.isalpha() for c in clean_text):
+        return jsonify({'success': False, 'error': 'Нет букв для озвучки'}), 400
+
+    is_kokoro = voice.startswith('kokoro-')
+    if not is_kokoro and voice not in SILERO_EN_VOICES:
+        voice = 'kokoro-af_heart'
+        is_kokoro = True
+
+    hash_input = f"word_{voice}_{clean_text}"
+    text_hash = hashlib.md5(hash_input.encode('utf-8')).hexdigest()[:10]
+    engine_prefix = 'kokoro' if is_kokoro else 'silero'
+    filename = f"word_{engine_prefix}_{text_hash}.wav"
+    filepath = os.path.join(AUDIO_DIR, filename)
+
+    if os.path.exists(filepath):
+        return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}', 'cached': True})
+
+    try:
+        if is_kokoro:
+            kokoro_voice = voice.replace('kokoro-', '')
+            synthesize_kokoro(clean_text, kokoro_voice, filepath)
+        else:
+            synth_silero_en(clean_text, voice, filepath)
+        return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}', 'cached': False})
     except Exception as e:
         import traceback
         traceback.print_exc()
