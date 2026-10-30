@@ -104,7 +104,6 @@
             --accent-red: #ff1744;
         }
 
-        /* ⌚ CASIO LCD THEME */
         body[data-theme="lcd"] {
             --bg-base: #939d7a;
             --bg-surface: #848e6c;
@@ -123,24 +122,6 @@
             --accent-red: #3b1c1c;
         }
 
-        body[data-theme="lcd"] .btn-play-hero {
-            background: #1a1f14;
-            color: #939d7a;
-            box-shadow: 2px 2px 0px #464d37;
-            border: 1px solid #11140d;
-        }
-        body[data-theme="lcd"] .paragraph.active-text {
-            background: rgba(17, 20, 13, 0.12);
-            border-left: 4px solid #11140d;
-        }
-        body[data-theme="lcd"] .md-pre,
-        body[data-theme="lcd"] .paragraph code {
-            background: #7c8665;
-            color: #11140d;
-            border: 1px solid #464d37;
-        }
-
-        /* 🧮 MONO LCD THEME */
         body[data-theme="lcd-mono"] {
             --bg-base: #a3a8a3;
             --bg-surface: #949994;
@@ -157,23 +138,6 @@
             --accent-cyan: #0d0e0d;
             --accent-amber: #2c2e2c;
             --accent-red: #381d1d;
-        }
-
-        body[data-theme="lcd-mono"] .btn-play-hero {
-            background: #171817;
-            color: #a3a8a3;
-            box-shadow: 2px 2px 0px #4a4d4a;
-            border: 1px solid #121312;
-        }
-        body[data-theme="lcd-mono"] .paragraph.active-text {
-            background: rgba(18, 19, 18, 0.12);
-            border-left: 4px solid #121312;
-        }
-        body[data-theme="lcd-mono"] .md-pre,
-        body[data-theme="lcd-mono"] .paragraph code {
-            background: #8b908b;
-            color: #121312;
-            border: 1px solid #4a4d4a;
         }
 
         * {
@@ -211,17 +175,18 @@
             overflow: hidden;
         }
 
-        /* 1. TOP CONTROL BAR */
+        /* 1. TOP CONTROL BAR (LINE 1) */
         .top-switch-bar {
             background: var(--bg-surface);
-            padding: 8px 10px;
+            padding: 6px 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 8px;
             border-bottom: 1px solid var(--border-color);
             z-index: 30;
             flex-shrink: 0;
+            min-height: 46px;
         }
 
         .bar-left-cluster {
@@ -231,7 +196,6 @@
             flex: 1 1 auto;
             min-width: 0;
             overflow: hidden;
-            padding-right: 4px;
         }
 
         .file-upload-badge {
@@ -249,7 +213,7 @@
             gap: 5px;
             cursor: pointer;
             transition: 0.2s;
-            max-width: 112px;
+            max-width: 110px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -277,11 +241,10 @@
             flex-shrink: 0;
         }
 
-        /* Аккуратный селектор голоса — не наезжает на кнопку READ */
         #voiceSelect {
-            flex: 0 1 130px;
-            min-width: 74px;
-            max-width: 135px;
+            flex: 0 1 125px;
+            min-width: 70px;
+            max-width: 130px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -316,7 +279,6 @@
             align-items: center;
             gap: 6px;
             flex-shrink: 0;
-            margin-left: 2px;
         }
 
         .btn-play-hero {
@@ -324,7 +286,7 @@
             border: none;
             color: #ffffff;
             height: 34px;
-            padding: 0 13px;
+            padding: 0 12px;
             border-radius: var(--radius-sm);
             font-size: 12.5px;
             font-weight: 800;
@@ -348,21 +310,24 @@
             display: none;
         }
 
-        /* 2. READER SETTINGS SUB-BAR */
+        /* 2. SUB-BAR (LINE 2): THEME, SPEED, FONT, TOC, BOOKMARKS, LOCK */
         .reader-settings-deck {
             background: var(--bg-surface);
-            padding: 6px 10px;
+            padding: 5px 10px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             gap: 6px;
-            flex-wrap: wrap;
             flex-shrink: 0;
             position: relative;
             z-index: 25;
+            min-height: 44px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
+        .reader-settings-deck::-webkit-scrollbar { display: none; }
 
-        /* ВЕРТИКАЛЬНЫЙ ПОЛЗУНОК СКОРОСТИ (УВЕЛИЧЕНИЕ ВНИЗ + КНОПКА ЗАКРЫТЬ) */
+        /* SPEED POPOVER */
         .speed-container {
             position: relative;
             display: inline-block;
@@ -385,9 +350,7 @@
             width: 76px;
             touch-action: none;
         }
-        .speed-popover.hidden {
-            display: none;
-        }
+        .speed-popover.hidden { display: none; }
         .speed-val {
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
@@ -402,7 +365,6 @@
             text-align: center;
             line-height: 1;
         }
-        /* Обёртка для вертикального слайдера (сверху 0.5x -> вниз 2.0x) */
         .v-slider-wrap {
             width: 36px;
             height: 136px;
@@ -422,7 +384,7 @@
             touch-action: none;
         }
 
-        /* ОБЪЕДИНЁННОЕ МЕНЮ ШРИФТА И РАЗМЕРА (Aa) */
+        /* FONT POPOVER */
         .font-menu-container {
             position: relative;
             display: inline-block;
@@ -442,9 +404,7 @@
             z-index: 120;
             width: 185px;
         }
-        .font-popover.hidden {
-            display: none;
-        }
+        .font-popover.hidden { display: none; }
         .popover-section-label {
             font-size: 10px;
             font-family: 'JetBrains Mono', monospace;
@@ -469,9 +429,7 @@
             cursor: pointer;
             transition: 0.15s;
         }
-        .font-choice-btn:hover {
-            background: var(--bg-card-hover);
-        }
+        .font-choice-btn:hover { background: var(--bg-card-hover); }
         .font-choice-btn.active {
             border-color: var(--accent-cyan);
             color: var(--accent-cyan);
@@ -494,7 +452,6 @@
             min-width: 44px;
             text-align: center;
         }
-
         .popover-close-btn {
             width: 100%;
             background: var(--bg-card);
@@ -514,210 +471,6 @@
             background: var(--bg-card-hover);
             color: var(--text-main);
             border-color: var(--border-focus);
-        }
-
-        .chunk-nav {
-            display: flex;
-            gap: 8px;
-            margin-left: auto;
-        }
-
-        /* MODALS */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 99998;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .modal-overlay.hidden { display: none; }
-        .modal-box {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px 18px;
-            max-width: 540px;
-            width: 100%;
-            max-height: 82vh;
-            overflow-y: auto;
-            color: var(--text-main);
-        }
-        .modal-header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .modal-header-row h3 {
-            margin: 0;
-            font-size: 15px;
-        }
-        .modal-top-close {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            width: 30px;
-            height: 30px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .modal-top-close:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--accent-red);
-            color: var(--accent-red);
-        }
-        .modal-box input {
-            width: 100%;
-            padding: 10px 12px;
-            background: var(--bg-base);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-main);
-            font-size: 14px;
-            margin-bottom: 12px;
-            box-sizing: border-box;
-        }
-        .modal-box input:focus { outline: none; border-color: var(--accent-cyan); }
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 12px;
-        }
-        .modal-actions button {
-            padding: 9px 15px;
-            font-size: 13px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-weight: 700;
-        }
-        .modal-actions .btn-cancel { background: #475569; color: #fff; }
-        .modal-actions .btn-primary { background: var(--accent-cyan); color: var(--bg-base); }
-
-        /* BOOKMARKS */
-        .bookmark-item {
-            position: relative;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 9px 11px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            margin-bottom: 8px;
-            gap: 8px;
-            background: var(--bg-card);
-        }
-        .bookmark-item .bm-text {
-            flex: 1;
-            overflow: hidden;
-            min-width: 0;
-        }
-        .bookmark-item .bm-name {
-            font-size: 13px;
-            font-weight: 700;
-            line-height: 1.3;
-            color: var(--text-main);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .bookmark-item .bm-snippet {
-            font-size: 11.5px;
-            line-height: 1.35;
-            color: var(--text-dim);
-            margin-top: 3px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            word-break: break-word;
-        }
-        .bookmark-item .bm-snippet.expanded {
-            display: block;
-            -webkit-line-clamp: unset;
-            background: var(--bg-base);
-            padding: 6px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            margin-top: 6px;
-            color: var(--text-main);
-        }
-        .bookmark-item .bm-meta {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-top: 4px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .bookmark-item .bm-actions {
-            display: flex;
-            gap: 5px;
-            flex-shrink: 0;
-            align-items: center;
-        }
-        .bookmark-item .bm-btn {
-            padding: 5px 8px;
-            font-size: 12px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-surface);
-            color: var(--text-main);
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        .bookmark-item .bm-btn.delete { background: #7f1d1d; color: #fff; border-color: #7f1d1d; }
-
-        /* TABLE OF CONTENTS (TOC) */
-        .toc-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            margin-bottom: 6px;
-            background: var(--bg-card);
-            cursor: pointer;
-            transition: 0.15s;
-            gap: 8px;
-        }
-        .toc-item:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--accent-cyan);
-        }
-        .toc-item.active-toc {
-            border-left: 4px solid var(--accent-cyan);
-            background: var(--bg-card-hover);
-        }
-        .toc-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-main);
-            line-height: 1.3;
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .toc-lvl-1 { font-weight: 800; font-size: 13.5px; }
-        .toc-lvl-2 { padding-left: 14px; font-weight: 600; }
-        .toc-lvl-3 { padding-left: 28px; font-size: 12px; color: var(--text-dim); }
-        .toc-lvl-4, .toc-lvl-5, .toc-lvl-6 { padding-left: 38px; font-size: 11.5px; color: var(--text-muted); }
-        .toc-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            color: var(--text-muted);
-            flex-shrink: 0;
         }
 
         /* 3. TRACK & FILE INFO */
@@ -746,7 +499,7 @@
             min-height: 0;
             overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
-            padding: 20px 24px;
+            padding: 20px 24px 100px 24px;
             font-family: var(--reader-font-family);
         }
         .content-viewport::-webkit-scrollbar { width: 6px; }
@@ -776,7 +529,6 @@
             border-left: 3px solid var(--accent-cyan);
         }
 
-        /* ================= MARKDOWN ================= */
         .md-h1 { font-size: 1.8em; font-weight: 800; margin-top: 1.2em; line-height: 1.3; }
         .md-h2 { font-size: 1.5em; font-weight: 700; margin-top: 1.1em; line-height: 1.3; }
         .md-h3 { font-size: 1.3em; font-weight: 700; margin-top: 1.0em; }
@@ -813,7 +565,6 @@
             color: #a0e8d0;
             cursor: default;
         }
-        .md-pre:hover { background: #1e2430; color: #a0e8d0; }
 
         .md-hr {
             border: none;
@@ -892,6 +643,235 @@
             font-weight: 700;
         }
 
+        /* 🎛️ FLOATING CHUNK CONTROLLER (СВОБОДНО ПЕРЕМЕЩАЕМЫЙ ПУЛЬТ) */
+        .floating-chunk-pad {
+            position: absolute;
+            left: 50%;
+            top: 76%;
+            transform: translate(-50%, -50%);
+            display: inline-flex;
+            align-items: center;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+            border-radius: 40px;
+            padding: 5px;
+            gap: 5px;
+            z-index: 45;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            backdrop-filter: blur(8px);
+            transition: opacity 0.25s ease, box-shadow 0.25s ease;
+        }
+        .floating-chunk-pad.reading-mode {
+            opacity: 0.75;
+        }
+        .floating-chunk-pad.reading-mode:hover,
+        .floating-chunk-pad.reading-mode:active {
+            opacity: 1;
+        }
+        .floating-chunk-pad.unlocked {
+            border-color: var(--accent-amber);
+            box-shadow: 0 0 18px rgba(245, 158, 11, 0.35);
+        }
+
+        .floating-lock-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            width: 40px;
+            height: 44px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .floating-chunk-pad.unlocked .floating-lock-btn {
+            background: var(--accent-amber);
+            color: #0c0e14;
+            border-color: var(--accent-amber);
+            font-weight: 800;
+        }
+
+        .drag-handle-pill {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-amber);
+            font-size: 14px;
+            font-weight: 800;
+            padding: 0 4px;
+            cursor: grab;
+            letter-spacing: -2px;
+        }
+        .floating-chunk-pad.unlocked .drag-handle-pill {
+            display: flex;
+        }
+
+        .floating-nav-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            height: 44px;
+            min-width: 58px;
+            padding: 0 16px;
+            border-radius: 28px;
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .floating-nav-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+        .floating-nav-btn:active {
+            transform: scale(0.94);
+        }
+
+        /* MODALS */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 99998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.hidden { display: none; }
+        .modal-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 18px;
+            max-width: 540px;
+            width: 100%;
+            max-height: 82vh;
+            overflow-y: auto;
+            color: var(--text-main);
+        }
+        .modal-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header-row h3 { margin: 0; font-size: 15px; }
+        .modal-top-close {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .modal-top-close:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+        .modal-box input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-base);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 14px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        .modal-box input:focus { outline: none; border-color: var(--accent-cyan); }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+        .modal-actions button {
+            padding: 9px 15px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .modal-actions .btn-cancel { background: #475569; color: #fff; }
+        .modal-actions .btn-primary { background: var(--accent-cyan); color: var(--bg-base); }
+
+        /* BOOKMARKS */
+        .bookmark-item {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 9px 11px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            gap: 8px;
+            background: var(--bg-card);
+        }
+        .bookmark-item .bm-text { flex: 1; overflow: hidden; min-width: 0; }
+        .bookmark-item .bm-name {
+            font-size: 13px; font-weight: 700; line-height: 1.3;
+            color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .bookmark-item .bm-snippet {
+            font-size: 11.5px; line-height: 1.35; color: var(--text-dim); margin-top: 3px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; word-break: break-word;
+        }
+        .bookmark-item .bm-snippet.expanded {
+            display: block; -webkit-line-clamp: unset; background: var(--bg-base);
+            padding: 6px 8px; border-radius: 4px; border: 1px solid var(--border-color);
+            margin-top: 6px; color: var(--text-main);
+        }
+        .bookmark-item .bm-meta {
+            font-size: 10px; color: var(--text-muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace;
+        }
+        .bookmark-item .bm-actions { display: flex; gap: 5px; flex-shrink: 0; align-items: center; }
+        .bookmark-item .bm-btn {
+            padding: 5px 8px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border-color);
+            background: var(--bg-surface); color: var(--text-main); cursor: pointer; flex-shrink: 0;
+        }
+        .bookmark-item .bm-btn.delete { background: #7f1d1d; color: #fff; border-color: #7f1d1d; }
+
+        /* TABLE OF CONTENTS (TOC) */
+        .toc-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px;
+            margin-bottom: 6px; background: var(--bg-card); cursor: pointer; transition: 0.15s; gap: 8px;
+        }
+        .toc-item:hover { background: var(--bg-card-hover); border-color: var(--accent-cyan); }
+        .toc-item.active-toc { border-left: 4px solid var(--accent-cyan); background: var(--bg-card-hover); }
+        .toc-title { font-size: 13px; font-weight: 600; color: var(--text-main); line-height: 1.3; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+        .toc-lvl-1 { font-weight: 800; font-size: 13.5px; }
+        .toc-lvl-2 { padding-left: 14px; font-weight: 600; }
+        .toc-lvl-3 { padding-left: 28px; font-size: 12px; color: var(--text-dim); }
+        .toc-lvl-4, .toc-lvl-5, .toc-lvl-6 { padding-left: 38px; font-size: 11.5px; color: var(--text-muted); }
+        .toc-badge { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-muted); flex-shrink: 0; }
+
         /* LOCK SCREEN OVERLAY */
         .lock-overlay {
             position: fixed;
@@ -941,16 +921,8 @@
             margin-bottom: 12px;
             box-sizing: border-box;
         }
-        .paste-textarea:focus {
-            outline: none;
-            border-color: var(--accent-cyan);
-        }
-        .paste-toolbar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-        }
+        .paste-textarea:focus { outline: none; border-color: var(--accent-cyan); }
+        .paste-toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
         .paste-tool-btn {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -965,24 +937,21 @@
             gap: 6px;
             transition: 0.2s;
         }
-        .paste-tool-btn:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--accent-cyan);
-        }
+        .paste-tool-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-cyan); }
 
         audio { display: none; }
     </style>
 </head>
 <body>
 
-<div class="app-shell">
+<div class="app-shell" id="appShell">
 
-    <!-- 1. TOP CONTROL BAR -->
+    <!-- 1. TOP CONTROL BAR (СТРОКА 1) -->
     <header class="top-switch-bar" id="topControlBar">
         <div class="bar-left-cluster">
             <div class="file-upload-badge" id="fileBtnWrap" title="Choose file (.fb2, .txt, .md, .docx, .pdf)">
                 <span>📁</span>
-                <span id="fileNameDisp">Open File</span>
+                <span id="fileNameDisp">File</span>
                 <input type="file" id="fb2File">
             </div>
             <button class="file-upload-badge" id="pasteTabBtn" type="button" title="Paste custom text or Markdown" style="color: var(--accent-amber);">
@@ -990,7 +959,7 @@
                 <span>Paste</span>
             </button>
 
-            <!-- Voice Selection: Silero only (RU + EN) -->
+            <!-- Voice Selection -->
             <select id="voiceSelect" class="modern-select" title="Select Voice">
                 <optgroup label="🇷🇺 Russian (Silero)">
                     <option value="silero-xenia" selected>Xenia</option>
@@ -1004,120 +973,6 @@
                     <option value="silero-en_82">en_82</option>
                     <option value="silero-en_1">en_1</option>
                     <option value="silero-en_0">en_0</option>
-                    <option value="silero-en_2">en_2</option>
-                    <option value="silero-en_3">en_3</option>
-                    <option value="silero-en_4">en_4</option>
-                    <option value="silero-en_5">en_5</option>
-                    <option value="silero-en_6">en_6</option>
-                    <option value="silero-en_7">en_7</option>
-                    <option value="silero-en_8">en_8</option>
-                    <option value="silero-en_9">en_9</option>
-                    <option value="silero-en_10">en_10</option>
-                    <option value="silero-en_11">en_11</option>
-                    <option value="silero-en_12">en_12</option>
-                    <option value="silero-en_13">en_13</option>
-                    <option value="silero-en_14">en_14</option>
-                    <option value="silero-en_15">en_15</option>
-                    <option value="silero-en_16">en_16</option>
-                    <option value="silero-en_17">en_17</option>
-                    <option value="silero-en_18">en_18</option>
-                    <option value="silero-en_19">en_19</option>
-                    <option value="silero-en_20">en_20</option>
-                    <option value="silero-en_21">en_21</option>
-                    <option value="silero-en_22">en_22</option>
-                    <option value="silero-en_23">en_23</option>
-                    <option value="silero-en_24">en_24</option>
-                    <option value="silero-en_25">en_25</option>
-                    <option value="silero-en_26">en_26</option>
-                    <option value="silero-en_27">en_27</option>
-                    <option value="silero-en_28">en_28</option>
-                    <option value="silero-en_29">en_29</option>
-                    <option value="silero-en_30">en_30</option>
-                    <option value="silero-en_31">en_31</option>
-                    <option value="silero-en_32">en_32</option>
-                    <option value="silero-en_33">en_33</option>
-                    <option value="silero-en_34">en_34</option>
-                    <option value="silero-en_35">en_35</option>
-                    <option value="silero-en_36">en_36</option>
-                    <option value="silero-en_37">en_37</option>
-                    <option value="silero-en_38">en_38</option>
-                    <option value="silero-en_39">en_39</option>
-                    <option value="silero-en_40">en_40</option>
-                    <option value="silero-en_41">en_41</option>
-                    <option value="silero-en_42">en_42</option>
-                    <option value="silero-en_43">en_43</option>
-                    <option value="silero-en_44">en_44</option>
-                    <option value="silero-en_45">en_45</option>
-                    <option value="silero-en_46">en_46</option>
-                    <option value="silero-en_47">en_47</option>
-                    <option value="silero-en_48">en_48</option>
-                    <option value="silero-en_49">en_49</option>
-                    <option value="silero-en_50">en_50</option>
-                    <option value="silero-en_51">en_51</option>
-                    <option value="silero-en_52">en_52</option>
-                    <option value="silero-en_53">en_53</option>
-                    <option value="silero-en_54">en_54</option>
-                    <option value="silero-en_55">en_55</option>
-                    <option value="silero-en_57">en_57</option>
-                    <option value="silero-en_58">en_58</option>
-                    <option value="silero-en_59">en_59</option>
-                    <option value="silero-en_60">en_60</option>
-                    <option value="silero-en_61">en_61</option>
-                    <option value="silero-en_62">en_62</option>
-                    <option value="silero-en_63">en_63</option>
-                    <option value="silero-en_64">en_64</option>
-                    <option value="silero-en_65">en_65</option>
-                    <option value="silero-en_66">en_66</option>
-                    <option value="silero-en_67">en_67</option>
-                    <option value="silero-en_68">en_68</option>
-                    <option value="silero-en_69">en_69</option>
-                    <option value="silero-en_70">en_70</option>
-                    <option value="silero-en_71">en_71</option>
-                    <option value="silero-en_72">en_72</option>
-                    <option value="silero-en_73">en_73</option>
-                    <option value="silero-en_74">en_74</option>
-                    <option value="silero-en_75">en_75</option>
-                    <option value="silero-en_76">en_76</option>
-                    <option value="silero-en_77">en_77</option>
-                    <option value="silero-en_78">en_78</option>
-                    <option value="silero-en_79">en_79</option>
-                    <option value="silero-en_80">en_80</option>
-                    <option value="silero-en_81">en_81</option>
-                    <option value="silero-en_83">en_83</option>
-                    <option value="silero-en_84">en_84</option>
-                    <option value="silero-en_85">en_85</option>
-                    <option value="silero-en_86">en_86</option>
-                    <option value="silero-en_87">en_87</option>
-                    <option value="silero-en_88">en_88</option>
-                    <option value="silero-en_89">en_89</option>
-                    <option value="silero-en_90">en_90</option>
-                    <option value="silero-en_91">en_91</option>
-                    <option value="silero-en_92">en_92</option>
-                    <option value="silero-en_93">en_93</option>
-                    <option value="silero-en_94">en_94</option>
-                    <option value="silero-en_95">en_95</option>
-                    <option value="silero-en_96">en_96</option>
-                    <option value="silero-en_97">en_97</option>
-                    <option value="silero-en_98">en_98</option>
-                    <option value="silero-en_99">en_99</option>
-                    <option value="silero-en_100">en_100</option>
-                    <option value="silero-en_101">en_101</option>
-                    <option value="silero-en_102">en_102</option>
-                    <option value="silero-en_103">en_103</option>
-                    <option value="silero-en_104">en_104</option>
-                    <option value="silero-en_105">en_105</option>
-                    <option value="silero-en_106">en_106</option>
-                    <option value="silero-en_107">en_107</option>
-                    <option value="silero-en_108">en_108</option>
-                    <option value="silero-en_109">en_109</option>
-                    <option value="silero-en_110">en_110</option>
-                    <option value="silero-en_111">en_111</option>
-                    <option value="silero-en_112">en_112</option>
-                    <option value="silero-en_113">en_113</option>
-                    <option value="silero-en_114">en_114</option>
-                    <option value="silero-en_115">en_115</option>
-                    <option value="silero-en_116">en_116</option>
-                    <option value="silero-en_117">en_117</option>
                 </optgroup>
             </select>
         </div>
@@ -1130,7 +985,7 @@
         </div>
     </header>
 
-    <!-- 2. SUB-BAR: THEME, SPEED, COMBINED FONT & SIZE, TOC, BOOKMARKS -->
+    <!-- 2. SUB-BAR: SETTINGS DECK (СТРОКА 2) -->
     <div class="reader-settings-deck" id="settingsDeckBar">
         <select id="themeSelect" class="modern-select" title="Color Theme">
             <option value="dark">🌙 Dark</option>
@@ -1141,7 +996,7 @@
             <option value="lcd-mono">🧮 Mono LCD</option>
         </select>
 
-        <!-- Vertical Speed Slider (0.5x at top -> 2.0x at bottom) -->
+        <!-- Vertical Speed Slider -->
         <div class="speed-container">
             <button class="icon-action-btn" id="speedToggleBtn" title="Playback Speed">
                 ⏩ <span id="speedBtnText" style="margin-left:4px; font-size:11px; opacity:0.85;">1.00x</span>
@@ -1157,7 +1012,7 @@
             </div>
         </div>
 
-        <!-- Combined Font Family & Font Size Menu -->
+        <!-- Font Family & Size Menu -->
         <div class="font-menu-container">
             <button class="icon-action-btn" id="fontSizeToggleBtn" title="Font & Size Settings">
                 Aa <span id="fontSizeBtnText" style="margin-left:4px; font-size:11px; opacity:0.85;">[19px]</span>
@@ -1188,10 +1043,6 @@
         <button class="icon-action-btn" id="addBookmarkBtn" title="Add Bookmark">⭐</button>
         <button class="icon-action-btn" id="showBookmarksBtn" title="Saved Bookmarks">📌</button>
         <button class="icon-action-btn" id="lockBtn" style="color:var(--accent-amber);" title="Lock Screen">🔒</button>
-        <div class="chunk-nav">
-            <button class="icon-action-btn" id="prevBtn" title="Previous chunk (Hold 0.6s to jump to start)">⏮</button>
-            <button class="icon-action-btn" id="nextBtn" title="Next chunk">⏭</button>
-        </div>
     </div>
 
     <!-- 3. BOOK TITLE STRIP -->
@@ -1206,6 +1057,14 @@
             📥 Load an FB2, TXT, MD, DOCX, or PDF file to begin reading...
         </div>
     </main>
+
+    <!-- 🎛️ ПЛАВАЮЩИЙ ПУЛЬТ ПЕРЕМОТКИ ПО ЧАНКАМ -->
+    <div class="floating-chunk-pad" id="floatingChunkPad">
+        <button type="button" class="floating-lock-btn" id="padLockBtn" title="Unlock to move">🔒</button>
+        <div class="drag-handle-pill" id="padDragHandle" title="Drag to move">⋮⋮</div>
+        <button type="button" class="floating-nav-btn" id="prevBtn" title="Previous chunk (Hold 0.6s to jump to start)">⏮</button>
+        <button type="button" class="floating-nav-btn" id="nextBtn" title="Next chunk">⏭</button>
+    </div>
 
     <!-- 5. BOTTOM STATUS BAR -->
     <footer class="bottom-shelf">
@@ -1317,13 +1176,13 @@
 
     let allBlocks = []; 
     let textParagraphs = []; 
-    let tocItems = []; // [{ title, level, paragraphIndex }]
+    let tocItems = []; 
     let currentIndex = 0;
     
     let readingUnits = []; 
     let currentUnitIndex = 0;
 
-    let playlist = []; // [ { url, paragraphIndex, unitIndex, text } ]
+    let playlist = []; 
     let lastRequestedUnitIndex = -1;
     let currentPlayingItem = null;
 
@@ -1355,9 +1214,7 @@
             wakeLock = await navigator.wakeLock.request('screen');
             wakeLock.addEventListener('release', () => {
                 wakeLock = null;
-                if (isPlaying && !isPaused) {
-                    setTimeout(requestWakeLock, 1000);
-                }
+                if (isPlaying && !isPaused) setTimeout(requestWakeLock, 1000);
             });
         } catch (e) {
             console.warn("⚠️ Wake Lock error:", e);
@@ -1371,9 +1228,8 @@
         }
     }
 
-    // ================= HARD PAUSE ON ERROR (NO CHUNK SKIPPING) =================
+    // ================= HARD PAUSE ON ERROR =================
     function pauseOnError(reasonText) {
-        console.warn("⏸ Paused due to error:", reasonText);
         releaseWakeLock();
         isPaused = true;
         audioPlayer.pause();
@@ -1396,14 +1252,13 @@
 
         playBtn.style.display = 'flex';
         pauseBtn.style.display = 'none';
+        floatingPad.classList.remove('reading-mode');
         statusInfo.textContent = reasonText || `⚠️ Paused on chunk #${currentUnitIndex + 1}`;
         updateProgress();
     }
 
-    // ================= AUDIO ERRORS =================
     audioPlayer.addEventListener('error', () => {
         const errCode = audioPlayer.error ? audioPlayer.error.code : '?';
-        console.error(`❌ Audio error (code ${errCode}) on unit #${currentUnitIndex + 1}`);
         if (isPlaying && !isPaused) {
             if (currentPlayingItem && playlist.length && playlist[0].unitIndex === currentPlayingItem.unitIndex) {
                 playlist.shift();
@@ -1414,21 +1269,14 @@
             pauseOnError(`⚠️ Audio error on chunk #${currentUnitIndex + 1} (press Play)`);
         }
     });
-    audioPlayer.addEventListener('stalled', () => console.warn("⚠️ Audio stalled"));
-    audioPlayer.addEventListener('waiting', () => console.warn("⚠️ Audio waiting"));
 
-    // ================= BACKGROUND RESUME =================
     document.addEventListener('visibilitychange', () => {
-        console.log(`📱 visibilitychange: hidden=${document.hidden}, isPlaying=${isPlaying}, isPaused=${isPaused}, isFetching=${isFetching}`);
         if (!document.hidden && isPlaying && !isPaused) {
             setTimeout(() => {
                 if (!wakeLock) requestWakeLock();
                 if (audioPlayer.paused && isPlaying && !isPaused) {
                     if (audioPlayer.src && audioPlayer.currentTime > 0 && !audioPlayer.ended) {
-                        audioPlayer.play().catch(e => {
-                            console.error("Resume play failed:", e);
-                            pauseOnError(`⚠️ Paused on chunk #${currentUnitIndex + 1}`);
-                        });
+                        audioPlayer.play().catch(e => pauseOnError(`⚠️ Paused on chunk #${currentUnitIndex + 1}`));
                     } else if (playlist.length > 0) {
                         playAudio();
                     } else if (!isFetching) {
@@ -1439,7 +1287,100 @@
         }
     });
 
-    // 1. Font Family Buttons (Inside Combined Aa Menu)
+    // ================= DRAGGABLE / FLOATING CHUNK CONTROLLER =================
+    const floatingPad = document.getElementById('floatingChunkPad');
+    const padLockBtn = document.getElementById('padLockBtn');
+    let isPadUnlocked = false;
+    let isDragging = false;
+    let dragStartX = 0, dragStartY = 0;
+    let padStartLeft = 0, padStartTop = 0;
+
+    // Загрузка сохранённого положения
+    const savedPadPos = localStorage.getItem('silero-chunk-pad-pos');
+    if (savedPadPos) {
+        try {
+            const { x, y } = JSON.parse(savedPadPos);
+            floatingPad.style.left = x + 'px';
+            floatingPad.style.top = y + 'px';
+            floatingPad.style.transform = 'none';
+        } catch (_) {}
+    }
+
+    padLockBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isPadUnlocked = !isPadUnlocked;
+        floatingPad.classList.toggle('unlocked', isPadUnlocked);
+        padLockBtn.textContent = isPadUnlocked ? '🔓' : '🔒';
+        padLockBtn.title = isPadUnlocked ? 'Pad is UNLOCKED (Drag to move)' : 'Pad is LOCKED (Click to move)';
+        if (isPadUnlocked && navigator.vibrate) navigator.vibrate(30);
+    });
+
+    function startPadDrag(clientX, clientY) {
+        if (!isPadUnlocked) return;
+        isDragging = true;
+        const rect = floatingPad.getBoundingClientRect();
+        
+        // Переход с transform(-50%, -50%) на абсолютные пиксели
+        floatingPad.style.transform = 'none';
+        floatingPad.style.left = rect.left + 'px';
+        floatingPad.style.top = rect.top + 'px';
+
+        dragStartX = clientX;
+        dragStartY = clientY;
+        padStartLeft = rect.left;
+        padStartTop = rect.top;
+    }
+
+    function movePadDrag(clientX, clientY) {
+        if (!isDragging) return;
+        const dx = clientX - dragStartX;
+        const dy = clientY - dragStartY;
+
+        let newLeft = padStartLeft + dx;
+        let newTop = padStartTop + dy;
+
+        const maxLeft = window.innerWidth - floatingPad.offsetWidth - 8;
+        const maxTop = window.innerHeight - floatingPad.offsetHeight - 8;
+
+        newLeft = Math.max(8, Math.min(newLeft, maxLeft));
+        newTop = Math.max(50, Math.min(newTop, maxTop));
+
+        floatingPad.style.left = newLeft + 'px';
+        floatingPad.style.top = newTop + 'px';
+    }
+
+    function endPadDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        const rect = floatingPad.getBoundingClientRect();
+        localStorage.setItem('silero-chunk-pad-pos', JSON.stringify({ x: rect.left, y: rect.top }));
+    }
+
+    floatingPad.addEventListener('mousedown', (e) => {
+        if (isPadUnlocked && (e.target === floatingPad || e.target.id === 'padDragHandle')) {
+            startPadDrag(e.clientX, e.clientY);
+        }
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (isDragging) movePadDrag(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', endPadDrag);
+
+    floatingPad.addEventListener('touchstart', (e) => {
+        if (isPadUnlocked && (e.target === floatingPad || e.target.id === 'padDragHandle')) {
+            const t = e.touches[0];
+            startPadDrag(t.clientX, t.clientY);
+        }
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+        if (isDragging && e.touches.length > 0) {
+            const t = e.touches[0];
+            movePadDrag(t.clientX, t.clientY);
+        }
+    }, { passive: true });
+    window.addEventListener('touchend', endPadDrag);
+
+    // ================= FONT / THEME / SPEED =================
     let savedFont = localStorage.getItem('reader-font') || "'Lora', Georgia, serif";
     function applyFontFamily(fontVal) {
         savedFont = fontVal;
@@ -1458,7 +1399,6 @@
         });
     });
 
-    // 2. Playback Speed Preference (Vertical Slider: Top=0.5x, Bottom=2.0x)
     let currentPlaybackRate = parseFloat(localStorage.getItem('reader-speed')) || 1.0;
     if (currentPlaybackRate < 0.5) currentPlaybackRate = 0.5;
     if (currentPlaybackRate > 2.0) currentPlaybackRate = 2.0;
@@ -1477,25 +1417,20 @@
         fontSizePopover.classList.add('hidden');
         speedPopover.classList.toggle('hidden');
     };
-
     speedPopover.addEventListener('click', (e) => e.stopPropagation());
-
     btnCloseSpeed.onclick = (e) => {
         e.stopPropagation();
         speedPopover.classList.add('hidden');
     };
-
     speedRange.addEventListener('input', () => {
         currentPlaybackRate = parseFloat(speedRange.value);
         updateSpeedUI();
     });
-
     speedRange.addEventListener('change', () => {
         localStorage.setItem('reader-speed', currentPlaybackRate);
         updateTimeEstimate();
     });
 
-    // 3. Combined Font & Size Menu Controls
     let currentFontSize = parseInt(localStorage.getItem('reader-font-size')) || 19;
     function updateFontSize() {
         document.documentElement.style.setProperty('--font-size', currentFontSize + 'px');
@@ -1510,14 +1445,11 @@
         speedPopover.classList.add('hidden');
         fontSizePopover.classList.toggle('hidden');
     };
-
     fontSizePopover.addEventListener('click', (e) => e.stopPropagation());
-
     btnCloseFont.onclick = (e) => {
         e.stopPropagation();
         fontSizePopover.classList.add('hidden');
     };
-
     document.getElementById('btnFontMinus').onclick = (e) => {
         e.stopPropagation();
         currentFontSize = Math.max(12, currentFontSize - 2);
@@ -1529,7 +1461,6 @@
         updateFontSize();
     };
 
-    // Close popovers when clicking anywhere outside (including top bars)
     document.addEventListener('click', (e) => {
         if (!speedPopover.contains(e.target) && e.target !== speedToggleBtn) {
             speedPopover.classList.add('hidden');
@@ -1539,7 +1470,6 @@
         }
     });
 
-    // 4. Color Theme Selection
     const savedTheme = localStorage.getItem('reader-theme') || 'dark';
     document.body.setAttribute('data-theme', savedTheme);
     if (themeSelect) {
@@ -1551,7 +1481,7 @@
         });
     }
 
-    // 5. Scroll Observation
+    // Scroll Observation
     readerBody.addEventListener('touchmove', () => { userTouchScrolling = true; }, { passive: true });
     readerBody.addEventListener('wheel', () => { userTouchScrolling = true; }, { passive: true });
 
@@ -1584,7 +1514,7 @@
         }
     }, { root: readerBody, rootMargin: '0px', threshold: 0.5 });
 
-    // 6. File Upload & Parsing Handler
+    // File Upload Handlers
     document.getElementById('fb2File').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
@@ -1604,36 +1534,28 @@
             const reader = new FileReader();
             reader.onload = (evt) => parseFB2(evt.target.result);
             reader.readAsText(file);
-        } 
-        else if (ext === 'txt') {
+        } else if (ext === 'txt') {
             const reader = new FileReader();
             reader.onload = (evt) => {
                 const txt = evt.target.result;
                 const looksLikeMarkdown = /(^|\n)(#{1,6}\s|>\s|[-*]\s|\d+\.\s)|(\*\*[^*\n]+\*\*)|(`[^`\n]+`)/m.test(txt);
-                if (looksLikeMarkdown) {
-                    parseMD(txt);
-                } else {
-                    parseTXT(txt);
-                }
+                if (looksLikeMarkdown) parseMD(txt);
+                else parseTXT(txt);
             };
             reader.readAsText(file);
-        }
-        else if (['md', 'markdown', 'mdown', 'mkd'].includes(ext)) {
+        } else if (['md', 'markdown', 'mdown', 'mkd'].includes(ext)) {
             const reader = new FileReader();
             reader.onload = (evt) => parseMD(evt.target.result);
             reader.readAsText(file);
-        } 
-        else if (ext === 'docx') {
+        } else if (ext === 'docx') {
             const reader = new FileReader();
             reader.onload = (evt) => parseDOCX(evt.target.result);
             reader.readAsArrayBuffer(file);
-        }
-        else if (ext === 'pdf') {
+        } else if (ext === 'pdf') {
             const reader = new FileReader();
             reader.onload = (evt) => parsePDF(evt.target.result);
             reader.readAsArrayBuffer(file);
-        }
-        else {
+        } else {
             const reader = new FileReader();
             reader.onload = (evt) => parseMD(evt.target.result);
             reader.readAsText(file);
@@ -1649,13 +1571,10 @@
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
                 let rawPageText = textContent.items.map(item => item.str).join(" ");
-                rawPageText = rawPageText.replace(/\s+/g, ' ');
-                fullText += rawPageText + " ";
+                fullText += rawPageText.replace(/\s+/g, ' ') + " ";
             }
-            let formattedText = fullText.replace(/([.?!])\s+([A-Za-zА-Яа-яЁё])/g, "$1\n$2");
-            parseTXT(formattedText);
+            parseTXT(fullText.replace(/([.?!])\s+([A-Za-zА-Яа-яЁё])/g, "$1\n$2"));
         } catch (err) {
-            console.error(err);
             statusInfo.textContent = "PDF reading error";
         }
     }
@@ -1667,8 +1586,7 @@
         for(let i = 0; i < binaryTags.length; i++) {
             const id = binaryTags[i].getAttribute('id');
             const cType = binaryTags[i].getAttribute('content-type') || 'image/jpeg';
-            const base64Data = binaryTags[i].textContent.replace(/\s+/g, '');
-            binaries[id] = `data:${cType};base64,${base64Data}`;
+            binaries[id] = `data:${cType};base64,${binaryTags[i].textContent.replace(/\s+/g, '')}`;
         }
 
         allBlocks = []; textParagraphs = []; tocItems = []; let pIndex = 0;
@@ -1712,11 +1630,7 @@
                             allBlocks.push(block);
                             textParagraphs.push(block);
                             if (isHeading) {
-                                tocItems.push({
-                                    title: text.slice(0, 90),
-                                    level: inTitle ? 1 : 2,
-                                    paragraphIndex: idx
-                                });
+                                tocItems.push({ title: text.slice(0, 90), level: inTitle ? 1 : 2, paragraphIndex: idx });
                             }
                         }
                     } else if (tagName === 'image') {
@@ -1737,26 +1651,15 @@
 
     function parseMD(textString) {
         allBlocks = []; textParagraphs = []; tocItems = []; let pIndex = 0;
-
-        if (typeof marked === 'undefined') {
-            return parseTXT(textString);
-        }
+        if (typeof marked === 'undefined') return parseTXT(textString);
 
         let html;
-        try {
-            html = marked.parse(textString, { breaks: true, gfm: true });
-        } catch (e) {
-            console.error("marked.parse failed:", e);
-            return parseTXT(textString);
-        }
+        try { html = marked.parse(textString, { breaks: true, gfm: true }); } 
+        catch (e) { return parseTXT(textString); }
 
         const container = document.createElement('div');
         container.innerHTML = html;
-
-        container.querySelectorAll('a').forEach(a => {
-            a.replaceWith(document.createTextNode(a.textContent));
-        });
-
+        container.querySelectorAll('a').forEach(a => a.replaceWith(document.createTextNode(a.textContent)));
         const norm = (s) => (s || '').replace(/\s+/g, ' ').trim();
 
         const addTextBlock = (el, className, headingLevel = 0) => {
@@ -1773,53 +1676,37 @@
             allBlocks.push(block);
             textParagraphs.push(block);
             if (headingLevel > 0) {
-                tocItems.push({
-                    title: text,
-                    level: headingLevel,
-                    paragraphIndex: idx
-                });
+                tocItems.push({ title: text, level: headingLevel, paragraphIndex: idx });
             }
         };
 
         for (const child of Array.from(container.children)) {
             const tag = child.tagName.toLowerCase();
-
             if (/^h[1-6]$/.test(tag)) {
-                const lvl = parseInt(tag.substring(1), 10);
-                addTextBlock(child, 'md-' + tag, lvl);
+                addTextBlock(child, 'md-' + tag, parseInt(tag.substring(1), 10));
             } else if (tag === 'p') {
                 addTextBlock(child, '');
             } else if (tag === 'ul' || tag === 'ol') {
                 for (const li of Array.from(child.children)) {
-                    if (li.tagName.toLowerCase() === 'li') {
-                        addTextBlock(li, 'md-li');
-                    }
+                    if (li.tagName.toLowerCase() === 'li') addTextBlock(li, 'md-li');
                 }
             } else if (tag === 'blockquote') {
                 addTextBlock(child, 'md-quote');
             } else if (tag === 'pre') {
                 const codeText = child.textContent || '';
-                if (codeText.trim()) {
-                    allBlocks.push({
-                        type: 'code',
-                        html: child.innerHTML,
-                        text: codeText
-                    });
-                }
+                if (codeText.trim()) allBlocks.push({ type: 'code', html: child.innerHTML, text: codeText });
             } else if (tag === 'hr') {
                 allBlocks.push({ type: 'hr' });
             } else {
                 addTextBlock(child, '');
             }
         }
-
         buildReadingUnitsServer().then(() => loadProgressAndRender());
     }
 
     function parseTXT(textString) {
         allBlocks = []; textParagraphs = []; tocItems = []; let pIndex = 0;
-        const lines = textString.split(/\r?\n/);
-        lines.forEach(line => {
+        textString.split(/\r?\n/).forEach(line => {
             const raw = line.trim();
             if (raw.length > 1) {
                 const mdMatch = raw.match(/^(#{1,6})\s+(.+)$/);
@@ -1827,14 +1714,8 @@
                 if (mdMatch) {
                     const lvl = mdMatch[1].length;
                     const cleanTitle = mdMatch[2].trim();
-                    const block = {
-                        type: 'text',
-                        text: cleanTitle,
-                        className: 'md-h' + lvl,
-                        index: idx
-                    };
-                    allBlocks.push(block);
-                    textParagraphs.push(block);
+                    allBlocks.push({ type: 'text', text: cleanTitle, className: 'md-h' + lvl, index: idx });
+                    textParagraphs.push(allBlocks[allBlocks.length - 1]);
                     tocItems.push({ title: cleanTitle, level: lvl, paragraphIndex: idx });
                 } else {
                     const block = { type: 'text', text: raw, index: idx };
@@ -1847,48 +1728,35 @@
     }
 
     function parseDOCX(arrayBuffer) {
-        mammoth.convertToHtml({arrayBuffer: arrayBuffer})
-            .then(function(result) {
-                const htmlString = result.value; 
-                const doc = new DOMParser().parseFromString(htmlString, "text/html");
-                allBlocks = []; textParagraphs = []; tocItems = []; let pIndex = 0;
+        mammoth.convertToHtml({arrayBuffer: arrayBuffer}).then(result => {
+            const doc = new DOMParser().parseFromString(result.value, "text/html");
+            allBlocks = []; textParagraphs = []; tocItems = []; let pIndex = 0;
 
-                const walk = (node) => {
-                    if (node.nodeType === 1) { 
-                        const tagName = node.tagName.toLowerCase();
-                        if (tagName === 'img') {
-                            const src = node.getAttribute('src');
-                            if (src) allBlocks.push({ type: 'image', src: src });
-                        } 
-                        else if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li'].includes(tagName)) {
-                            const text = node.textContent.trim();
-                            if (text.length > 1) {
-                                const idx = pIndex++;
-                                const isH = /^h[1-6]$/.test(tagName);
-                                const block = {
-                                    type: 'text',
-                                    text: text,
-                                    className: isH ? ('md-' + tagName) : '',
-                                    index: idx
-                                };
-                                allBlocks.push(block);
-                                textParagraphs.push(block);
-                                if (isH) {
-                                    tocItems.push({
-                                        title: text,
-                                        level: parseInt(tagName.substring(1), 10),
-                                        paragraphIndex: idx
-                                    });
-                                }
+            const walk = (node) => {
+                if (node.nodeType === 1) { 
+                    const tagName = node.tagName.toLowerCase();
+                    if (tagName === 'img') {
+                        const src = node.getAttribute('src');
+                        if (src) allBlocks.push({ type: 'image', src: src });
+                    } else if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li'].includes(tagName)) {
+                        const text = node.textContent.trim();
+                        if (text.length > 1) {
+                            const idx = pIndex++;
+                            const isH = /^h[1-6]$/.test(tagName);
+                            allBlocks.push({ type: 'text', text: text, className: isH ? ('md-' + tagName) : '', index: idx });
+                            textParagraphs.push(allBlocks[allBlocks.length - 1]);
+                            if (isH) {
+                                tocItems.push({ title: text, level: parseInt(tagName.substring(1), 10), paragraphIndex: idx });
                             }
-                        } else {
-                            for (let i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]);
                         }
+                    } else {
+                        for (let i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]);
                     }
-                };
-                walk(doc.body);
-                buildReadingUnitsServer().then(() => loadProgressAndRender());
-            });
+                }
+            };
+            walk(doc.body);
+            buildReadingUnitsServer().then(() => loadProgressAndRender());
+        });
     }
 
     async function buildReadingUnitsServer() {
@@ -1909,18 +1777,13 @@
                 for (let i = 0; i < textParagraphs.length; i++) {
                     const chunks = data.results[i];
                     for (const ch of chunks) {
-                        readingUnits.push({
-                            unitIndex: unitCounter++,
-                            paragraphIndex: textParagraphs[i].index,
-                            text: ch
-                        });
+                        readingUnits.push({ unitIndex: unitCounter++, paragraphIndex: textParagraphs[i].index, text: ch });
                     }
                 }
             } else {
                 fallbackSplit(unitCounter);
             }
         } catch (e) {
-            console.warn("Server split failed, fallback to raw paragraphs:", e);
             fallbackSplit(unitCounter);
         }
     }
@@ -1928,11 +1791,7 @@
     function fallbackSplit(unitCounter) {
         readingUnits = [];
         for (const p of textParagraphs) {
-            readingUnits.push({
-                unitIndex: unitCounter++,
-                paragraphIndex: p.index,
-                text: p.text
-            });
+            readingUnits.push({ unitIndex: unitCounter++, paragraphIndex: p.index, text: p.text });
         }
     }
 
@@ -1969,22 +1828,15 @@
         allBlocks.forEach(block => {
             if (block.type === 'text') {
                 const div = document.createElement('div');
-                let cls = 'paragraph';
-                if (block.className) cls += ' ' + block.className;
-                div.className = cls;
+                div.className = 'paragraph' + (block.className ? ' ' + block.className : '');
                 div.id = 'p-' + block.index;
 
-                if (block.html) {
-                    div.innerHTML = block.html;
-                } else {
-                    div.textContent = block.text;
-                }
+                if (block.html) div.innerHTML = block.html;
+                else div.textContent = block.text;
 
                 div.onclick = () => { 
                     const sel = window.getSelection();
-                    if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
-                        return;
-                    }
+                    if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) return;
                     
                     currentIndex = block.index; 
                     syncCurrentUnitFromParagraph();
@@ -2050,10 +1902,7 @@
                 readerBody.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
                 const targetScrollTop = el.offsetTop - readerBody.offsetTop - (readerBody.clientHeight / 2) + (el.clientHeight / 2);
-                readerBody.scrollTo({
-                    top: Math.max(0, targetScrollTop),
-                    behavior: 'smooth'
-                });
+                readerBody.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
             }
 
             setTimeout(() => {
@@ -2070,7 +1919,6 @@
                 artist: text.length > 40 ? text.substring(0, 40) + '...' : text,
                 album: bookKey || 'Audiobook'
             });
-            
             navigator.mediaSession.setActionHandler('play', () => { if(isPaused) playBtn.click(); });
             navigator.mediaSession.setActionHandler('pause', () => { pauseBtn.click(); });
             navigator.mediaSession.setActionHandler('stop', () => { stopBtn.click(); });
@@ -2087,13 +1935,11 @@
             playBtn.style.display = 'none';
             pauseBtn.style.display = 'flex';
             stopBtn.style.display = 'flex';
+            floatingPad.classList.add('reading-mode');
             statusInfo.textContent = "Playing...";
 
             if (audioPlayer.src && audioPlayer.currentTime > 0 && !audioPlayer.ended) {
-                audioPlayer.play().catch(e => {
-                    console.warn("Resume failed, re-playing from queue:", e);
-                    playAudio();
-                });
+                audioPlayer.play().catch(() => playAudio());
             } else if (playlist.length > 0) {
                 playAudio();
             } else {
@@ -2110,14 +1956,12 @@
         playBtn.style.display = 'none'; 
         pauseBtn.style.display = 'flex';
         stopBtn.style.display = 'flex';
+        floatingPad.classList.add('reading-mode');
         
         playlist = [];
         currentPlayingItem = null;
-        if (!hasPendingJump) {
-            syncCurrentUnitFromParagraph();
-        }
+        if (!hasPendingJump) syncCurrentUnitFromParagraph();
         hasPendingJump = false;
-        console.log(`▶️ Start reading: paragraph=${currentIndex}, unit=${currentUnitIndex}/${readingUnits.length}`);
         statusInfo.textContent = "Buffering audio...";
         fetchNext();
     };
@@ -2128,6 +1972,7 @@
         audioPlayer.pause();
         playBtn.style.display = 'flex';
         pauseBtn.style.display = 'none';
+        floatingPad.classList.remove('reading-mode');
         statusInfo.textContent = "Paused";
     };
 
@@ -2152,6 +1997,7 @@
         playBtn.style.display = 'flex'; 
         pauseBtn.style.display = 'none';
         stopBtn.style.display = 'none';
+        floatingPad.classList.remove('reading-mode');
         statusInfo.textContent = "Stopped";
         clearChunkHighlight();
         timingStats = { totalChars: 0, totalDuration: 0, sampleCount: 0 };
@@ -2159,14 +2005,15 @@
         updateProgress();
     }
 
-    // ================= CHUNK NAVIGATION (⏮ / ⏭ + HOLD 0.6s FOR START) =================
+    // ================= CHUNK NAVIGATION =================
     function jumpToUnit(targetIndex) {
         if (!readingUnits.length) return;
         if (targetIndex < 0) targetIndex = 0;
         if (targetIndex >= readingUnits.length) targetIndex = readingUnits.length - 1;
 
-        const wasPlaying = isPlaying && !isPaused;
+        if (navigator.vibrate) navigator.vibrate(20);
 
+        const wasPlaying = isPlaying && !isPaused;
         currentSessionId++;
         playlist = [];
         currentPlayingItem = null;
@@ -2221,17 +2068,15 @@
         prevHoldTimer = setTimeout(() => {
             prevLongPressed = true;
             jumpToUnit(0);
-            statusInfo.textContent = "⏮ Jumped to start (chunk 1)";
+            statusInfo.textContent = "⏮ Jumped to start";
         }, 600);
     }
-    function endPrevHold() {
-        clearTimeout(prevHoldTimer);
-    }
+    function endPrevHold() { clearTimeout(prevHoldTimer); }
 
     prevBtnEl.addEventListener('mousedown', startPrevHold);
     prevBtnEl.addEventListener('mouseup', endPrevHold);
     prevBtnEl.addEventListener('mouseleave', endPrevHold);
-    prevBtnEl.addEventListener('touchstart', () => startPrevHold(), { passive: true });
+    prevBtnEl.addEventListener('touchstart', startPrevHold, { passive: true });
     prevBtnEl.addEventListener('touchend', endPrevHold);
     prevBtnEl.addEventListener('touchcancel', endPrevHold);
 
@@ -2247,12 +2092,11 @@
         jumpToUnit(currentUnitIndex + 1);
     };
 
-    // ================= PREFETCH WITH 30s TIMEOUT & ERROR PAUSE =================
+    // ================= PREFETCH & SYNTHESIS =================
     function fetchNext() {
         if (!isPlaying || isFetching || isPaused) return;
 
         const nextTargetUnitIndex = Math.max(lastRequestedUnitIndex + 1, currentUnitIndex);
-
         if (nextTargetUnitIndex >= readingUnits.length) return;
         if (playlist.length >= MAX_PLAYLIST) return;
         if (playlist.length >= PREFETCH_AHEAD && !audioPlayer.paused) return;
@@ -2270,7 +2114,6 @@
         fetchAbortController = new AbortController();
         clearTimeout(fetchTimeoutId);
         fetchTimeoutId = setTimeout(() => {
-            console.warn(`⏱ Fetch timeout (>30s) on unit #${nextTargetUnitIndex + 1}`);
             if (fetchAbortController) {
                 try { fetchAbortController.abort(); } catch (_) {}
             }
@@ -2298,51 +2141,37 @@
                     });
                     updateProgress();
 
-                    if (audioPlayer.paused && playlist.length >= 1 && !isPaused) {
-                        playAudio();
-                    }
-                    
+                    if (audioPlayer.paused && playlist.length >= 1 && !isPaused) playAudio();
                     fetchNext();
                 } else {
-                    console.error(`❌ Server synthesize error on unit #${item.unitIndex + 1}:`, data.error);
                     lastRequestedUnitIndex = item.unitIndex - 1;
                     if (playlist.length === 0 && audioPlayer.paused) {
                         pauseOnError(`⚠️ Synth error on chunk #${item.unitIndex + 1}`);
-                    } else {
-                        statusInfo.textContent = `⚠️ Prefetch error #${item.unitIndex + 1}`;
                     }
                 }
-            }).catch((err) => { 
+            }).catch(() => { 
                 clearTimeout(fetchTimeoutId);
                 isFetching = false;
                 fetchAbortController = null;
                 if (!isPlaying || fetchSessionId !== currentSessionId) return;
 
-                console.warn(`⚠️ Network/Abort error on unit #${item.unitIndex + 1}:`, err);
                 lastRequestedUnitIndex = item.unitIndex - 1;
-
                 if (playlist.length === 0 && audioPlayer.paused) {
-                    pauseOnError(`⚠️ Network timeout on chunk #${item.unitIndex + 1} (press Play)`);
+                    pauseOnError(`⚠️ Network error on chunk #${item.unitIndex + 1} (press Play)`);
                 }
             });
     }
 
-    // ================= CHUNK HIGHLIGHTING =================
+    // ================= HIGHLIGHTING =================
     function findChunkRange(fullText, chunkText) {
         let idx = fullText.indexOf(chunkText);
         if (idx !== -1) return { start: idx, end: idx + chunkText.length };
 
         try {
-            const escaped = chunkText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const flexible = escaped.replace(/\s+/g, '\\s+');
-            const regex = new RegExp(flexible);
+            const regex = new RegExp(chunkText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'));
             const match = fullText.match(regex);
-            if (match) {
-                return { start: match.index, end: match.index + match[0].length };
-            }
-        } catch (e) {
-            console.warn("Regex failed:", e);
-        }
+            if (match) return { start: match.index, end: match.index + match[0].length };
+        } catch (_) {}
         return null;
     }
 
@@ -2358,14 +2187,12 @@
 
     function highlightChunk(paragraphIndex, chunkText) {
         clearChunkHighlight();
-
         const para = document.getElementById('p-' + paragraphIndex);
         if (!para) return;
 
         const walker = document.createTreeWalker(para, NodeFilter.SHOW_TEXT);
         const nodes = [];
-        let fullText = '';
-        let n;
+        let fullText = '', n;
         while (n = walker.nextNode()) {
             nodes.push({ node: n, start: fullText.length });
             fullText += n.nodeValue;
@@ -2375,7 +2202,6 @@
         if (!range) return;
 
         const { start, end } = range;
-
         const pieces = [];
         for (const { node, start: nodeStart } of nodes) {
             const nodeLen = node.nodeValue.length;
@@ -2408,19 +2234,12 @@
         }
 
         const firstSpan = para.querySelector('.chunk-active');
-        if (firstSpan) scrollToElementCenter(firstSpan);
-    }
-
-    function scrollToElementCenter(el) {
-        const rect = el.getBoundingClientRect();
-        const bodyRect = readerBody.getBoundingClientRect();
-        const elTopInBody = rect.top - bodyRect.top + readerBody.scrollTop;
-        const targetScrollTop = elTopInBody - (readerBody.clientHeight / 2) + (rect.height / 2);
-
-        readerBody.scrollTo({
-            top: Math.max(0, targetScrollTop),
-            behavior: 'smooth'
-        });
+        if (firstSpan) {
+            const rect = firstSpan.getBoundingClientRect();
+            const bodyRect = readerBody.getBoundingClientRect();
+            const targetScrollTop = (rect.top - bodyRect.top + readerBody.scrollTop) - (readerBody.clientHeight / 2) + (rect.height / 2);
+            readerBody.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+        }
     }
 
     function playAudio() {
@@ -2448,7 +2267,6 @@
         audioPlayer.playbackRate = currentPlaybackRate;
         
         audioPlayer.play().catch(e => {
-            console.error("❌ Playback prevented or failed:", e);
             pauseOnError(`⚠️ Press Play (chunk #${audioItem.unitIndex + 1})`);
         });
 
@@ -2483,28 +2301,22 @@
         }
     };
 
-    // ================= TIME ESTIMATE =================
     function formatTime(sec) {
         if (!isFinite(sec) || sec < 0) return '--';
         if (sec < 60) return Math.round(sec) + 's';
         if (sec < 3600) return Math.round(sec / 60) + 'm';
-        const h = Math.floor(sec / 3600);
-        const m = Math.round((sec % 3600) / 60);
-        return h + 'h ' + m + 'm';
+        return Math.floor(sec / 3600) + 'h ' + Math.round((sec % 3600) / 60) + 'm';
     }
 
     function updateTimeEstimate() {
         const timeInfo = document.getElementById('timeInfo');
-        if (!timeInfo) return;
-        if (timingStats.sampleCount < 1 || !readingUnits.length) {
-            timeInfo.textContent = '⏱ --';
+        if (!timeInfo || timingStats.sampleCount < 1 || !readingUnits.length) {
+            if (timeInfo) timeInfo.textContent = '⏱ --';
             return;
         }
         const charsPerSec = timingStats.totalChars / timingStats.totalDuration;
-        if (!isFinite(charsPerSec) || charsPerSec <= 0) {
-            timeInfo.textContent = '⏱ --';
-            return;
-        }
+        if (!isFinite(charsPerSec) || charsPerSec <= 0) return;
+
         let remainingChars = 0;
         for (let i = currentUnitIndex; i < readingUnits.length; i++) {
             remainingChars += readingUnits[i].text.length;
@@ -2513,28 +2325,24 @@
         timeInfo.textContent = '⏱ ~' + formatTime(remainingSec);
     }
 
-    // ================= TABLE OF CONTENTS (TOC) =================
+    // ================= MODALS & UTILS =================
     function openTocModal() {
         if (!textParagraphs.length) {
-            statusInfo.textContent = '⚠️ Load a book or text first';
+            statusInfo.textContent = '⚠️ Load a book first';
             return;
         }
         const list = document.getElementById('tocList');
         if (!tocItems.length) {
-            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center; font-size:13px;">No headings (#, ##, ###) found in this document</div>';
+            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center;">No headings found</div>';
         } else {
             let activeTocIdx = -1;
             for (let i = 0; i < tocItems.length; i++) {
-                if (tocItems[i].paragraphIndex <= currentIndex) {
-                    activeTocIdx = i;
-                } else {
-                    break;
-                }
+                if (tocItems[i].paragraphIndex <= currentIndex) activeTocIdx = i;
+                else break;
             }
-
             list.innerHTML = tocItems.map((item, idx) => `
                 <div class="toc-item ${idx === activeTocIdx ? 'active-toc' : ''}" onclick="jumpToHeading(${item.paragraphIndex})">
-                    <div class="toc-title toc-lvl-${item.level}" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+                    <div class="toc-title toc-lvl-${item.level}">${escapeHtml(item.title)}</div>
                     <span class="toc-badge">¶ ${item.paragraphIndex + 1}</span>
                 </div>
             `).join('');
@@ -2542,16 +2350,12 @@
         document.getElementById('tocModal').classList.remove('hidden');
     }
 
-    function closeTocModal() {
-        document.getElementById('tocModal').classList.add('hidden');
-    }
-
+    function closeTocModal() { document.getElementById('tocModal').classList.add('hidden'); }
     function jumpToHeading(paragraphIdx) {
         closeTocModal();
         const targetUnit = readingUnits.findIndex(u => u.paragraphIndex >= paragraphIdx);
-        if (targetUnit !== -1) {
-            jumpToUnit(targetUnit);
-        } else {
+        if (targetUnit !== -1) jumpToUnit(targetUnit);
+        else {
             currentIndex = paragraphIdx;
             scrollToCurrent();
             saveDebounced();
@@ -2563,38 +2367,22 @@
         if (e.target.id === 'tocModal') closeTocModal();
     });
 
-    // ================= BOOKMARKS =================
     async function loadBookmarks() {
         if (!bookKey) return [];
         try {
             const res = await fetch(`/api/bookmarks?book_name=${encodeURIComponent(bookKey)}`);
             const data = await res.json();
             return data.success ? data.bookmarks : [];
-        } catch (e) {
-            console.error('loadBookmarks error:', e);
-            return [];
-        }
+        } catch (_) { return []; }
     }
 
     function openBookmarkModal() {
-        if (!readingUnits.length) {
-            statusInfo.textContent = '⚠️ Load a book first';
-            return;
-        }
+        if (!readingUnits.length) return;
         const currentItem = readingUnits[currentUnitIndex];
-        const defaultName = currentItem ? currentItem.text.substring(0, 45) : '';
-        document.getElementById('bookmarkNameInput').value = defaultName;
+        document.getElementById('bookmarkNameInput').value = currentItem ? currentItem.text.substring(0, 45) : '';
         document.getElementById('bookmarkModal').classList.remove('hidden');
-        setTimeout(() => {
-            const inp = document.getElementById('bookmarkNameInput');
-            inp.focus();
-            inp.select();
-        }, 100);
     }
-
-    function closeBookmarkModal() {
-        document.getElementById('bookmarkModal').classList.add('hidden');
-    }
+    function closeBookmarkModal() { document.getElementById('bookmarkModal').classList.add('hidden'); }
 
     async function confirmSaveBookmark() {
         const name = document.getElementById('bookmarkNameInput').value.trim();
@@ -2602,7 +2390,7 @@
         if (!currentItem) return;
 
         try {
-            const res = await fetch('/api/bookmarks/save', {
+            await fetch('/api/bookmarks/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2613,20 +2401,9 @@
                     name: name || currentItem.text.substring(0, 35)
                 })
             });
-            const data = await res.json();
-            if (data.success) {
-                closeBookmarkModal();
-                statusInfo.textContent = '⭐ Bookmark saved';
-                setTimeout(() => {
-                    if (isPlaying) statusInfo.textContent = 'Speaking...';
-                    else statusInfo.textContent = 'Ready to read';
-                }, 2000);
-            } else {
-                alert('Error: ' + data.error);
-            }
-        } catch (e) {
-            alert('Connection error');
-        }
+            closeBookmarkModal();
+            statusInfo.textContent = '⭐ Bookmark saved';
+        } catch (_) {}
     }
 
     function toggleBookmarkSnippet(id) {
@@ -2635,69 +2412,49 @@
     }
 
     async function openBookmarksList() {
-        if (!bookKey) {
-            statusInfo.textContent = '⚠️ Load a book first';
-            return;
-        }
+        if (!bookKey) return;
         const bm = await loadBookmarks();
         const list = document.getElementById('bookmarksList');
         if (!bm.length) {
             list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center;">No bookmarks yet</div>';
         } else {
-            list.innerHTML = bm.map(b => {
-                const fullText = b.text || b.name || '';
-                return `
-                <div class="bookmark-item" title="${escapeHtml(fullText)}">
+            list.innerHTML = bm.map(b => `
+                <div class="bookmark-item">
                     <div class="bm-text" onclick="toggleBookmarkSnippet(${b.id})" style="cursor:pointer;">
                         <div class="bm-name">${escapeHtml(b.name)}</div>
                         ${b.text ? `<div class="bm-snippet" id="bm-snip-${b.id}">${escapeHtml(b.text)}</div>` : ''}
-                        <div class="bm-meta">${b.created_at} · chunk ${b.unit_index + 1} (tap text to expand)</div>
+                        <div class="bm-meta">${b.created_at} · chunk ${b.unit_index + 1}</div>
                     </div>
                     <div class="bm-actions">
-                        <button class="bm-btn" title="Show full text" onclick="toggleBookmarkSnippet(${b.id})">👁</button>
-                        <button class="bm-btn" title="Jump to bookmark" onclick="jumpToBookmark(${b.unit_index})">→</button>
-                        <button class="bm-btn delete" title="Delete bookmark" onclick="deleteBookmark(${b.id})">🗑</button>
+                        <button class="bm-btn" onclick="toggleBookmarkSnippet(${b.id})">👁</button>
+                        <button class="bm-btn" onclick="jumpToBookmark(${b.unit_index})">→</button>
+                        <button class="bm-btn delete" onclick="deleteBookmark(${b.id})">🗑</button>
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
         }
         document.getElementById('bookmarksListModal').classList.remove('hidden');
     }
-
-    function closeBookmarksList() {
-        document.getElementById('bookmarksListModal').classList.add('hidden');
-    }
-
+    function closeBookmarksList() { document.getElementById('bookmarksListModal').classList.add('hidden'); }
     function jumpToBookmark(unitIndex) {
         closeBookmarksList();
-        if (unitIndex >= 0 && unitIndex < readingUnits.length) {
-            jumpToUnit(unitIndex);
-        }
+        if (unitIndex >= 0 && unitIndex < readingUnits.length) jumpToUnit(unitIndex);
     }
-
     async function deleteBookmark(id) {
-        try {
-            const res = await fetch('/api/bookmarks/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ book_name: bookKey, id: id })
-            });
-            const data = await res.json();
-            if (data.success) openBookmarksList();
-        } catch (e) {
-            alert('Failed to delete bookmark');
-        }
+        await fetch('/api/bookmarks/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ book_name: bookKey, id: id })
+        });
+        openBookmarksList();
     }
 
     function escapeHtml(s) {
         return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     }
 
-    const _addBmBtn = document.getElementById('addBookmarkBtn');
-    const _showBmBtn = document.getElementById('showBookmarksBtn');
-    if (_addBmBtn) _addBmBtn.onclick = openBookmarkModal;
-    if (_showBmBtn) _showBmBtn.onclick = openBookmarksList;
-
+    document.getElementById('addBookmarkBtn').onclick = openBookmarkModal;
+    document.getElementById('showBookmarksBtn').onclick = openBookmarksList;
     document.getElementById('bookmarkModal').addEventListener('click', (e) => {
         if (e.target.id === 'bookmarkModal') closeBookmarkModal();
     });
@@ -2705,52 +2462,37 @@
         if (e.target.id === 'bookmarksListModal') closeBookmarksList();
     });
 
-    // 7. Lock Screen Logic
+    // Lock Screen
     const lockBtn = document.getElementById('lockBtn');
     const lockOverlay = document.getElementById('lock-overlay');
     const unlockZone = document.getElementById('unlock-zone');
     let unlockTimeout;
 
-    lockBtn.addEventListener('click', () => {
-        lockOverlay.classList.remove('hidden');
-    });
+    lockBtn.addEventListener('click', () => lockOverlay.classList.remove('hidden'));
 
     function startUnlockTimer() {
         unlockZone.style.borderColor = 'var(--accent-cyan)';
         unlockZone.style.color = 'var(--accent-cyan)';
-        
         unlockTimeout = setTimeout(() => {
             lockOverlay.classList.add('hidden');
             unlockZone.style.borderColor = 'var(--border-color)';
             unlockZone.style.color = 'var(--text-muted)';
         }, 1000);
     }
-
     function cancelUnlockTimer() {
         clearTimeout(unlockTimeout);
         unlockZone.style.borderColor = 'var(--border-color)';
         unlockZone.style.color = 'var(--text-muted)';
     }
 
-    unlockZone.addEventListener('touchstart', (e) => { 
-        e.preventDefault();
-        startUnlockTimer(); 
-    }, {passive: false});
-    
+    unlockZone.addEventListener('touchstart', (e) => { e.preventDefault(); startUnlockTimer(); }, {passive: false});
     unlockZone.addEventListener('touchend', cancelUnlockTimer);
     unlockZone.addEventListener('touchcancel', cancelUnlockTimer);
-    
     unlockZone.addEventListener('mousedown', startUnlockTimer);
     unlockZone.addEventListener('mouseup', cancelUnlockTimer);
     unlockZone.addEventListener('mouseleave', cancelUnlockTimer);
 
-    lockOverlay.addEventListener('click', (e) => {
-        if (e.target === lockOverlay) {
-            e.stopPropagation();
-        }
-    });
-
-    // 7.5. Paste Custom Text Modal
+    // Paste Modal
     const pasteTabBtn = document.getElementById('pasteTabBtn');
     const pasteTextModal = document.getElementById('pasteTextModal');
     const pastedTextInput = document.getElementById('pastedTextInput');
@@ -2762,23 +2504,14 @@
 
     const savedDraft = localStorage.getItem('sileroread-pasted-draft');
     if (savedDraft) pastedTextInput.value = savedDraft;
-
-    pastedTextInput.addEventListener('input', () => {
-        localStorage.setItem('sileroread-pasted-draft', pastedTextInput.value);
-    });
+    pastedTextInput.addEventListener('input', () => localStorage.setItem('sileroread-pasted-draft', pastedTextInput.value));
 
     pasteTabBtn.addEventListener('click', () => {
         pasteTextModal.classList.remove('hidden');
         setTimeout(() => pastedTextInput.focus(), 100);
     });
-
-    btnClosePasteModal.addEventListener('click', () => {
-        pasteTextModal.classList.add('hidden');
-    });
-    btnTopClosePasteModal.addEventListener('click', () => {
-        pasteTextModal.classList.add('hidden');
-    });
-
+    btnClosePasteModal.addEventListener('click', () => pasteTextModal.classList.add('hidden'));
+    btnTopClosePasteModal.addEventListener('click', () => pasteTextModal.classList.add('hidden'));
     pasteTextModal.addEventListener('click', (e) => {
         if (e.target === pasteTextModal) pasteTextModal.classList.add('hidden');
     });
@@ -2789,14 +2522,13 @@
             if (clipText) {
                 const start = pastedTextInput.selectionStart;
                 const end = pastedTextInput.selectionEnd;
-                const current = pastedTextInput.value;
-                pastedTextInput.value = current.slice(0, start) + clipText + current.slice(end);
+                pastedTextInput.value = pastedTextInput.value.slice(0, start) + clipText + pastedTextInput.value.slice(end);
                 localStorage.setItem('sileroread-pasted-draft', pastedTextInput.value);
                 pastedTextInput.focus();
             }
-        } catch (err) {
+        } catch (_) {
             pastedTextInput.focus();
-            alert('Browser requested manual paste (press Ctrl+V or long-press inside the text box).');
+            alert('Browser requested manual paste (Ctrl+V / long press).');
         }
     });
 
@@ -2808,10 +2540,7 @@
 
     btnReadPastedText.addEventListener('click', () => {
         const rawText = pastedTextInput.value.trim();
-        if (!rawText) {
-            statusInfo.textContent = '⚠️ Text field is empty';
-            return;
-        }
+        if (!rawText) return;
         pasteTextModal.classList.add('hidden');
         stop();
 
@@ -2829,18 +2558,13 @@
         statusInfo.textContent = 'Processing text...';
 
         const looksLikeMarkdown = /(^|\n)(#{1,6}\s|>\s|[-*]\s|\d+\.\s)|(\*\*[^*\n]+\*\*)|(`[^`\n]+`)/m.test(rawText);
-        if (looksLikeMarkdown) {
-            parseMD(rawText);
-        } else {
-            parseTXT(rawText);
-        }
+        if (looksLikeMarkdown) parseMD(rawText);
+        else parseTXT(rawText);
     });
 
-    // 8. Service Worker Registration
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                .catch(err => console.log('SW registration error:', err));
+            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
         });
     }
 </script>
