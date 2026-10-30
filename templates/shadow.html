@@ -981,15 +981,75 @@
                 window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
             }
 
-            // --- ИНИЦИАЛИЗАЦИЯ СЕЛЕКТОРА ГОЛОСОВ SILERO (en_0 .. en_117) ---
+            // --- ИНИЦИАЛИЗАЦИЯ СЕЛЕКТОРА ГОЛОСОВ (Silero + Kokoro) ---
             const voiceSelect = document.getElementById('silero-voice-select');
-            const savedVoice = localStorage.getItem('silero_en_voice') || 'en_56';
-            for (let i = 0; i < 118; i++) {
-                const v = `en_${i}`;
-                const opt = new Option(v === 'en_56' ? 'en_56 (★)' : v, v);
-                voiceSelect.add(opt);
+
+            const KOKORO_FEMALE = [
+                ['af_heart', 'Heart (F)'],
+                ['af_bella', 'Bella (F)'],
+                ['af_nicole', 'Nicole (F)'],
+                ['af_sarah', 'Sarah (F)'],
+                ['af_sky', 'Sky (F)'],
+                ['af_alloy', 'Alloy (F)'],
+                ['af_aoede', 'Aoede (F)'],
+                ['af_jessica', 'Jessica (F)'],
+                ['af_kore', 'Kore (F)'],
+                ['af_nova', 'Nova (F)'],
+                ['af_river', 'River (F)'],
+            ];
+            const KOKORO_MALE = [
+                ['am_michael', 'Michael (M)'],
+                ['am_fenrir', 'Fenrir (M)'],
+                ['am_adam', 'Adam (M)'],
+                ['am_echo', 'Echo (M)'],
+                ['am_eric', 'Eric (M)'],
+                ['am_liam', 'Liam (M)'],
+                ['am_onyx', 'Onyx (M)'],
+                ['am_puck', 'Puck (M)'],
+                ['am_santa', 'Santa (M)'],
+            ];
+
+            const optSileroGroup = document.createElement('optgroup');
+            optSileroGroup.label = '🇬🇧 English (Silero)';
+            optSileroGroup.appendChild(new Option('en_56 (Silero)', 'en_56'));
+
+            const optKokoroFemaleGroup = document.createElement('optgroup');
+            optKokoroFemaleGroup.label = '🇺🇸 English (Kokoro Female)';
+            KOKORO_FEMALE.forEach(([v, label]) => {
+                optKokoroFemaleGroup.appendChild(new Option(label, 'kokoro-' + v));
+            });
+
+            const optKokoroMaleGroup = document.createElement('optgroup');
+            optKokoroMaleGroup.label = '🇺🇸 English (Kokoro Male)';
+            KOKORO_MALE.forEach(([v, label]) => {
+                optKokoroMaleGroup.appendChild(new Option(label, 'kokoro-' + v));
+            });
+
+            voiceSelect.appendChild(optSileroGroup);
+            voiceSelect.appendChild(optKokoroFemaleGroup);
+            voiceSelect.appendChild(optKokoroMaleGroup);
+
+            const ALL_VOICES = [
+                'en_56',
+                ...KOKORO_FEMALE.map(([v]) => 'kokoro-' + v),
+                ...KOKORO_MALE.map(([v]) => 'kokoro-' + v),
+            ];
+            const DEFAULT_VOICE = 'kokoro-af_heart';
+
+            const savedVoice = localStorage.getItem('silero_en_voice');
+            let initialVoice;
+            if (!savedVoice) {
+                initialVoice = DEFAULT_VOICE;
+            } else if (ALL_VOICES.includes(savedVoice)) {
+                initialVoice = savedVoice;
+            } else {
+                initialVoice = DEFAULT_VOICE;
+                localStorage.setItem('silero_en_voice', DEFAULT_VOICE);
+                setTimeout(() => {
+                    alert('Старый голос "' + savedVoice + '" больше недоступен.\nПо умолчанию выбран Kokoro: Heart (F).\nВыберите голос заново в селекторе.');
+                }, 500);
             }
-            voiceSelect.value = savedVoice;
+            voiceSelect.value = initialVoice;
 
             voiceSelect.addEventListener('change', () => {
                 localStorage.setItem('silero_en_voice', voiceSelect.value);
@@ -1620,20 +1680,31 @@
                 wordActionBar.style.display = 'none';
             }
 
-            actionSpeak.addEventListener('click', (e) => {
+            actionSpeak.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 if (!activeTargetData || !activeTargetData.text) return;
-                
-                window.speechSynthesis.cancel();
-                const utter = new SpeechSynthesisUtterance(activeTargetData.text.replace(/[*_]/g, ''));
-                
-                utter.lang = 'en-US';
-                const voices = window.speechSynthesis.getVoices();
-                const enVoice = voices.find(v => v.lang && (v.lang === 'en-US' || v.lang.startsWith('en')));
-                if (enVoice) utter.voice = enVoice;
 
-                utter.rate = isSlowMode ? 0.8 : 1.0;
-                window.speechSynthesis.speak(utter);
+                const cleanText = activeTargetData.text.replace(/[*_]/g, '').trim();
+                if (!cleanText) return;
+
+                const fd = new FormData();
+                fd.append('text', cleanText);
+                fd.append('voice', voiceSelect.value);
+
+                try {
+                    const res = await fetch('/synthesize_word', { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.success) {
+                        wordAudio.pause();
+                        wordAudio.src = data.audio_url + "?t=" + Date.now();
+                        wordAudio.playbackRate = isSlowMode ? 0.85 : 1.0;
+                        wordAudio.play().catch(err => console.error("Word play failed:", err));
+                    } else {
+                        console.error("Word TTS error:", data.error);
+                    }
+                } catch (err) {
+                    console.error("Word fetch error:", err);
+                }
             });
 
             actionTranslate.addEventListener('click', (e) => {
@@ -1772,6 +1843,7 @@
 
             // --- АУДИО И ПЛЕЕР ---
             const audioPlayer = document.getElementById('audio-player');
+            const wordAudio = new Audio();  // для озвучки отдельных слов
             const playerPanel = document.getElementById('player-panel');
 
             function updatePlayBtnIcon(btn, isPlaying) {
