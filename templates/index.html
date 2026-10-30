@@ -399,6 +399,70 @@
             text-align: right;
         }
 
+        /* 🌙 SLEEP POPOVER */
+        .sleep-popover {
+            position: fixed;
+            top: 90px;
+            left: 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            z-index: 9999;
+            min-width: 220px;
+        }
+        .sleep-popover.hidden {
+            display: none;
+        }
+        .sleep-popover-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+        .sleep-popover-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .sleep-option-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.15s;
+            font-family: inherit;
+        }
+        .sleep-option-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-cyan);
+        }
+        .sleep-option-btn.active {
+            background: var(--accent-cyan);
+            color: var(--bg-base);
+            border-color: var(--accent-cyan);
+        }
+        .sleep-option-cancel {
+            grid-column: 1 / -1;
+            background: transparent;
+            border-color: var(--border-color);
+            color: var(--text-muted);
+        }
+        .sleep-option-cancel:hover {
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+        body[data-theme="lcd"] .sleep-option-btn.active,
+        body[data-theme="lcd-mono"] .sleep-option-btn.active {
+            background: var(--text-main);
+            color: var(--bg-base);
+        }
+
         /* ПЛАВАЮЩИЙ БЛОК ПЕРЕМОТКИ ПО ЧАНКАМ */
         .floating-chunk-bar {
             position: fixed;
@@ -431,14 +495,15 @@
             cursor: move;
         }
 
+        /* CHUNKBAR_SCALED */
         .chunk-drag-lock-btn {
             background: var(--bg-card);
             border: none;
             border-right: 1px solid var(--border-color);
             color: var(--text-muted);
-            width: 42px;
-            min-height: 48px;
-            font-size: 15px;
+            width: 55px;
+            min-height: 62px;
+            font-size: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -459,16 +524,16 @@
             background: var(--bg-surface);
             border: none;
             color: var(--text-main);
-            width: 68px;
-            min-height: 48px;
-            font-size: 20px;
+            width: 88px;
+            min-height: 62px;
+            font-size: 26px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: background 0.15s;
         }
-        .chunk-nav-btn:first-child {
+        .chunk-nav-btn:not(:last-child) {
             border-right: 1px solid var(--border-color);
         }
         .chunk-nav-btn:active {
@@ -1084,6 +1149,7 @@
         <button class="icon-action-btn" id="tocBtn" title="Оглавление (Главы)">📑</button>
         <button class="icon-action-btn" id="addBookmarkBtn" title="Добавить закладку">⭐</button>
         <button class="icon-action-btn" id="showBookmarksBtn" title="Список закладок">📌</button>
+        <button class="icon-action-btn" id="sleepBtn" title="Режим сна">🌙</button>
         <button class="icon-action-btn" id="lockBtn" style="color:var(--accent-amber);" title="Lock Screen">🔒</button>
     </div>
 
@@ -1099,11 +1165,23 @@
         <button class="icon-action-btn" id="btnFontPlus" style="padding: 0 10px;">A+</button>
     </div>
 
+    <!-- Popover: Режим сна -->
+    <div class="sleep-popover hidden" id="sleepPopover">
+        <div class="sleep-popover-title">🌙 Режим сна</div>
+        <div class="sleep-popover-buttons">
+            <button type="button" class="sleep-option-btn" data-min="15">15 мин</button>
+            <button type="button" class="sleep-option-btn" data-min="30">30 мин</button>
+            <button type="button" class="sleep-option-btn" data-min="60">60 мин</button>
+            <button type="button" class="sleep-option-btn sleep-option-cancel" data-min="0">Отмена</button>
+        </div>
+    </div>
+
     <!-- ПЛАВАЮЩИЙ БЛОК ПЕРЕМОТКИ ПО ЧАНКАМ (с замком перетаскивания) -->
     <div class="floating-chunk-bar" id="floatingChunkBar">
         <button class="chunk-drag-lock-btn" id="chunkDragLockBtn" type="button" title="Разблокировать / закрепить позицию панели">🔒</button>
         <div class="chunk-nav-buttons">
             <button class="chunk-nav-btn" id="prevBtn" type="button" title="Предыдущий чанк (удерживайте 0.6с для перехода в начало книги)">⏮</button>
+            <button class="chunk-nav-btn" id="chunkPlayPauseBtn" type="button" title="Играть">▶</button>
             <button class="chunk-nav-btn" id="nextBtn" type="button" title="Следующий чанк">⏭</button>
         </div>
     </div>
@@ -2849,7 +2927,7 @@
     });
     window.addEventListener('mouseup', onChunkDragEnd);
 
-    ['prevBtn', 'nextBtn'].forEach(btnId => {
+    ['prevBtn', 'nextBtn', 'chunkPlayPauseBtn'].forEach(btnId => {
         const btn = document.getElementById(btnId);
         btn.addEventListener('click', (e) => {
             wakeChunkBar();
@@ -2869,6 +2947,158 @@
 
     loadChunkBarPosition();
     wakeChunkBar();
+
+    // ================= FLOATING PLAY/PAUSE (кнопка в панели чанков) =================
+    const chunkPlayPauseBtn = document.getElementById('chunkPlayPauseBtn');
+
+    function updateChunkPlayPauseIcon() {
+        if (!chunkPlayPauseBtn) return;
+        if (isPlaying && !isPaused) {
+            chunkPlayPauseBtn.textContent = '⏸';
+            chunkPlayPauseBtn.title = 'Пауза';
+        } else {
+            chunkPlayPauseBtn.textContent = '▶';
+            chunkPlayPauseBtn.title = 'Играть';
+        }
+    }
+
+    if (chunkPlayPauseBtn) {
+        chunkPlayPauseBtn.onclick = () => {
+            if (isPlaying && !isPaused) {
+                pauseBtn.click();
+            } else {
+                playBtn.click();
+            }
+        };
+    }
+
+    // Наблюдаем за состоянием playBtn, чтобы иконка всегда была актуальной
+    try {
+        new MutationObserver(updateChunkPlayPauseIcon).observe(playBtn, {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+    } catch (e) {
+        console.warn('MutationObserver for playBtn failed:', e);
+    }
+    updateChunkPlayPauseIcon();
+
+    // ================= 🌙 SLEEP TIMER (Режим сна) =================
+    const sleepBtn = document.getElementById('sleepBtn');
+    const sleepPopover = document.getElementById('sleepPopover');
+
+    let sleepTimerId = null;
+    let sleepTickId = null;
+    let sleepEndTime = 0;
+    let sleepActiveMinutes = 0;
+
+    function updateSleepOptionsUI() {
+        document.querySelectorAll('.sleep-option-btn').forEach(btn => {
+            const min = parseInt(btn.dataset.min || '0', 10);
+            const isActive = min > 0 && min === sleepActiveMinutes && sleepEndTime > 0;
+            btn.classList.toggle('active', isActive);
+        });
+    }
+
+    function clearSleepTimer(silent) {
+        if (sleepTimerId) clearTimeout(sleepTimerId);
+        if (sleepTickId) clearInterval(sleepTickId);
+        sleepTimerId = null;
+        sleepTickId = null;
+        sleepEndTime = 0;
+        sleepActiveMinutes = 0;
+        if (sleepBtn) {
+            sleepBtn.classList.remove('sleep-active');
+            sleepBtn.style.color = '';
+            sleepBtn.title = 'Режим сна';
+        }
+        updateSleepOptionsUI();
+        if (!silent) {
+            statusInfo.textContent = '🌙 Режим сна отменён';
+        }
+    }
+
+    function setSleepTimer(minutes) {
+        clearSleepTimer(true);
+
+        if (minutes <= 0) {
+            statusInfo.textContent = '🌙 Режим сна отменён';
+            return;
+        }
+
+        sleepActiveMinutes = minutes;
+        sleepEndTime = Date.now() + minutes * 60000;
+
+        if (sleepBtn) {
+            sleepBtn.style.color = 'var(--accent-amber)';
+            sleepBtn.title = `🌙 Сон через ${minutes} мин`;
+        }
+        statusInfo.textContent = `🌙 Режим сна: ${minutes} мин`;
+        updateSleepOptionsUI();
+
+        sleepTimerId = setTimeout(() => {
+            if (isPlaying && !isPaused) {
+                pauseBtn.click();
+            }
+            statusInfo.textContent = '🌙 Режим сна: пауза';
+            clearSleepTimer(true);
+            statusInfo.textContent = '🌙 Таймер сна сработал — пауза';
+        }, minutes * 60000);
+
+        // Обновление title с оставшимся временем
+        sleepTickId = setInterval(() => {
+            if (!sleepEndTime) return;
+            const leftMs = Math.max(0, sleepEndTime - Date.now());
+            const m = Math.floor(leftMs / 60000);
+            const s = Math.floor((leftMs % 60000) / 1000);
+            if (sleepBtn) {
+                sleepBtn.title = `🌙 Осталось ${m}м ${s}с`;
+            }
+        }, 30000);
+    }
+
+    // Проверка при возврате из фона (Android может throttle setTimeout)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && sleepEndTime && Date.now() >= sleepEndTime) {
+            if (isPlaying && !isPaused) {
+                pauseBtn.click();
+            }
+            clearSleepTimer(true);
+            statusInfo.textContent = '🌙 Таймер сна сработал — пауза';
+        }
+    });
+
+    // Открытие/закрытие popover
+    if (sleepBtn && sleepPopover) {
+        sleepBtn.onclick = (e) => {
+            e.stopPropagation();
+            speedPopover.classList.add('hidden');
+            fontSizePopover.classList.add('hidden');
+            positionPopoverUnderBtn(sleepBtn, sleepPopover);
+            sleepPopover.classList.toggle('hidden');
+            updateSleepOptionsUI();
+        };
+
+        document.addEventListener('click', (e) => {
+            if (!sleepPopover.contains(e.target) && e.target !== sleepBtn) {
+                sleepPopover.classList.add('hidden');
+            }
+        });
+
+        // Закрывать sleepPopover при открытии других
+        speedToggleBtn.addEventListener('click', () => sleepPopover.classList.add('hidden'));
+        fontSizeToggleBtn.addEventListener('click', () => sleepPopover.classList.add('hidden'));
+
+        // Обработка кликов по опциям
+        document.querySelectorAll('.sleep-option-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const min = parseInt(btn.dataset.min || '0', 10);
+                sleepPopover.classList.add('hidden');
+                setSleepTimer(min);
+            };
+        });
+    }
 
     // 8. Service Worker Registration
     if ('serviceWorker' in navigator) {
