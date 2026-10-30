@@ -972,24 +972,24 @@
     <!-- 1. TOP CONTROL BAR -->
     <header class="top-switch-bar">
         <div class="bar-left-cluster">
-            <div class="file-upload-badge" id="fileBtnWrap" title="Выбрать файл (.fb2, .txt, .md, .docx, .pdf)">
+            <div class="file-upload-badge" id="fileBtnWrap" title="Choose file (.fb2, .txt, .md, .docx, .pdf)">
                 <span>📁</span>
                 <span id="fileNameDisp">Choose File</span>
                 <input type="file" id="fb2File">
             </div>
-            <button class="file-upload-badge" id="pasteTabBtn" type="button" title="Вставить свой текст или Markdown" style="color: var(--accent-amber);">
+            <button class="file-upload-badge" id="pasteTabBtn" type="button" title="Paste your own text or Markdown" style="color: var(--accent-amber);">
                 <span>📋</span>
-                <span>Текст</span>
+                <span>Text</span>
             </button>
 
             <!-- Voice Selection: Silero only (RU + EN) -->
             <select id="voiceSelect" class="modern-select" title="Voice">
                 <optgroup label="🇷🇺 Russian (Silero)">
-                    <option value="silero-xenia" selected>Ксения</option>
-                    <option value="silero-kseniya">Ксения (альт)</option>
-                    <option value="silero-aidar">Айдар</option>
-                    <option value="silero-baya">Бая</option>
-                    <option value="silero-eugene">Евгений</option>
+                    <option value="silero-xenia" selected>Xenia</option>
+                    <option value="silero-kseniya">Kseniya (alt)</option>
+                    <option value="silero-aidar">Aidar</option>
+                    <option value="silero-baya">Baya</option>
+                    <option value="silero-eugene">Eugene</option>
                 </optgroup>
                 <optgroup label="🇬🇧 English (Silero)">
                     <option value="silero-en_56">en_56 (Silero)</option>
@@ -1038,7 +1038,7 @@
             <option value="sepia">📜 Sepia</option>
             <option value="oled">🖤 OLED</option>
             <option value="lcd">⌚ Casio LCD</option>
-            <option value="lcd-mono">🧮 Mono LCD (Ч/Б)</option>
+            <option value="lcd-mono">🧮 Mono LCD (B/W)</option>
         </select>
 
         <select id="fontSelect" class="modern-select" style="max-width: 150px;" title="Select font family">
@@ -1057,10 +1057,10 @@
             Aa <span id="fontSizeBtnText" style="margin-left:4px; font-size:11px; opacity:0.8;">[19px]</span>
         </button>
 
-        <button class="icon-action-btn" id="tocBtn" title="Оглавление (Главы)">📑</button>
-        <button class="icon-action-btn" id="addBookmarkBtn" title="Добавить закладку">⭐</button>
-        <button class="icon-action-btn" id="showBookmarksBtn" title="Список закладок">📌</button>
-        <button class="icon-action-btn" id="sleepBtn" title="Режим сна">🌙</button>
+        <button class="icon-action-btn" id="tocBtn" title="Table of Contents">📑</button>
+        <button class="icon-action-btn" id="addBookmarkBtn" title="Add bookmark">⭐</button>
+        <button class="icon-action-btn" id="showBookmarksBtn" title="Bookmarks list">📌</button>
+        <button class="icon-action-btn" id="sleepBtn" title="Sleep mode">🌙</button>
         <button class="icon-action-btn" id="lockBtn" style="color:var(--accent-amber);" title="Lock Screen">🔒</button>
     </div>
 
@@ -1078,22 +1078,22 @@
 
     <!-- Popover: Режим сна -->
     <div class="sleep-popover hidden" id="sleepPopover">
-        <div class="sleep-popover-title">🌙 Режим сна</div>
+        <div class="sleep-popover-title">🌙 Sleep Mode</div>
         <div class="sleep-popover-buttons">
-            <button type="button" class="sleep-option-btn" data-min="15">15 мин</button>
-            <button type="button" class="sleep-option-btn" data-min="30">30 мин</button>
-            <button type="button" class="sleep-option-btn" data-min="60">60 мин</button>
-            <button type="button" class="sleep-option-btn sleep-option-cancel" data-min="0">Отмена</button>
+            <button type="button" class="sleep-option-btn" data-min="15">15 min</button>
+            <button type="button" class="sleep-option-btn" data-min="30">30 min</button>
+            <button type="button" class="sleep-option-btn" data-min="60">60 min</button>
+            <button type="button" class="sleep-option-btn sleep-option-cancel" data-min="0">Cancel</button>
         </div>
     </div>
 
     <!-- ПЛАВАЮЩИЙ БЛОК ПЕРЕМОТКИ ПО ЧАНКАМ (с замком перетаскивания) -->
     <div class="floating-chunk-bar" id="floatingChunkBar">
-        <button class="chunk-drag-lock-btn" id="chunkDragLockBtn" type="button" title="Разблокировать / закрепить позицию панели">🔒</button>
+        <button class="chunk-drag-lock-btn" id="chunkDragLockBtn" type="button" title="Unlock / lock panel position">🔒</button>
         <div class="chunk-nav-buttons">
-            <button class="chunk-nav-btn" id="prevBtn" type="button" title="Предыдущий чанк (удерживайте 0.6с для перехода в начало книги)">⏮</button>
-            <button class="chunk-nav-btn" id="chunkPlayPauseBtn" type="button" title="Играть">▶</button>
-            <button class="chunk-nav-btn" id="nextBtn" type="button" title="Следующий чанк">⏭</button>
+            <button class="chunk-nav-btn" id="prevBtn" type="button" title="Previous chunk (hold 0.6s to jump to start of book)">⏮</button>
+            <button class="chunk-nav-btn" id="chunkPlayPauseBtn" type="button" title="Play">▶</button>
+            <button class="chunk-nav-btn" id="nextBtn" type="button" title="Next chunk">⏭</button>
         </div>
     </div>
 
@@ -1136,10 +1136,10 @@
 <!-- MODAL: Table of Contents (Оглавление) -->
 <div class="modal-overlay hidden" id="tocModal">
     <div class="modal-box">
-        <h3>📑 Оглавление</h3>
+        <h3>📑 Table of Contents</h3>
         <div id="tocList"></div>
         <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeTocModal()">Закрыть</button>
+            <button class="btn-cancel" onclick="closeTocModal()">Close</button>
         </div>
     </div>
 </div>
@@ -1147,11 +1147,11 @@
 <!-- MODAL: Add bookmark -->
 <div class="modal-overlay hidden" id="bookmarkModal">
     <div class="modal-box">
-        <h3>⭐ Сохранить закладку</h3>
-        <input type="text" id="bookmarkNameInput" placeholder="Название закладки...">
+        <h3>⭐ Save Bookmark</h3>
+        <input type="text" id="bookmarkNameInput" placeholder="Bookmark name...">
         <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeBookmarkModal()">Отмена</button>
-            <button class="btn-primary" onclick="confirmSaveBookmark()">Сохранить</button>
+            <button class="btn-cancel" onclick="closeBookmarkModal()">Cancel</button>
+            <button class="btn-primary" onclick="confirmSaveBookmark()">Save</button>
         </div>
     </div>
 </div>
@@ -1159,10 +1159,10 @@
 <!-- MODAL: Bookmarks list -->
 <div class="modal-overlay hidden" id="bookmarksListModal">
     <div class="modal-box">
-        <h3>📌 Закладки</h3>
+        <h3>📌 Bookmarks</h3>
         <div id="bookmarksList"></div>
         <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeBookmarksList()">Закрыть</button>
+            <button class="btn-cancel" onclick="closeBookmarksList()">Close</button>
         </div>
     </div>
 </div>
@@ -1170,15 +1170,15 @@
 <!-- MODAL: Paste Custom Text -->
 <div class="modal-overlay hidden" id="pasteTextModal">
     <div class="modal-box" style="max-width: 640px;">
-        <h3>📋 Вставить текст / Markdown</h3>
+        <h3>📋 Paste Text / Markdown</h3>
         <div class="paste-toolbar">
-            <button type="button" class="paste-tool-btn" id="btnClipboardPaste">📋 Вставить</button>
-            <button type="button" class="paste-tool-btn" id="btnClipboardClear">🧹 Очистить</button>
+            <button type="button" class="paste-tool-btn" id="btnClipboardPaste">📋 Paste</button>
+            <button type="button" class="paste-tool-btn" id="btnClipboardClear">🧹 Clear</button>
         </div>
-        <textarea id="pastedTextInput" class="paste-textarea" placeholder="Вставьте или введите сюда любой текст или Markdown..."></textarea>
+        <textarea id="pastedTextInput" class="paste-textarea" placeholder="Paste or type any text or Markdown here..."></textarea>
         <div class="modal-actions">
-            <button type="button" class="btn-cancel" id="btnClosePasteModal">Отмена</button>
-            <button type="button" class="btn-primary" id="btnReadPastedText">📖 Читать текст</button>
+            <button type="button" class="btn-cancel" id="btnClosePasteModal">Cancel</button>
+            <button type="button" class="btn-primary" id="btnReadPastedText">📖 Read Text</button>
         </div>
     </div>
 </div>
@@ -1288,7 +1288,7 @@
 
         playBtn.style.display = 'flex';
         pauseBtn.style.display = 'none';
-        statusInfo.textContent = reasonText || `⚠️ Пауза на чанке #${currentUnitIndex + 1}`;
+        statusInfo.textContent = reasonText || `⚠️ Paused at chunk #${currentUnitIndex + 1}`;
         updateProgress();
     }
 
@@ -1304,7 +1304,7 @@
             playlist = [];
             lastRequestedUnitIndex = currentUnitIndex - 1;
             currentPlayingItem = null;
-            pauseOnError(`⚠️ Сбой аудио на чанке #${currentUnitIndex + 1} (нажми Play)`);
+            pauseOnError(`⚠️ Audio error at chunk #${currentUnitIndex + 1} (press Play)`);
         }
     });
     audioPlayer.addEventListener('stalled', () => console.warn("⚠️ Audio stalled"));
@@ -1321,7 +1321,7 @@
                     if (audioPlayer.src && audioPlayer.currentTime > 0 && !audioPlayer.ended) {
                         audioPlayer.play().catch(e => {
                             console.error("Resume play failed:", e);
-                            pauseOnError(`⚠️ Остановлено на чанке #${currentUnitIndex + 1}`);
+                            pauseOnError(`⚠️ Stopped at chunk #${currentUnitIndex + 1}`);
                         });
                     } else if (playlist.length > 0) {
                         playAudio();
@@ -2019,7 +2019,7 @@
         statusInfo.textContent = "Paused";
         // ★ PAUSE_PREFETCH: добиваем буфер до 6, чтобы после Play было плавно
         if (playlist.length < PREFETCH_AHEAD && lastRequestedUnitIndex + 1 < readingUnits.length) {
-            statusInfo.textContent = `Paused · заполняю буфер (${playlist.length}/${PREFETCH_AHEAD})`;
+            statusInfo.textContent = `Paused · filling buffer (${playlist.length}/${PREFETCH_AHEAD})`;
             fetchNext();
         }
     };
@@ -2099,7 +2099,7 @@
             playBtn.style.display = 'flex';
             pauseBtn.style.display = 'none';
             stopBtn.style.display = 'none';
-            statusInfo.textContent = `Чанк ${targetIndex + 1} / ${readingUnits.length}`;
+            statusInfo.textContent = `Chunk ${targetIndex + 1} / ${readingUnits.length}`;
             hasPendingJump = true;
         }
     }
@@ -2116,7 +2116,7 @@
         prevHoldTimer = setTimeout(() => {
             prevLongPressed = true;
             jumpToUnit(0);
-            statusInfo.textContent = "⏮ В начало книги (чанк 1)";
+            statusInfo.textContent = "⏮ To start of book (chunk 1)";
         }, 600);
     }
     function endPrevHold() {
@@ -2195,9 +2195,9 @@
                     updateProgress();
                     // ★ PAUSE_PREFETCH: показать прогресс заполнения на паузе
                     if (isPaused && playlist.length < PREFETCH_AHEAD) {
-                        statusInfo.textContent = `Paused · заполняю буфер (${playlist.length}/${PREFETCH_AHEAD})`;
+                        statusInfo.textContent = `Paused · filling buffer (${playlist.length}/${PREFETCH_AHEAD})`;
                     } else if (isPaused) {
-                        statusInfo.textContent = "Paused · буфер готов";
+                        statusInfo.textContent = "Paused · buffer ready";
                     }
 
                     if (audioPlayer.paused && playlist.length >= 1 && !isPaused) {
@@ -2210,9 +2210,9 @@
                     lastRequestedUnitIndex = item.unitIndex - 1;
                     // Если очередь пуста — сразу ставим на паузу, не перескакивая
                     if (playlist.length === 0 && audioPlayer.paused) {
-                        pauseOnError(`⚠️ Ошибка синтеза чанка #${item.unitIndex + 1}`);
+                        pauseOnError(`⚠️ Synthesis error at chunk #${item.unitIndex + 1}`);
                     } else {
-                        statusInfo.textContent = `⚠️ Ошибка префетча #${item.unitIndex + 1}`;
+                        statusInfo.textContent = `⚠️ Prefetch error #${item.unitIndex + 1}`;
                     }
                 }
             }).catch((err) => { 
@@ -2225,7 +2225,7 @@
                 lastRequestedUnitIndex = item.unitIndex - 1;
 
                 if (playlist.length === 0 && audioPlayer.paused) {
-                    pauseOnError(`⚠️ Сеть/таймаут на чанке #${item.unitIndex + 1} (нажми Play)`);
+                    pauseOnError(`⚠️ Network/timeout at chunk #${item.unitIndex + 1} (press Play)`);
                 }
             });
     }
@@ -2353,7 +2353,7 @@
         audioPlayer.play().catch(e => {
             console.error("❌ Playback prevented or failed:", e);
             // Не пропускаем чанк — возвращаем его в очередь и ставим на паузу!
-            pauseOnError(`⚠️ Нажми Play (чанк #${audioItem.unitIndex + 1})`);
+            pauseOnError(`⚠️ Press Play (chunk #${audioItem.unitIndex + 1})`);
         });
 
         const onMeta = () => {
@@ -2420,12 +2420,12 @@
     // ================= ОГЛАВЛЕНИЕ (TOC) =================
     function openTocModal() {
         if (!textParagraphs.length) {
-            statusInfo.textContent = '⚠️ Сначала загрузи книгу или текст';
+            statusInfo.textContent = '⚠️ Load a book or text first';
             return;
         }
         const list = document.getElementById('tocList');
         if (!tocItems.length) {
-            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center; font-size:13px;">В этом документе нет заголовков (#, ##, ###)</div>';
+            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center; font-size:13px;">This document has no headings (#, ##, ###)</div>';
         } else {
             // Определяем текущую активную главу
             let activeTocIdx = -1;
@@ -2483,7 +2483,7 @@
 
     function openBookmarkModal() {
         if (!readingUnits.length) {
-            statusInfo.textContent = '⚠️ Сначала загрузи книгу';
+            statusInfo.textContent = '⚠️ Load a book first';
             return;
         }
         const currentItem = readingUnits[currentUnitIndex];
@@ -2521,16 +2521,16 @@
             const data = await res.json();
             if (data.success) {
                 closeBookmarkModal();
-                statusInfo.textContent = '⭐ Закладка сохранена';
+                statusInfo.textContent = '⭐ Bookmark saved';
                 setTimeout(() => {
                     if (isPlaying) statusInfo.textContent = 'Speaking...';
                     else statusInfo.textContent = 'Ready to read';
                 }, 2000);
             } else {
-                alert('Ошибка: ' + data.error);
+                alert('Error: ' + data.error);
             }
         } catch (e) {
-            alert('Ошибка соединения');
+            alert('Connection error');
         }
     }
 
@@ -2541,13 +2541,13 @@
 
     async function openBookmarksList() {
         if (!bookKey) {
-            statusInfo.textContent = '⚠️ Сначала загрузи книгу';
+            statusInfo.textContent = '⚠️ Load a book first';
             return;
         }
         const bm = await loadBookmarks();
         const list = document.getElementById('bookmarksList');
         if (!bm.length) {
-            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center;">Закладок пока нет</div>';
+            list.innerHTML = '<div style="color:var(--text-muted); padding:20px; text-align:center;">No bookmarks yet</div>';
         } else {
             list.innerHTML = bm.map(b => {
                 const fullText = b.text || b.name || '';
@@ -2556,12 +2556,12 @@
                     <div class="bm-text" onclick="toggleBookmarkSnippet(${b.id})" style="cursor:pointer;">
                         <div class="bm-name">${escapeHtml(b.name)}</div>
                         ${b.text ? `<div class="bm-snippet" id="bm-snip-${b.id}">${escapeHtml(b.text)}</div>` : ''}
-                        <div class="bm-meta">${b.created_at} · чанк ${b.unit_index + 1} (нажми на текст, чтобы развернуть)</div>
+                        <div class="bm-meta">${b.created_at} · chunk ${b.unit_index + 1} (click text to expand)</div>
                     </div>
                     <div class="bm-actions">
-                        <button class="bm-btn" title="Показать весь текст" onclick="toggleBookmarkSnippet(${b.id})">👁</button>
-                        <button class="bm-btn" title="Перейти к закладке" onclick="jumpToBookmark(${b.unit_index})">→</button>
-                        <button class="bm-btn delete" title="Удалить" onclick="deleteBookmark(${b.id})">🗑</button>
+                        <button class="bm-btn" title="Show full text" onclick="toggleBookmarkSnippet(${b.id})">👁</button>
+                        <button class="bm-btn" title="Go to bookmark" onclick="jumpToBookmark(${b.unit_index})">→</button>
+                        <button class="bm-btn delete" title="Delete" onclick="deleteBookmark(${b.id})">🗑</button>
                     </div>
                 </div>
             `}).join('');
@@ -2590,7 +2590,7 @@
             const data = await res.json();
             if (data.success) openBookmarksList();
         } catch (e) {
-            alert('Ошибка удаления');
+            alert('Deletion error');
         }
     }
 
@@ -2690,7 +2690,7 @@
             }
         } catch (err) {
             pastedTextInput.focus();
-            alert('Браузер запросил ручную вставку (нажмите Ctrl+V или удерживайте палец в поле ввода).');
+            alert('Browser requires manual paste (press Ctrl+V or long-press the input field).');
         }
     });
 
@@ -2703,7 +2703,7 @@
     btnReadPastedText.addEventListener('click', () => {
         const rawText = pastedTextInput.value.trim();
         if (!rawText) {
-            statusInfo.textContent = '⚠️ Поле текста пустое';
+            statusInfo.textContent = '⚠️ Text field is empty';
             return;
         }
         pasteTextModal.classList.add('hidden');
@@ -2714,10 +2714,10 @@
             hash = ((hash << 5) - hash) + rawText.charCodeAt(i);
             hash |= 0;
         }
-        const firstLine = rawText.split(/\r?\n/)[0].replace(/[#>*_`~]/g, '').trim().slice(0, 28) || 'Вставленный текст';
+        const firstLine = rawText.split(/\r?\n/)[0].replace(/[#>*_`~]/g, '').trim().slice(0, 28) || 'Pasted text';
         bookKey = `pasted_${Math.abs(hash)}`;
 
-        fileNameDisp.textContent = 'Из буфера';
+        fileNameDisp.textContent = 'From clipboard';
         deckBookTitle.textContent = `📋 ${firstLine}`;
         deckFormatInfo.textContent = 'TEXT/MD • READY';
         statusInfo.textContent = 'Processing text...';
@@ -2878,10 +2878,10 @@
         if (!chunkPlayPauseBtn) return;
         if (isPlaying && !isPaused) {
             chunkPlayPauseBtn.textContent = '⏸';
-            chunkPlayPauseBtn.title = 'Пауза';
+            chunkPlayPauseBtn.title = 'Pause';
         } else {
             chunkPlayPauseBtn.textContent = '▶';
-            chunkPlayPauseBtn.title = 'Играть';
+            chunkPlayPauseBtn.title = 'Play';
         }
     }
 
@@ -2933,11 +2933,11 @@
         if (sleepBtn) {
             sleepBtn.classList.remove('sleep-active');
             sleepBtn.style.color = '';
-            sleepBtn.title = 'Режим сна';
+            sleepBtn.title = 'Sleep mode';
         }
         updateSleepOptionsUI();
         if (!silent) {
-            statusInfo.textContent = '🌙 Режим сна отменён';
+            statusInfo.textContent = '🌙 Sleep mode cancelled';
         }
     }
 
@@ -2945,7 +2945,7 @@
         clearSleepTimer(true);
 
         if (minutes <= 0) {
-            statusInfo.textContent = '🌙 Режим сна отменён';
+            statusInfo.textContent = '🌙 Sleep mode cancelled';
             return;
         }
 
@@ -2954,18 +2954,18 @@
 
         if (sleepBtn) {
             sleepBtn.style.color = 'var(--accent-amber)';
-            sleepBtn.title = `🌙 Сон через ${minutes} мин`;
+            sleepBtn.title = `🌙 Sleep in ${minutes} min`;
         }
-        statusInfo.textContent = `🌙 Режим сна: ${minutes} мин`;
+        statusInfo.textContent = `🌙 Sleep mode: ${minutes} min`;
         updateSleepOptionsUI();
 
         sleepTimerId = setTimeout(() => {
             if (isPlaying && !isPaused) {
                 pauseBtn.click();
             }
-            statusInfo.textContent = '🌙 Режим сна: пауза';
+            statusInfo.textContent = '🌙 Sleep mode: pausing';
             clearSleepTimer(true);
-            statusInfo.textContent = '🌙 Таймер сна сработал — пауза';
+            statusInfo.textContent = '🌙 Sleep timer fired — paused';
         }, minutes * 60000);
 
         // Обновление title с оставшимся временем
@@ -2975,7 +2975,7 @@
             const m = Math.floor(leftMs / 60000);
             const s = Math.floor((leftMs % 60000) / 1000);
             if (sleepBtn) {
-                sleepBtn.title = `🌙 Осталось ${m}м ${s}с`;
+                sleepBtn.title = `🌙 ${m}m ${s}s left`;
             }
         }, 30000);
     }
@@ -2987,7 +2987,7 @@
                 pauseBtn.click();
             }
             clearSleepTimer(true);
-            statusInfo.textContent = '🌙 Таймер сна сработал — пауза';
+            statusInfo.textContent = '🌙 Sleep timer fired — paused';
         }
     });
 
