@@ -1,5 +1,5 @@
 
-
+![SileroRead Interface](assets/preview.png)
 
 # SileroRead • Hybrid Local TTS Reader & Pimsleur Engine
 
