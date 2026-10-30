@@ -10,8 +10,19 @@ import gc
 import ctypes
 import subprocess
 import wave
+os.environ.setdefault('OMP_NUM_THREADS', '4')
 from threading import RLock, Lock
 from flask import Flask, render_template, request, jsonify, send_from_directory
+
+# ================= KOKORO (EN) =================
+try:
+    import kokoro_onnx
+    import soundfile as sf
+    KOKORO_AVAILABLE = True
+    print("✅ kokoro-onnx загружен")
+except ImportError as e:
+    KOKORO_AVAILABLE = False
+    print(f"⚠️ kokoro-onnx не установлен: {e}")
 
 # ================= НОРМАЛИЗАЦИЯ ТЕКСТА =================
 try:
@@ -225,17 +236,79 @@ SILERO_RU_MODEL = os.path.join(MODELS_DIR, 'v5_ru.pt')
 SILERO_EN_MODEL = os.path.join(MODELS_DIR, 'v3_en.pt')
 
 SILERO_RU_VOICES = {'aidar', 'baya', 'kseniya', 'xenia', 'eugene'}
-SILERO_EN_VOICE_IDS = list(range(118))
+SILERO_EN_VOICE_IDS = [56]  # только Silero EN
 SILERO_VOICES = ({f'silero-{v}' for v in SILERO_RU_VOICES} |
                  {f'silero-en_{i}' for i in SILERO_EN_VOICE_IDS})
 
 SILERO_RELOAD_EVERY = 40
 SILERO_RSS_LOG_EVERY = 10
 
+# ================= KOKORO КОНСТАНТЫ =================
+KOKORO_MODEL_PATH = os.path.join(MODELS_DIR, 'kokoro-v1.0.fp16.onnx')
+KOKORO_VOICES_PATH = os.path.join(MODELS_DIR, 'voices-v1.0.bin')
+
+# Единственный EN-голос, остающийся на Silero
+SILERO_EN_SILERO_VOICE = 'en_56'
+
+# Голоса Kokoro (порядок = приоритет качества)
+KOKORO_EN_VOICES = [
+    'af_heart', 'af_bella', 'af_sarah', 'am_michael',
+    'am_fenrir', 'bf_emma', 'bm_george',
+    'af_nicole', 'af_sky', 'af_alloy', 'af_aoede',
+    'af_jessica', 'af_kore', 'af_nova', 'af_river',
+    'am_adam', 'am_echo', 'am_eric', 'am_liam',
+    'am_onyx', 'am_puck', 'am_santa',
+    'bf_alice', 'bf_isabella', 'bf_lily',
+    'bm_daniel', 'bm_fable', 'bm_lewis',
+]
+
+
+def en_id_to_kokoro_voice(en_id):
+    """en_0...en_117 → имя голоса Kokoro (циклически). en_56 не должен сюда попадать."""
+    try:
+        idx = int(en_id.replace('en_', ''))
+    except (ValueError, AttributeError):
+        idx = 0
+    return KOKORO_EN_VOICES[idx % len(KOKORO_EN_VOICES)]
+
 silero_model = None
 silero_model_path = None
 torch_module = None
 _silero_request_count = 0
+
+# ================= KOKORO STATE =================
+kokoro_model = None
+kokoro_lock = Lock()
+
+
+def get_kokoro_model():
+    """Ленивая загрузка Kokoro ONNX. ONNX inference thread-safe, лок только на загрузку."""
+    global kokoro_model
+    with kokoro_lock:
+        if kokoro_model is not None:
+            return kokoro_model
+        if not KOKORO_AVAILABLE:
+            raise RuntimeError("kokoro-onnx не установлен. pip install kokoro-onnx soundfile")
+        if not os.path.exists(KOKORO_MODEL_PATH):
+            raise FileNotFoundError(f"Модель Kokoro не найдена: {KOKORO_MODEL_PATH}")
+        if not os.path.exists(KOKORO_VOICES_PATH):
+            raise FileNotFoundError(f"Файл голосов Kokoro не найден: {KOKORO_VOICES_PATH}")
+        print("⏳ Загружаю Kokoro ONNX...", flush=True)
+        kokoro_model = kokoro_onnx.Kokoro(KOKORO_MODEL_PATH, KOKORO_VOICES_PATH)
+        print("✅ Kokoro готов", flush=True)
+        return kokoro_model
+
+
+def synthesize_kokoro(text, kokoro_voice, output_path):
+    """Генерация EN через Kokoro. Скорость всегда 1.0, ускорение — на фронте через playbackRate."""
+    model = get_kokoro_model()
+    samples, sample_rate = model.create(
+        text,
+        voice=kokoro_voice,
+        speed=1.0,
+        lang="en-us",
+    )
+    sf.write(output_path, samples, sample_rate)
 
 
 def get_silero_model(model_path):
@@ -588,10 +661,34 @@ def synthesize():
     cache_hash = hashlib.md5(hash_seed).hexdigest()
 
     try:
+        # ================= KOKORO (EN) =================
+        if voice.startswith('kokoro-'):
+            kokoro_voice = voice.replace('kokoro-', '')
+            tts_text = normalize_en_text(text)
+            if not _has_speakable_chars(tts_text):
+                return jsonify({'success': False, 'error': 'Normalized text is empty'}), 400
+
+            filename = f"speech_kokoro_{cache_hash}.wav"
+            filepath = os.path.join(AUDIO_DIR, filename)
+
+            if os.path.exists(filepath) and (time.time() - os.path.getmtime(filepath) < CACHE_TTL_SECONDS):
+                return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
+                                'engine': 'kokoro', 'cached': True})
+
+            try:
+                synthesize_kokoro(text=tts_text, kokoro_voice=kokoro_voice, output_path=filepath)
+                return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
+                                'engine': 'kokoro', 'cached': False})
+            except Exception as kokoro_err:
+                print(f"❌ Kokoro упал ({kokoro_err})", flush=True)
+                return jsonify({'success': False, 'error': f'Kokoro: {kokoro_err}'}), 500
+
         # --- 1. SILERO ---
         if voice in SILERO_VOICES:
             speaker_name = voice.replace('silero-', '')
             is_english = speaker_name.startswith('en_')
+
+            # SILERO (RU + en_56)
             tts_text = normalize_en_text(text) if is_english else normalize_text(text)
             if not _has_speakable_chars(tts_text):
                 return jsonify({'success': False, 'error': 'Normalized text is empty'}), 400
@@ -659,6 +756,8 @@ if __name__ == '__main__':
     print(f"📝 EN Normalization: {'✅ num2words' if EN_NORMALIZATION_AVAILABLE else '❌ disabled'}")
     print(f"🧹 malloc_trim:   {'✅ available' if _HAS_MALLOC_TRIM else '❌ not available'}")
     print(f"♻️  Silero reload: every {SILERO_RELOAD_EVERY} requests")
+    print(f"🎙️  Kokoro (EN): {'✅ available' if KOKORO_AVAILABLE else '❌ disabled'}")
+    print(f"🔀 EN-роутинг: en_56 → Silero, kokoro-* → Kokoro")
     print("📍 UI:     http://127.0.0.1:5008")
     print("=" * 60 + "\n")
 
