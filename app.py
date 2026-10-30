@@ -19,10 +19,10 @@ try:
     import kokoro_onnx
     import soundfile as sf
     KOKORO_AVAILABLE = True
-    print("✅ kokoro-onnx загружен")
+    print("✅ kokoro-onnx loaded")
 except ImportError as e:
     KOKORO_AVAILABLE = False
-    print(f"⚠️ kokoro-onnx не установлен: {e}")
+    print(f"⚠️ kokoro-onnx not installed: {e}")
 
 # ================= НОРМАЛИЗАЦИЯ ТЕКСТА =================
 try:
@@ -30,15 +30,15 @@ try:
     NORMALIZATION_AVAILABLE = True
 except ImportError:
     NORMALIZATION_AVAILABLE = False
-    print("⚠️ ru-normalizr не установлен. Числа и символы не будут нормализованы.")
+    print("⚠️ ru-normalizr not installed. Numbers and symbols will not be normalized.")
 
 _normalizer = None
 if NORMALIZATION_AVAILABLE:
     try:
         _normalizer = Normalizer(NormalizeOptions.tts())
-        print("✅ ru-normalizr загружен")
+        print("✅ ru-normalizr loaded")
     except Exception as e:
-        print(f"⚠️ Не удалось создать Normalizer: {e}")
+        print(f"⚠️ Failed to create Normalizer: {e}")
         NORMALIZATION_AVAILABLE = False
 
 
@@ -48,7 +48,7 @@ def normalize_text(text: str) -> str:
     try:
         return _normalizer.normalize(text)
     except Exception as e:
-        print(f"⚠️ Ошибка нормализации: {e}. Использую исходный текст.")
+        print(f"⚠️ Normalization error: {e}. Using original text.")
         return text
 
 
@@ -57,21 +57,21 @@ _ABBREV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'abbrevi
 try:
     with open(_ABBREV_FILE, 'r', encoding='utf-8') as _f:
         _ABBREV_DICT = json.load(_f)
-    print(f"✅ abbreviations.json загружен ({len(_ABBREV_DICT)} записей)")
+    print(f"✅ abbreviations.json loaded ({len(_ABBREV_DICT)} entries)")
 except Exception:
     _ABBREV_DICT = {}
-    print("⚠️ abbreviations.json не найден — аббревиатуры без замены")
+    print("⚠️ abbreviations.json not found — abbreviations not expanded")
 
 
 # ================= АНГЛИЙСКАЯ НОРМАЛИЗАЦИЯ (num2words) =================
 try:
     from num2words import num2words
     EN_NORMALIZATION_AVAILABLE = True
-    print("✅ English Normalizer (num2words) загружен")
+    print("✅ English Normalizer (num2words) loaded")
 except ImportError:
     EN_NORMALIZATION_AVAILABLE = False
-    print("⚠️ num2words не установлен. Английские числа не будут озвучены. "
-          "Установи: pip install num2words")
+    print("⚠️ num2words not installed. English numbers will not be spoken. "
+          "Install: pip install num2words")
 
 
 def normalize_en_text(text: str) -> str:
@@ -131,7 +131,7 @@ def normalize_en_text(text: str) -> str:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
     except Exception as e:
-        print(f"⚠️ Ошибка EN-нормализации: {e}")
+        print(f"⚠️ EN normalization error: {e}")
         return text
 # =========================================================================
 
@@ -288,14 +288,14 @@ def get_kokoro_model():
         if kokoro_model is not None:
             return kokoro_model
         if not KOKORO_AVAILABLE:
-            raise RuntimeError("kokoro-onnx не установлен. pip install kokoro-onnx soundfile")
+            raise RuntimeError("kokoro-onnx not installed. pip install kokoro-onnx soundfile")
         if not os.path.exists(KOKORO_MODEL_PATH):
-            raise FileNotFoundError(f"Модель Kokoro не найдена: {KOKORO_MODEL_PATH}")
+            raise FileNotFoundError(f"Kokoro model not found: {KOKORO_MODEL_PATH}")
         if not os.path.exists(KOKORO_VOICES_PATH):
-            raise FileNotFoundError(f"Файл голосов Kokoro не найден: {KOKORO_VOICES_PATH}")
-        print("⏳ Загружаю Kokoro ONNX...", flush=True)
+            raise FileNotFoundError(f"Kokoro voices file not found: {KOKORO_VOICES_PATH}")
+        print("⏳ Loading Kokoro ONNX...", flush=True)
         kokoro_model = kokoro_onnx.Kokoro(KOKORO_MODEL_PATH, KOKORO_VOICES_PATH)
-        print("✅ Kokoro готов", flush=True)
+        print("✅ Kokoro ready", flush=True)
         return kokoro_model
 
 
@@ -317,25 +317,25 @@ def get_silero_model(model_path):
         if silero_model is not None and silero_model_path == model_path:
             return silero_model
         if silero_model is not None:
-            print(f"♻️ Выгружаю {os.path.basename(silero_model_path or '?')}...", flush=True)
+            print(f"♻️ Unloading {os.path.basename(silero_model_path or '?')}...", flush=True)
             del silero_model
             silero_model = None
             silero_model_path = None
             _force_memory_release()
         if not os.path.exists(model_path):
             raise FileNotFoundError(
-                f"Модель Silero не найдена: {model_path}. "
-                f"Скачай вручную с https://models.silero.ai/models/tts/"
+                f"Silero model not found: {model_path}. "
+                f"Download manually from https://models.silero.ai/models/tts/"
             )
         if torch_module is None:
             import torch
             torch.set_num_threads(2)
             torch_module = torch
-        print(f"⏳ Загружаю {os.path.basename(model_path)}...", flush=True)
+        print(f"⏳ Loading {os.path.basename(model_path)}...", flush=True)
         silero_model = torch_module.package.PackageImporter(model_path).load_pickle("tts_models", "model")
         silero_model.to(torch_module.device('cpu'))
         silero_model_path = model_path
-        print(f"✅ Silero готова | RSS: {_get_rss_mb()} MB | Swap: {_get_swap_mb()} MB", flush=True)
+        print(f"✅ Silero ready | RSS: {_get_rss_mb()} MB | Swap: {_get_swap_mb()} MB", flush=True)
         return silero_model
 
 
@@ -383,15 +383,15 @@ def synthesize_silero(text, voice_id, output_path):
             rss_before = _get_rss_mb()
             swap_before = _get_swap_mb()
             print(
-                f"♻️ Перезагрузка Silero после {_silero_request_count} запросов "
-                f"(RSS до: {rss_before} MB, Swap: {swap_before} MB)",
+                f"♻️ Reloading Silero after {_silero_request_count} requests "
+                f"(RSS before: {rss_before} MB, Swap: {swap_before} MB)",
                 flush=True
             )
             silero_model = None
             silero_model_path = None
             _force_memory_release()
             print(
-                f"✅ Silero выгружена | RSS после: {_get_rss_mb()} MB | Swap: {_get_swap_mb()} MB",
+                f"✅ Silero unloaded | RSS after: {_get_rss_mb()} MB | Swap: {_get_swap_mb()} MB",
                 flush=True
             )
 
@@ -401,7 +401,7 @@ def run_edge_tts_cli(text, voice, output_path, timeout_sec=30):
     with edge_tts_lock:
         clean_text = text.strip()
         if not clean_text:
-            raise ValueError("Пустой фрагмент текста")
+            raise ValueError("Empty text fragment")
         with open(TEMP_TXT, 'w', encoding='utf-8') as f:
             f.write(clean_text)
         cmd = [
@@ -412,10 +412,10 @@ def run_edge_tts_cli(text, voice, output_path, timeout_sec=30):
         ]
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_sec)
         if proc.returncode != 0:
-            err = proc.stderr.strip() or f"Код ошибки: {proc.returncode}"
+            err = proc.stderr.strip() or f"Error code: {proc.returncode}"
             raise RuntimeError(err)
         if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
-            raise FileNotFoundError("Аудиофайл не создан")
+            raise FileNotFoundError("Audio file was not created")
 
 
 # ================= КЭШ И УТИЛИТЫ =================
@@ -680,7 +680,7 @@ def synthesize():
                 return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
                                 'engine': 'kokoro', 'cached': False})
             except Exception as kokoro_err:
-                print(f"❌ Kokoro упал ({kokoro_err})", flush=True)
+                print(f"❌ Kokoro failed ({kokoro_err})", flush=True)
                 return jsonify({'success': False, 'error': f'Kokoro: {kokoro_err}'}), 500
 
         # --- 1. SILERO ---
@@ -705,7 +705,7 @@ def synthesize():
                 return jsonify({'success': True, 'audio_url': f'/static/audio/{filename}',
                                 'engine': 'silero', 'cached': False})
             except Exception as silero_err:
-                print(f"⚠️ Silero упал ({silero_err})", flush=True)
+                print(f"⚠️ Silero failed ({silero_err})", flush=True)
                 return jsonify({'success': False, 'error': f'Silero: {silero_err}'}), 500
 
         # --- 2. PIPER ---
@@ -735,7 +735,7 @@ def synthesize():
                             'engine': 'piper', 'cached': False})
 
         else:
-            return jsonify({'success': False, 'error': f'Неизвестный голос: {voice}'}), 400
+            return jsonify({'success': False, 'error': f'Unknown voice: {voice}'}), 400
 
     except subprocess.TimeoutExpired:
         return jsonify({'success': False, 'error': 'Audio generation timed out.'}), 504
@@ -750,14 +750,14 @@ if __name__ == '__main__':
     print("\n" + "=" * 60)
     print("📖 SileroRead TTS Server")
     print("🔊 Engine: Silero (RU + EN)")
-    print(f"📦 RU модель: {os.path.basename(SILERO_RU_MODEL)}")
-    print(f"📦 EN модель: {os.path.basename(SILERO_EN_MODEL)}")
+    print(f"📦 RU model: {os.path.basename(SILERO_RU_MODEL)}")
+    print(f"📦 EN model: {os.path.basename(SILERO_EN_MODEL)}")
     print(f"📝 RU Normalization: {'✅ ru-normalizr' if NORMALIZATION_AVAILABLE else '❌ disabled'}")
     print(f"📝 EN Normalization: {'✅ num2words' if EN_NORMALIZATION_AVAILABLE else '❌ disabled'}")
     print(f"🧹 malloc_trim:   {'✅ available' if _HAS_MALLOC_TRIM else '❌ not available'}")
     print(f"♻️  Silero reload: every {SILERO_RELOAD_EVERY} requests")
     print(f"🎙️  Kokoro (EN): {'✅ available' if KOKORO_AVAILABLE else '❌ disabled'}")
-    print(f"🔀 EN-роутинг: en_56 → Silero, kokoro-* → Kokoro")
+    print(f"🔀 EN routing: en_56 → Silero, kokoro-* → Kokoro")
     print("📍 UI:     http://127.0.0.1:5008")
     print("=" * 60 + "\n")
 
