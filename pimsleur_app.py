@@ -4,6 +4,7 @@ pimsleur_app.py — отдельный сервер для генерации у
 Использует тот же venv, что и SileroRead.
 """
 import os
+os.environ.setdefault('OMP_NUM_THREADS', '4')
 import sys
 import gc
 import json
@@ -13,6 +14,16 @@ import subprocess
 from datetime import datetime
 from threading import Lock
 from flask import Flask, request, jsonify, render_template
+
+# ================= KOKORO (EN) =================
+try:
+    import kokoro_onnx
+    import soundfile as sf
+    KOKORO_AVAILABLE = True
+    print("✅ kokoro-onnx загружен")
+except ImportError as e:
+    KOKORO_AVAILABLE = False
+    print(f"⚠️ kokoro-onnx не установлен: {e}")
 
 # ---------- NUM2WORDS ----------
 try:
@@ -64,7 +75,42 @@ SILERO_RU_MODEL = os.path.join(MODELS_DIR, 'v5_ru.pt')
 SILERO_EN_MODEL = os.path.join(MODELS_DIR, 'v3_en.pt')
 
 SILERO_RU_VOICES = ['aidar', 'baya', 'kseniya', 'xenia', 'eugene']
-SILERO_EN_VOICES = [f'en_{i}' for i in range(118)]
+SILERO_EN_VOICES = ['en_56']  # только Silero EN
+
+# ================= KOKORO КОНСТАНТЫ =================
+KOKORO_MODEL_PATH = os.path.join(MODELS_DIR, 'kokoro-v1.0.fp16.onnx')
+KOKORO_VOICES_PATH = os.path.join(MODELS_DIR, 'voices-v1.0.bin')
+
+_kokoro_lock = Lock()
+_kokoro_model = None
+
+
+def get_kokoro_model():
+    """Ленивая загрузка Kokoro ONNX."""
+    global _kokoro_model
+    with _kokoro_lock:
+        if _kokoro_model is not None:
+            return _kokoro_model
+        if not KOKORO_AVAILABLE:
+            raise RuntimeError("kokoro-onnx не установлен")
+        if not os.path.exists(KOKORO_MODEL_PATH):
+            raise FileNotFoundError(f"Модель Kokoro: {KOKORO_MODEL_PATH}")
+        if not os.path.exists(KOKORO_VOICES_PATH):
+            raise FileNotFoundError(f"Голоса Kokoro: {KOKORO_VOICES_PATH}")
+        print("⏳ Загружаю Kokoro ONNX...", flush=True)
+        _kokoro_model = kokoro_onnx.Kokoro(KOKORO_MODEL_PATH, KOKORO_VOICES_PATH)
+        print("✅ Kokoro готов", flush=True)
+        return _kokoro_model
+
+
+def synthesize_kokoro(text, kokoro_voice, output_path):
+    """Kokoro speed=1.0. Замедление делаем через ffmpeg atempo — как для Silero."""
+    model = get_kokoro_model()
+    samples, sample_rate = model.create(
+        text, voice=kokoro_voice, speed=1.0, lang="en-us"
+    )
+    sf.write(output_path, samples, sample_rate)
+
 
 for d in [RU_DIR, EN_DIR, WORD_DIR, OUTPUT_DIR]:
     os.makedirs(d, exist_ok=True)
@@ -232,7 +278,18 @@ def synth_silero_ru(text, speaker, output_path):
 
 
 def synth_silero_en(text, speaker, output_path):
+    """Роутинг: kokoro-* → Kokoro, en_56 → Silero. Замедление — снаружи через ffmpeg."""
     text = normalize_en_text(text)  # числа + аббревиатуры
+
+    if speaker.startswith('kokoro-'):
+        kokoro_voice = speaker.replace('kokoro-', '')
+        synthesize_kokoro(text, kokoro_voice, output_path)
+        return
+
+    # Safety: если пришёл невалидный Silero-голос → en_56
+    if speaker not in SILERO_EN_VOICES:
+        speaker = 'en_56'
+
     model = load_silero(SILERO_EN_MODEL)
     audio = model.apply_tts(
         text=text, speaker=speaker, sample_rate=48000
@@ -321,7 +378,7 @@ def api_pimsleur():
     data = request.json or {}
     pairs = data.get('pairs', [])
     ru_voice = data.get('ru_voice', 'xenia')
-    en_voice = data.get('en_voice', 'en_0')
+    en_voice = data.get('en_voice', 'kokoro-af_heart')
 
     if not pairs:
         return jsonify({'success': False, 'error': 'Нет пар'})
@@ -413,7 +470,7 @@ def api_open_folder():
 def api_words():
     data = request.json or {}
     lines = data.get('lines', [])
-    en_voice = data.get('en_voice', 'en_0')
+    en_voice = data.get('en_voice', 'kokoro-af_heart')
     speed = float(data.get('speed', 1.0))
     lead_silence_ms = int(data.get('lead_silence_ms', 200))
 

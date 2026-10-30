@@ -270,13 +270,74 @@
 </div>
 
 <script>
-    // Заполняем селекторы EN голосами
-    const enVoices = Array.from({length: 118}, (_, i) => `en_${i}`);
+    // EN-голоса: Silero (1) + Kokoro US (11 F + 9 M)
+    const KOKORO_FEMALE = [
+        ['af_heart', 'Heart (F)'],
+        ['af_bella', 'Bella (F)'],
+        ['af_nicole', 'Nicole (F)'],
+        ['af_sarah', 'Sarah (F)'],
+        ['af_sky', 'Sky (F)'],
+        ['af_alloy', 'Alloy (F)'],
+        ['af_aoede', 'Aoede (F)'],
+        ['af_jessica', 'Jessica (F)'],
+        ['af_kore', 'Kore (F)'],
+        ['af_nova', 'Nova (F)'],
+        ['af_river', 'River (F)'],
+    ];
+    const KOKORO_MALE = [
+        ['am_michael', 'Michael (M)'],
+        ['am_fenrir', 'Fenrir (M)'],
+        ['am_adam', 'Adam (M)'],
+        ['am_echo', 'Echo (M)'],
+        ['am_eric', 'Eric (M)'],
+        ['am_liam', 'Liam (M)'],
+        ['am_onyx', 'Onyx (M)'],
+        ['am_puck', 'Puck (M)'],
+        ['am_santa', 'Santa (M)'],
+    ];
+
+    const VALID_EN_VOICES = [
+        'en_56',
+        ...KOKORO_FEMALE.map(([v]) => 'kokoro-' + v),
+        ...KOKORO_MALE.map(([v]) => 'kokoro-' + v),
+    ];
+    const DEFAULT_EN_VOICE = 'kokoro-af_heart';
+    const EN_VOICE_KEY = 'pimsleur_en_voice';
+
+    function getSavedEnVoice() {
+        const saved = localStorage.getItem(EN_VOICE_KEY);
+        if (saved && VALID_EN_VOICES.includes(saved)) return saved;
+        return DEFAULT_EN_VOICE;
+    }
+
     function fillEnVoices(selectId) {
         const sel = document.getElementById(selectId);
         sel.innerHTML = '';
-        enVoices.forEach(v => sel.add(new Option(v, v)));
-        sel.value = 'en_56';  // дефолт — «народный фаворит»
+
+        const optSilero = document.createElement('optgroup');
+        optSilero.label = '🇬🇧 English (Silero)';
+        optSilero.appendChild(new Option('en_56 (Silero)', 'en_56'));
+
+        const optF = document.createElement('optgroup');
+        optF.label = '🇺🇸 English (Kokoro Female)';
+        KOKORO_FEMALE.forEach(([v, label]) => optF.appendChild(new Option(label, 'kokoro-' + v)));
+
+        const optM = document.createElement('optgroup');
+        optM.label = '🇺🇸 English (Kokoro Male)';
+        KOKORO_MALE.forEach(([v, label]) => optM.appendChild(new Option(label, 'kokoro-' + v)));
+
+        sel.appendChild(optSilero);
+        sel.appendChild(optF);
+        sel.appendChild(optM);
+        sel.value = getSavedEnVoice();
+
+        // Синхронизируем оба селекта (Pimsleur + Words) через localStorage
+        sel.addEventListener('change', () => {
+            localStorage.setItem(EN_VOICE_KEY, sel.value);
+            const otherId = selectId === 'enVoice' ? 'wordVoice' : 'enVoice';
+            const other = document.getElementById(otherId);
+            if (other) other.value = sel.value;
+        });
     }
     fillEnVoices('enVoice');
     fillEnVoices('wordVoice');
