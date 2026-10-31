@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
@@ -796,6 +796,18 @@
             background: var(--danger-bg);
         }
 
+        /* ========== MARKDOWN BLOCKS ========== */
+        .sentence.md-h1 { font-size: 1.55em; font-weight: 600; margin-top: 1.6em; margin-bottom: 0.8em; line-height: 1.3; }
+        .sentence.md-h2 { font-size: 1.3em;  font-weight: 600; margin-top: 1.4em; margin-bottom: 0.7em; line-height: 1.35; }
+        .sentence.md-h3 { font-size: 1.15em; font-weight: 600; margin-top: 1.3em; margin-bottom: 0.6em; }
+        .sentence.md-h4,
+        .sentence.md-h5,
+        .sentence.md-h6 { font-size: 1.05em; font-weight: 600; margin-top: 1.1em; margin-bottom: 0.5em; }
+        .md-hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+        .sentence.md-li { padding-left: 1.8em; position: relative; }
+        .sentence.md-li::before { content: '\2022'; position: absolute; left: 0.5em; top: 0.5em; color: var(--accent); font-weight: 700; line-height: 1; }
+        .sentence.md-quote { border-left: 3px solid var(--accent); padding-left: 0.9em; color: var(--text-sub); font-style: italic; }
+
         @keyframes popIn {
             0% { opacity: 0; transform: scale(0.94) translateY(-6px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -811,7 +823,7 @@
 <body>
 
     <div class="phrase-collector-bar" id="phrase-collector-bar">
-        <input type="text" id="quick-phrase-input" class="phrase-input" placeholder="Сохранить фразу (автосохранение 2 сек)...">
+        <input type="text" id="quick-phrase-input" class="phrase-input" placeholder="Save phrase (auto-save in 2 sec)...">
         <button class="save-btn-circle" id="quick-save-btn">
             <svg class="progress-ring" viewBox="0 0 32 32"><circle class="ring-bg" cx="16" cy="16" r="14"></circle><circle id="quick-progress-ring" class="ring-progress" cx="16" cy="16" r="14"></circle></svg>
             <svg class="icon-center"><use href="#icon-check"></use></svg>
@@ -843,30 +855,30 @@
                 
                 <div class="header-right-controls">
                     <!-- ВЫБОР ГОЛОСА SILERO EN -->
-                    <div class="voice-selector-wrap" title="Голос Silero (Английский)">
-                        <span>🇬🇧 Голос:</span>
+                    <div class="voice-selector-wrap" title="Silero voice (English)">
+                        <span>🇬🇧 Voice:</span>
                         <select id="silero-voice-select"></select>
                     </div>
 
                     <!-- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
                     <div class="theme-switcher">
-                        <button class="theme-btn" data-set-theme="light" title="Светлая">☀️ День</button>
-                        <button class="theme-btn" data-set-theme="sepia" title="Сепия">📜 Сепия</button>
-                        <button class="theme-btn active" data-set-theme="dark" title="Ночная">🌙 Ночь</button>
+                        <button class="theme-btn" data-set-theme="light" title="Light">☀️ Day</button>
+                        <button class="theme-btn" data-set-theme="sepia" title="Sepia">📜 Sepia</button>
+                        <button class="theme-btn active" data-set-theme="dark" title="Dark">🌙 Night</button>
                     </div>
                 </div>
             </div>
-            <p id="header-desc">Импортируйте текст для сфокусированного чтения и отработки.</p>
+            <p id="header-desc">Import text for focused reading and shadowing practice.</p>
             
             <div class="file-controls" id="file-controls" style="display: none;">
-                <button id="back-btn" class="secondary-btn"><svg><use href="#icon-back"></use></svg> Назад</button>
+                <button id="back-btn" class="secondary-btn"><svg><use href="#icon-back"></use></svg> Back</button>
 
                 <!-- ВЫПАДАЮЩАЯ ПАНЕЛЬ ШРИФТОВ -->
                 <div class="font-dropdown-wrap">
-                    <button id="font-btn" class="secondary-btn" title="Стилизация надписей"><svg><use href="#icon-tune"></use></svg> Вид</button>
+                    <button id="font-btn" class="secondary-btn" title="Annotation styling"><svg><use href="#icon-tune"></use></svg> Style</button>
                     <div class="font-dropdown-panel" id="font-dropdown-panel">
                         <div class="control-row">
-                            <span>Шрифт:</span>
+                            <span>Font:</span>
                             <select id="font-family-select">
                                 <option value="'Inter', sans-serif">Inter</option>
                                 <option value="'Newsreader', serif">Newsreader</option>
@@ -874,43 +886,43 @@
                             </select>
                         </div>
                         <div class="control-row">
-                            <span>Цвет:</span>
+                            <span>Color:</span>
                             <div class="color-palette-preset">
-                                <span class="preset-dot" style="background: #4da3ff;" data-color="#4da3ff" title="Голубой"></span>
-                                <span class="preset-dot" style="background: #2e78d6;" data-color="#2e78d6" title="Синий"></span>
-                                <span class="preset-dot" style="background: #eb5757;" data-color="#eb5757" title="Коралловый"></span>
-                                <span class="preset-dot" style="background: #27ae60;" data-color="#27ae60" title="Зеленый"></span>
-                                <span class="preset-dot" style="background: #e5a93c;" data-color="#e5a93c" title="Янтарный"></span>
-                                <input type="color" id="custom-color-picker" class="color-picker-input" value="#4da3ff" title="Свой цвет">
+                                <span class="preset-dot" style="background: #4da3ff;" data-color="#4da3ff" title="Sky blue"></span>
+                                <span class="preset-dot" style="background: #2e78d6;" data-color="#2e78d6" title="Blue"></span>
+                                <span class="preset-dot" style="background: #eb5757;" data-color="#eb5757" title="Coral"></span>
+                                <span class="preset-dot" style="background: #27ae60;" data-color="#27ae60" title="Green"></span>
+                                <span class="preset-dot" style="background: #e5a93c;" data-color="#e5a93c" title="Amber"></span>
+                                <input type="color" id="custom-color-picker" class="color-picker-input" value="#4da3ff" title="Custom color">
                             </div>
                         </div>
                         <div class="control-row">
-                            <span>Размер: <b id="font-size-val">12px</b></span>
+                            <span>Size: <b id="font-size-val">12px</b></span>
                             <input type="range" id="font-size-slider" min="10" max="18" value="12" step="1" style="width: 80px; accent-color: var(--accent);">
                         </div>
                     </div>
                 </div>
 
-                <button id="view-dict-btn" class="secondary-btn" title="Просмотреть все сохраненные слова"><svg><use href="#icon-book"></use></svg> Словарь (<span id="dict-count">0</span>)</button>
-                <button id="export-btn" class="secondary-btn"><svg><use href="#icon-download"></use></svg> Экспорт</button>
-                <button id="import-btn" class="secondary-btn"><svg><use href="#icon-upload"></use></svg> Импорт</button>
+                <button id="view-dict-btn" class="secondary-btn" title="View all saved words"><svg><use href="#icon-book"></use></svg> Dictionary (<span id="dict-count">0</span>)</button>
+                <button id="export-btn" class="secondary-btn"><svg><use href="#icon-download"></use></svg> Export</button>
+                <button id="import-btn" class="secondary-btn"><svg><use href="#icon-upload"></use></svg> Import</button>
                 <input type="file" id="import-file" style="display: none;" accept=".json">
-                <button id="clear-cache-btn" class="secondary-btn danger"><svg><use href="#icon-trash"></use></svg> Сброс аудио</button>
+                <button id="clear-cache-btn" class="secondary-btn danger"><svg><use href="#icon-trash"></use></svg> Reset audio</button>
             </div>
         </header>
 
         <main class="paper-container">
             <section id="input-section">
-                <textarea id="raw-text-input" placeholder="Вставьте сюда любой фрагмент книги, статью или заметки..."></textarea>
+                <textarea id="raw-text-input" placeholder="Paste any book excerpt, article, or notes here..."></textarea>
                 
                 <div class="input-actions">
                     <input type="file" id="text-file-input" style="display: none;" accept=".txt">
-                    <button id="upload-text-btn" class="secondary-btn"><svg><use href="#icon-upload"></use></svg> Загрузить файл .txt</button>
-                    <button id="main-view-dict-btn" class="secondary-btn"><svg><use href="#icon-book"></use></svg> Мой словарь (<span id="main-dict-count">0</span>)</button>
-                    <button id="generate-btn" class="btn">Начать чтение</button>
+                    <button id="upload-text-btn" class="secondary-btn"><svg><use href="#icon-upload"></use></svg> Upload .txt file</button>
+                    <button id="main-view-dict-btn" class="secondary-btn"><svg><use href="#icon-book"></use></svg> My Dictionary (<span id="main-dict-count">0</span>)</button>
+                    <button id="generate-btn" class="btn">Start Reading</button>
                 </div>
 
-                <div id="loading" style="display: none;"><svg class="spinner"><use href="#icon-spinner"></use></svg> Подготовка текста...</div>
+                <div id="loading" style="display: none;"><svg class="spinner"><use href="#icon-spinner"></use></svg> Preparing text...</div>
             </section>
 
             <section id="workspace-section">
@@ -922,25 +934,25 @@
     
     <!-- ПЛАВАЮЩЕЕ МЕНЮ НАД СЛОВОМ / ВЫДЕЛЕНИЕМ -->
     <div id="word-action-bar" class="word-action-bar">
-        <button id="action-speak" class="word-action-btn" title="Озвучить на английском">
-            <svg><use href="#icon-speak"></use></svg> Озвучить
+        <button id="action-speak" class="word-action-btn" title="Speak in English">
+            <svg><use href="#icon-speak"></use></svg> Speak
         </button>
         <div class="word-action-divider"></div>
-        <button id="action-translate" class="word-action-btn" title="Ввести перевод">
-            <svg><use href="#icon-edit"></use></svg> Перевод
+        <button id="action-translate" class="word-action-btn" title="Enter translation">
+            <svg><use href="#icon-edit"></use></svg> Translate
         </button>
-        <button id="action-paste-direct" class="word-action-btn" title="Вставить перевод из буфера">
-            <svg><use href="#icon-paste"></use></svg> Вставить
+        <button id="action-paste-direct" class="word-action-btn" title="Paste translation from clipboard">
+            <svg><use href="#icon-paste"></use></svg> Paste
         </button>
-        <button id="action-clear-trans" class="word-action-btn" title="Выучил / Удалить из базы" style="display: none; color: var(--danger);">
-            <svg><use href="#icon-trash"></use></svg> Выучил
+        <button id="action-clear-trans" class="word-action-btn" title="Learned / Remove from database" style="display: none; color: var(--danger);">
+            <svg><use href="#icon-trash"></use></svg> Learned
         </button>
     </div>
 
     <!-- ТУЛТИП ВВОДА ЗНАЧЕНИЯ -->
     <div id="tooltip">
-        <button id="trans-paste" class="tooltip-btn secondary" title="Вставить из буфера"><svg><use href="#icon-paste"></use></svg></button>
-        <input type="text" id="trans-input" placeholder="Перевод или пояснение..." autocomplete="off">
+        <button id="trans-paste" class="tooltip-btn secondary" title="Paste from clipboard"><svg><use href="#icon-paste"></use></svg></button>
+        <input type="text" id="trans-input" placeholder="Translation or note..." autocomplete="off">
         <button id="trans-save" class="tooltip-btn"><svg><use href="#icon-check"></use></svg></button>
     </div>
 
@@ -948,11 +960,11 @@
     <div class="modal-overlay" id="dict-modal">
         <div class="modal-window">
             <div class="modal-header">
-                <h3>Единый словарь</h3>
+                <h3>Unified Dictionary</h3>
                 <button class="secondary-btn" id="dict-modal-close" style="padding: 4px;"><svg><use href="#icon-close"></use></svg></button>
             </div>
             <div class="modal-search">
-                <input type="text" id="dict-search-input" placeholder="Поиск слова или перевода...">
+                <input type="text" id="dict-search-input" placeholder="Search word or translation...">
             </div>
             <div class="modal-body" id="dict-items-list"></div>
         </div>
@@ -962,7 +974,7 @@
     <div class="player-panel" id="player-panel">
         <div class="sentence-num-badge" id="sentence-num">#1</div>
         <button class="control-btn" id="panel-play-btn"><svg id="panel-play-icon"><use href="#icon-play"></use></svg></button>
-        <button class="slow-btn" id="panel-slow-btn" title="Замедление">0.85×</button>
+        <button class="slow-btn" id="panel-slow-btn" title="Slow down">0.85×</button>
         <div class="progress-container">
             <span class="time-label" id="time-current">0:00</span>
             <input type="range" class="timeline" id="timeline" value="0" max="100">
@@ -1046,7 +1058,7 @@
                 initialVoice = DEFAULT_VOICE;
                 localStorage.setItem('silero_en_voice', DEFAULT_VOICE);
                 setTimeout(() => {
-                    alert('Старый голос "' + savedVoice + '" больше недоступен.\nПо умолчанию выбран Kokoro: Heart (F).\nВыберите голос заново в селекторе.');
+                    alert('Previous voice "' + savedVoice + '" is no longer available.\nDefaulting to Kokoro: Heart (F).\nPlease pick a voice in the selector.');
                 }, 500);
             }
             voiceSelect.value = initialVoice;
@@ -1237,7 +1249,7 @@
                 );
 
                 if (filtered.length === 0) {
-                    dictItemsList.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px;">Слов пока нет или ничего не найдено</div>';
+                    dictItemsList.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px;">No words yet or nothing found</div>';
                     return;
                 }
 
@@ -1249,7 +1261,7 @@
                             <span class="dict-item-word">${key}</span>
                             <span class="dict-item-trans">${globalDictionary[key]}</span>
                         </div>
-                        <button class="dict-del-btn" data-key="${key}">Выучил / Удалить</button>
+                        <button class="dict-del-btn" data-key="${key}">Learned / Delete</button>
                     `;
                     row.querySelector('.dict-del-btn').addEventListener('click', async (e) => {
                         const wordKey = e.target.dataset.key;
@@ -1401,14 +1413,15 @@
 
             function autoInitFirstSentence() {
                 setTimeout(() => {
-                    const firstBtn = document.querySelector('.play-btn[data-num="1"]');
+                    // берём первую существующую play-кнопку (HR не имеет её)
+                    const firstBtn = document.querySelector('.play-btn');
                     if (firstBtn) activateSentence(firstBtn, firstBtn.closest('.sentence'), false); 
                 }, 100);
             }
 
             generateBtn.addEventListener('click', async function() {
                 const text = rawTextInput.value.trim();
-                if (!text) return alert("Введите текст!");
+                if (!text) return alert("Enter text!");
                 
                 generateBtn.style.display = 'none';
                 document.getElementById('loading').style.display = 'flex';
@@ -1422,8 +1435,8 @@
                         buildWorkspace(data.files);
                         showWorkspace();
                         if (data.files.length > 0) autoInitFirstSentence();
-                    } else { alert("Ошибка: " + data.error); generateBtn.style.display = 'inline-flex'; }
-                } catch (e) { alert("Ошибка сервера."); generateBtn.style.display = 'inline-flex'; }
+                    } else { alert("Error: " + data.error); generateBtn.style.display = 'inline-flex'; }
+                } catch (e) { alert("Server error."); generateBtn.style.display = 'inline-flex'; }
                 finally { document.getElementById('loading').style.display = 'none'; }
             });
 
@@ -1452,16 +1465,88 @@
                 renderAllSentences();
             }
 
+            // ========== MARKDOWN BLOCK DETECTION ==========
+            function detectMarkdownBlock(rawText) {
+                // HR: --- / *** / ___ (3+ одного символа; поддержка em/en-dash)
+                if (/^\s*([-*_\u2014\u2013])(?:\s*\1){2,}\s*$/.test(rawText)) {
+                    return { kind: 'hr' };
+                }
+                // Heading: # / ## / ### ... (только однострочный, не «слипшийся»)
+                const hm = rawText.match(/^\s*(#{1,6})\s+([^\n]+?)\s*$/);
+                if (hm) {
+                    const body = hm[2];
+                    // Reject если похоже на склейку заголовка с предложением:
+                    // есть «. текст» внутри и в конце стоит .!?
+                    if (/[.!?]\s+\S/.test(body) && /[.!?]$/.test(body)) {
+                        // fall through → обычное предложение
+                    } else {
+                        return { kind: 'heading', level: hm[1].length, text: body };
+                    }
+                }
+                // List item: - / * / + / 1.  (relaxed — допускаем много предложений)
+                const lm = rawText.match(/^\s*(?:[-*+]|\d+\.)\s+([^\n]+?)\s*$/);
+                if (lm) {
+                    return { kind: 'list', text: lm[1] };
+                }
+                // Blockquote: > ... (relaxed)
+                const qm = rawText.match(/^\s*>\s*([^\n]+?)\s*$/);
+                if (qm) {
+                    return { kind: 'quote', text: qm[1] };
+                }
+                return null;
+            }
+
+            function stripMarkdownForAudio(rawText) {
+                return rawText
+                    .replace(/^\s*#{1,6}\s+/, '')
+                    .replace(/^\s*(?:[-*+]|\d+\.)\s+/, '')
+                    .replace(/^\s*>\s*/, '')
+                    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+                    .replace(/\*\*/g, '')
+                    .replace(/[*`_]/g, '')
+                    .trim();
+            }
+
             function renderAllSentences() {
                 const contentDiv = document.getElementById('content');
                 contentDiv.innerHTML = '';
 
                 sentencesData.forEach(fileData => {
+                    const rawText = fileData.text;
+                    const mdBlock = detectMarkdownBlock(rawText);
+
+                    // ---- HR: <hr>, без play-кнопки и без аудио ----
+                    if (mdBlock && mdBlock.kind === 'hr') {
+                        const hr = document.createElement('hr');
+                        hr.className = 'md-hr';
+                        contentDiv.appendChild(hr);
+                        return;
+                    }
+
+                    // ---- Определяем displayText + blockClass ----
+                    let blockClass = '';
+                    let displayText = rawText;
+                    if (mdBlock) {
+                        if (mdBlock.kind === 'heading') {
+                            blockClass = 'md-h' + mdBlock.level;
+                            displayText = mdBlock.text;
+                        } else if (mdBlock.kind === 'list') {
+                            blockClass = 'md-li';
+                            displayText = mdBlock.text;
+                        } else if (mdBlock.kind === 'quote') {
+                            blockClass = 'md-quote';
+                            displayText = mdBlock.text;
+                        }
+                    }
+                    // [text](url) -> text (для отображения тоже)
+                    displayText = displayText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
                     const sentenceDiv = document.createElement('div');
                     sentenceDiv.className = 'sentence';
+                    if (blockClass) sentenceDiv.classList.add(blockClass);
                     sentenceDiv.dataset.sentenceId = fileData.id;
 
-                    const cleanTextForAudio = fileData.text.replace(/\*\*/g, '');
+                    const cleanTextForAudio = stripMarkdownForAudio(rawText);
 
                     const playBtn = document.createElement('span');
                     playBtn.className = 'play-btn';
@@ -1476,12 +1561,12 @@
                     });
                     sentenceDiv.appendChild(playBtn);
 
-                    // Токенизация Markdown **жирного выделения**
+                    // Токенизация Markdown **жирного выделения** (работает и в заголовках)
                     const tokens = [];
                     const mdRegex = /\*\*([^*]+)\*\*|([^\s*]+)/g;
                     let match;
 
-                    while ((match = mdRegex.exec(fileData.text)) !== null) {
+                    while ((match = mdRegex.exec(displayText)) !== null) {
                         if (match[1]) {
                             const boldWords = match[1].trim().split(/\s+/).filter(Boolean);
                             boldWords.forEach(w => tokens.push({ text: w, isBold: true }));
@@ -1722,7 +1807,7 @@
                     if (text && text.trim()) {
                         applyTranslationDirectly(text.trim());
                     } else {
-                        alert("Буфер обмена пуст");
+                        alert("Clipboard is empty");
                     }
                 } catch (err) {
                     closeWordActionBar();
@@ -1957,8 +2042,8 @@
                         }
                         await fetchGlobalDictionary();
                         renderAllSentences();
-                        alert('Словарь успешно импортирован и объединен с базой!');
-                    } catch (err) { alert('Ошибка формата файла словаря.'); }
+                        alert('Dictionary imported and merged successfully!');
+                    } catch (err) { alert('Dictionary file format error.'); }
                 }; reader.readAsText(file); e.target.value = ''; 
             });
 
@@ -1966,8 +2051,25 @@
                 try { 
                     await fetch('/reset', { method: 'POST' }); 
                     document.querySelectorAll('.play-btn').forEach(b => b.dataset.audio = '');
-                    alert('Папка с аудио очищена. Аудио будет генерироваться заново.');
+                    alert('Audio folder cleared. Audio will be regenerated.');
                 } catch (e) {}
+            });
+
+            // ================= CLEAN COPY (bypass <ruby> + <rt> serialization) =================
+            // Копирование фрагмента с <ruby>: убираем переводы (<rt>), кнопки Play, иконки и
+            // схлопываем whitespace в 1 пробел. DOM не трогаем → клики работают как раньше.
+            document.addEventListener('copy', function(e) {
+                if (!e.clipboardData) return;
+                const selection = window.getSelection();
+                if (!selection || selection.rangeCount === 0) return;
+                const range = selection.getRangeAt(0);
+                const fragment = range.cloneContents();
+                if (!fragment.querySelector || !fragment.querySelector('ruby.phrase-wrapper')) return;
+                fragment.querySelectorAll('rt, .play-btn, .btn-icon, .sentence-num-badge, svg').forEach(el => el.remove());
+                let cleanText = (fragment.textContent || '').replace(/\s+/g, ' ').trim();
+                if (!cleanText) return;
+                e.clipboardData.setData('text/plain', cleanText);
+                e.preventDefault();
             });
         });
     </script>
