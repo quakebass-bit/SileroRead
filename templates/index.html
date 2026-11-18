@@ -400,6 +400,73 @@
         }
 
         /* 🌙 SLEEP POPOVER */
+        /* 🎚️ 5-BAND EQUALIZER POPOVER */
+        .eq-popover {
+            position: fixed;
+            top: 90px;
+            left: 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            z-index: 9999;
+            width: 270px;
+        }
+        .eq-popover.hidden { display: none; }
+        .eq-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 6px;
+        }
+        .eq-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .eq-bands {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            padding: 6px 0;
+        }
+        .eq-band {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            gap: 4px;
+        }
+        .eq-band input[type="range"] {
+            writing-mode: vertical-lr;
+            direction: rtl;
+            width: 22px;
+            height: 95px;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+        .eq-db {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-main);
+            min-width: 28px;
+            text-align: center;
+        }
+        .eq-freq {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .eq-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            gap: 6px;
+        }
+
         .sleep-popover {
             position: fixed;
             top: 90px;
@@ -839,6 +906,18 @@
             display: block;
             border: 1px solid var(--border-color);
         }
+        .unsupported-image-placeholder {
+            max-width: 85%;
+            margin: 14px auto;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px dashed var(--border-color);
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            text-align: center;
+        }
 
         /* 5. BOTTOM SHELF */
         .bottom-shelf {
@@ -1060,6 +1139,7 @@
         <button class="icon-action-btn" id="tocBtn" title="Table of Contents">📑</button>
         <button class="icon-action-btn" id="addBookmarkBtn" title="Add bookmark">⭐</button>
         <button class="icon-action-btn" id="showBookmarksBtn" title="Bookmarks list">📌</button>
+        <button class="icon-action-btn" id="eqToggleBtn" title="5-Band Equalizer">🎚️ EQ</button>
         <button class="icon-action-btn" id="sleepBtn" title="Sleep mode">🌙</button>
         <button class="icon-action-btn" id="lockBtn" style="color:var(--accent-amber);" title="Lock Screen">🔒</button>
     </div>
@@ -1074,6 +1154,31 @@
         <button class="icon-action-btn" id="btnFontMinus" style="padding: 0 10px;">A-</button>
         <span class="font-size-val" id="fontSizeDisp">19px</span>
         <button class="icon-action-btn" id="btnFontPlus" style="padding: 0 10px;">A+</button>
+    </div>
+
+    <!-- Popover: 5-Band Equalizer -->
+    <div class="eq-popover hidden" id="eqPopover">
+        <div class="eq-header">
+            <span class="eq-title">🎚️ 5-Band EQ</span>
+            <select id="eqPresetSelect" class="modern-select" style="padding:3px 6px; font-size:11px;">
+                <option value="flat">Flat</option>
+                <option value="voice">Voice Clarity</option>
+                <option value="bass">Warm Bass</option>
+                <option value="podcast">Podcast</option>
+                <option value="custom" disabled>Custom</option>
+            </select>
+        </div>
+        <div class="eq-bands">
+            <div class="eq-band"><span class="eq-db" id="eqVal0">0</span><input type="range" id="eqBand0" min="-12" max="12" step="1" value="0"><span class="eq-freq">60Hz</span></div>
+            <div class="eq-band"><span class="eq-db" id="eqVal1">0</span><input type="range" id="eqBand1" min="-12" max="12" step="1" value="0"><span class="eq-freq">230Hz</span></div>
+            <div class="eq-band"><span class="eq-db" id="eqVal2">0</span><input type="range" id="eqBand2" min="-12" max="12" step="1" value="0"><span class="eq-freq">910Hz</span></div>
+            <div class="eq-band"><span class="eq-db" id="eqVal3">0</span><input type="range" id="eqBand3" min="-12" max="12" step="1" value="0"><span class="eq-freq">3.6k</span></div>
+            <div class="eq-band"><span class="eq-db" id="eqVal4">0</span><input type="range" id="eqBand4" min="-12" max="12" step="1" value="0"><span class="eq-freq">14k</span></div>
+        </div>
+        <div class="eq-footer">
+            <button type="button" class="icon-action-btn" id="eqToggleActiveBtn" style="height:28px; font-size:11px;">ON</button>
+            <button type="button" class="icon-action-btn" id="eqResetBtn" style="height:28px; font-size:11px;">Reset</button>
+        </div>
     </div>
 
     <!-- Popover: Режим сна -->
@@ -1531,16 +1636,38 @@
         try {
             const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
             const pdf = await loadingTask.promise;
-            let fullText = "";
+            allBlocks = []; textParagraphs = []; tocItems = []; let pIndex = 0;
+
             for (let i = 1; i <= pdf.numPages; i++) {
+                statusInfo.textContent = `Rendering PDF page ${i} / ${pdf.numPages}...`;
                 const page = await pdf.getPage(i);
+
+                // Рендерим страницу (с картинками и схемами) в изображение
+                const viewport = page.getViewport({ scale: 1.4 });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                allBlocks.push({ type: 'image', src: canvas.toDataURL('image/jpeg', 0.85) });
+
+                // Извлекаем текст страницы для озвучки
                 const textContent = await page.getTextContent();
-                let rawPageText = textContent.items.map(item => item.str).join(" ");
-                rawPageText = rawPageText.replace(/\s+/g, ' ');
-                fullText += rawPageText + " ";
+                let rawPageText = textContent.items.map(item => item.str).join(" ").replace(/\s+/g, ' ').trim();
+                if (rawPageText) {
+                    const sentences = rawPageText.replace(/([.?!])\s+([A-Za-zА-Яа-яЁё])/g, "$1\n$2").split(/\r?\n/);
+                    for (const s of sentences) {
+                        const clean = s.trim();
+                        if (clean.length > 1) {
+                            const idx = pIndex++;
+                            const block = { type: 'text', text: clean, index: idx };
+                            allBlocks.push(block);
+                            textParagraphs.push(block);
+                        }
+                    }
+                }
             }
-            let formattedText = fullText.replace(/([.?!])\s+([A-Za-zА-Яа-яЁё])/g, "$1\n$2");
-            parseTXT(formattedText);
+            buildReadingUnitsServer().then(() => loadProgressAndRender());
         } catch (err) {
             console.error(err);
             statusInfo.textContent = "PDF reading error";
@@ -1734,7 +1861,26 @@
     }
 
     function parseDOCX(arrayBuffer) {
-        mammoth.convertToHtml({arrayBuffer: arrayBuffer})
+        const docxOptions = {
+            arrayBuffer: arrayBuffer,
+            convertImage: mammoth.images.imgElement(function(image) {
+                return image.read("base64").then(function(imageBuffer) {
+                    const mime = (image.contentType || "image/png").toLowerCase();
+                    if (mime.includes("wmf") || mime.includes("emf")) {
+                        return {
+                            src: "",
+                            "data-unsupported-mime": mime
+                        };
+                    }
+                    const safeMime = mime === "image/jpg" ? "image/jpeg" : mime;
+                    return {
+                        src: "data:" + safeMime + ";base64," + imageBuffer
+                    };
+                });
+            })
+        };
+
+        mammoth.convertToHtml(docxOptions)
             .then(function(result) {
                 const htmlString = result.value; 
                 const doc = new DOMParser().parseFromString(htmlString, "text/html");
@@ -1744,10 +1890,25 @@
                     if (node.nodeType === 1) { 
                         const tagName = node.tagName.toLowerCase();
                         if (tagName === 'img') {
+                            const unsupportedMime = node.getAttribute('data-unsupported-mime');
                             const src = node.getAttribute('src');
-                            if (src) allBlocks.push({ type: 'image', src: src });
+                            if (unsupportedMime) {
+                                allBlocks.push({ type: 'unsupported_image', mime: unsupportedMime });
+                            } else if (src) {
+                                allBlocks.push({ type: 'image', src: src });
+                            }
                         } 
                         else if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li'].includes(tagName)) {
+                            // Проверяем, нет ли картинки внутри абзаца/заголовка
+                            node.querySelectorAll('img').forEach(imgEl => {
+                                const uMime = imgEl.getAttribute('data-unsupported-mime');
+                                const iSrc = imgEl.getAttribute('src');
+                                if (uMime) {
+                                    allBlocks.push({ type: 'unsupported_image', mime: uMime });
+                                } else if (iSrc) {
+                                    allBlocks.push({ type: 'image', src: iSrc });
+                                }
+                            });
                             const text = node.textContent.trim();
                             if (text.length > 1) {
                                 const idx = pIndex++;
@@ -1775,6 +1936,10 @@
                 };
                 walk(doc.body);
                 buildReadingUnitsServer().then(() => loadProgressAndRender());
+            })
+            .catch(function(err) {
+                console.error("DOCX parse error:", err);
+                statusInfo.textContent = "DOCX reading error";
             });
     }
 
@@ -1901,6 +2066,11 @@
                 const img = document.createElement('img');
                 img.src = block.src; img.className = 'fb2-image';
                 readerBody.appendChild(img);
+            } else if (block.type === 'unsupported_image') {
+                const ph = document.createElement('div');
+                ph.className = 'unsupported-image-placeholder';
+                ph.textContent = `🖼️ Изображение (${block.mime}) не поддерживается браузером`;
+                readerBody.appendChild(ph);
             }
         });
         updateProgress();
@@ -3022,6 +3192,134 @@
             };
         });
     }
+
+    // ================= 🎚️ 5-BAND WEB AUDIO EQUALIZER =================
+    const eqToggleBtn = document.getElementById('eqToggleBtn');
+    const eqPopover = document.getElementById('eqPopover');
+    const eqPresetSelect = document.getElementById('eqPresetSelect');
+    const eqResetBtn = document.getElementById('eqResetBtn');
+    const eqToggleActiveBtn = document.getElementById('eqToggleActiveBtn');
+
+    const EQ_FREQS = [60, 230, 910, 3600, 14000];
+    const EQ_PRESETS = {
+        flat:    [0, 0, 0, 0, 0],
+        voice:   [-4, -1, 3, 5, 2],
+        bass:    [6, 3, 0, -1, 1],
+        podcast: [-3, 2, 4, 3, -2]
+    };
+
+    let eqCtx = null;
+    let eqFilters = [];
+    let eqEnabled = localStorage.getItem('sileroread-eq-enabled') !== 'false';
+    let eqGains = [0, 0, 0, 0, 0];
+    try {
+        const savedGains = JSON.parse(localStorage.getItem('sileroread-eq-gains'));
+        if (Array.isArray(savedGains) && savedGains.length === 5) eqGains = savedGains;
+    } catch (_) {}
+
+    function initWebAudioEQ() {
+        if (eqCtx) {
+            if (eqCtx.state === 'suspended') eqCtx.resume().catch(() => {});
+            return;
+        }
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        eqCtx = new AudioCtx();
+        const source = eqCtx.createMediaElementSource(audioPlayer);
+        eqFilters = EQ_FREQS.map((freq, idx) => {
+            const filter = eqCtx.createBiquadFilter();
+            filter.type = idx === 0 ? 'lowshelf' : (idx === 4 ? 'highshelf' : 'peaking');
+            filter.frequency.value = freq;
+            filter.Q.value = 1.0;
+            filter.gain.value = eqEnabled ? eqGains[idx] : 0;
+            return filter;
+        });
+        source.connect(eqFilters[0]);
+        for (let i = 0; i < eqFilters.length - 1; i++) {
+            eqFilters[i].connect(eqFilters[i + 1]);
+        }
+        eqFilters[eqFilters.length - 1].connect(eqCtx.destination);
+    }
+
+    function applyEQState() {
+        eqGains.forEach((g, i) => {
+            const slider = document.getElementById('eqBand' + i);
+            const label = document.getElementById('eqVal' + i);
+            if (slider) slider.value = g;
+            if (label) label.textContent = (g > 0 ? '+' + g : g);
+            if (eqFilters[i]) eqFilters[i].gain.value = eqEnabled ? g : 0;
+        });
+        const hasBoost = eqEnabled && eqGains.some(v => v !== 0);
+        eqToggleBtn.style.color = hasBoost ? 'var(--accent-cyan)' : '';
+        eqToggleActiveBtn.textContent = eqEnabled ? 'ON' : 'OFF';
+        eqToggleActiveBtn.style.color = eqEnabled ? 'var(--accent-cyan)' : 'var(--text-muted)';
+        localStorage.setItem('sileroread-eq-gains', JSON.stringify(eqGains));
+        localStorage.setItem('sileroread-eq-enabled', String(eqEnabled));
+    }
+
+    function detectEQPreset() {
+        for (const [name, vals] of Object.entries(EQ_PRESETS)) {
+            if (vals.every((v, i) => v === eqGains[i])) {
+                eqPresetSelect.value = name;
+                return;
+            }
+        }
+        eqPresetSelect.value = 'custom';
+    }
+
+    for (let i = 0; i < 5; i++) {
+        document.getElementById('eqBand' + i).addEventListener('input', (e) => {
+            initWebAudioEQ();
+            eqGains[i] = parseInt(e.target.value, 10) || 0;
+            detectEQPreset();
+            applyEQState();
+        });
+    }
+
+    eqPresetSelect.addEventListener('change', () => {
+        const preset = EQ_PRESETS[eqPresetSelect.value];
+        if (!preset) return;
+        initWebAudioEQ();
+        eqGains = [...preset];
+        applyEQState();
+    });
+
+    eqResetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        eqGains = [0, 0, 0, 0, 0];
+        eqPresetSelect.value = 'flat';
+        applyEQState();
+    });
+
+    eqToggleActiveBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        initWebAudioEQ();
+        eqEnabled = !eqEnabled;
+        applyEQState();
+    });
+
+    eqToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        speedPopover.classList.add('hidden');
+        fontSizePopover.classList.add('hidden');
+        if (typeof sleepPopover !== 'undefined') sleepPopover.classList.add('hidden');
+        positionPopoverUnderBtn(eqToggleBtn, eqPopover);
+        eqPopover.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!eqPopover.contains(e.target) && e.target !== eqToggleBtn) {
+            eqPopover.classList.add('hidden');
+        }
+    });
+
+    speedToggleBtn.addEventListener('click', () => eqPopover.classList.add('hidden'));
+    fontSizeToggleBtn.addEventListener('click', () => eqPopover.classList.add('hidden'));
+    if (sleepBtn) sleepBtn.addEventListener('click', () => eqPopover.classList.add('hidden'));
+    audioPlayer.addEventListener('play', initWebAudioEQ);
+
+    detectEQPreset();
+    applyEQState();
 
     // 8. Service Worker Registration
     if ('serviceWorker' in navigator) {
