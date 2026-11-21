@@ -997,9 +997,26 @@
             color: var(--accent-amber);
         }
 
+        #pasteTextModal {
+            align-items: flex-start;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+        #pasteTextModal .modal-box {
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100dvh - 20px);
+            overflow: hidden;
+        }
+        #pasteTextModal h3,
+        #pasteTextModal .paste-toolbar,
+        #pasteTextModal .modal-actions {
+            flex-shrink: 0;
+        }
         .paste-textarea {
             width: 100%;
-            min-height: 220px;
+            min-height: 80px;
+            flex: 1 1 auto;
             background: var(--bg-base);
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -1008,8 +1025,8 @@
             font-size: 14px;
             line-height: 1.5;
             padding: 12px;
-            resize: vertical;
-            margin-bottom: 12px;
+            resize: none;
+            margin-bottom: 10px;
             box-sizing: border-box;
         }
         .paste-textarea:focus {
@@ -1053,7 +1070,7 @@
         <div class="bar-left-cluster">
             <div class="file-upload-badge" id="fileBtnWrap" title="Choose file (.fb2, .txt, .md, .docx, .pdf)">
                 <span>📁</span>
-                <span id="fileNameDisp">Choose File</span>
+                <span id="fileNameDisp">From device</span>
                 <input type="file" id="fb2File">
             </div>
             <button class="file-upload-badge" id="pasteTabBtn" type="button" title="Paste your own text or Markdown" style="color: var(--accent-amber);">
@@ -2834,9 +2851,32 @@
         localStorage.setItem('sileroread-pasted-draft', pastedTextInput.value);
     });
 
+    function syncPasteModalViewport() {
+        if (pasteTextModal.classList.contains('hidden')) return;
+        const vv = window.visualViewport;
+        if (vv) {
+            pasteTextModal.style.top = vv.offsetTop + 'px';
+            pasteTextModal.style.height = vv.height + 'px';
+            pasteTextModal.style.bottom = 'auto';
+            const box = pasteTextModal.querySelector('.modal-box');
+            if (box) {
+                box.style.maxHeight = Math.max(180, vv.height - 20) + 'px';
+            }
+        }
+    }
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncPasteModalViewport);
+        window.visualViewport.addEventListener('scroll', syncPasteModalViewport);
+    }
+
     pasteTabBtn.addEventListener('click', () => {
         pasteTextModal.classList.remove('hidden');
-        setTimeout(() => pastedTextInput.focus(), 100);
+        syncPasteModalViewport();
+        setTimeout(() => {
+            pastedTextInput.focus();
+            syncPasteModalViewport();
+        }, 120);
     });
 
     btnClosePasteModal.addEventListener('click', () => {
@@ -2887,7 +2927,7 @@
         const firstLine = rawText.split(/\r?\n/)[0].replace(/[#>*_`~]/g, '').trim().slice(0, 28) || 'Pasted text';
         bookKey = `pasted_${Math.abs(hash)}`;
 
-        fileNameDisp.textContent = 'From clipboard';
+        fileNameDisp.textContent = 'From device';
         deckBookTitle.textContent = `📋 ${firstLine}`;
         deckFormatInfo.textContent = 'TEXT/MD • READY';
         statusInfo.textContent = 'Processing text...';
